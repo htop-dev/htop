@@ -61,10 +61,9 @@ static void SolarisMachine_updateCPUcount(SolarisMachine* this) {
    }
 
    if (change) {
-      kstat_close(this->kd);
-      this->kd = kstat_open();
-      if (!this->kd)
-         CRT_fatalError("Cannot open kstat handle");
+      kid_t update_kid = kstat_chain_update(this->kd);
+      if (update_kid < 0)
+         CRT_fatalError("Cannot update kstat chain");
    }
 }
 
@@ -165,49 +164,40 @@ static void SolarisMachine_scanCPUTime(SolarisMachine* this) {
 
 static void SolarisMachine_scanMemoryInfo(SolarisMachine* this) {
    Machine*            super = &this->super;
-   static kstat_t      *meminfo = NULL;
-   int                 ksrphyserr = -1;
-   kstat_named_t       *totalmem_pgs = NULL;
-   kstat_named_t       *freemem_pgs = NULL;
-   kstat_named_t       *pages = NULL;
-   struct swaptable    *sl = NULL;
-   struct swapent      *swapdev = NULL;
+   kstat_t*            meminfo = NULL;
+   struct swaptable*   sl = NULL;
+   struct swapent*     swapdev = NULL;
    uint64_t            totalswap = 0;
    uint64_t            totalfree = 0;
+   int                 ksrphyserr = -1;
    int                 nswap = 0;
-   char                *spath = NULL;
-   char                *spathbase = NULL;
+   char*               spath = NULL;
+   char*               spathbase = NULL;
 
    // Part 1 - physical memory
-   if (this->kd != NULL && meminfo == NULL) {
-      // Look up the kstat chain just once, it never changes
+   if (this->kd != NULL) {
+      // The ptr `meminfo` is invalidated when the kstat chain is updated by
+      // `kstat_chain_update` (in `SolarisMachine_updateCPUcount`). So it needs
+      // to be re-read on every memory update.
       meminfo = kstat_lookup_wrapper(this->kd, "unix", 0, "system_pages");
    }
    if (meminfo != NULL) {
       ksrphyserr = kstat_read(this->kd, meminfo, NULL);
    }
    if (ksrphyserr != -1) {
-      totalmem_pgs   = kstat_data_lookup_wrapper(meminfo, "physmem");
-      freemem_pgs    = kstat_data_lookup_wrapper(meminfo, "freemem");
-      pages          = kstat_data_lookup_wrapper(meminfo, "pagestotal");
+      kstat_named_t* physmem = kstat_data_lookup_wrapper(meminfo, "physmem");
+      kstat_named_t* pagesfree = kstat_data_lookup_wrapper(meminfo, "pagesfree");
+      kstat_named_t* pagestotal = kstat_data_lookup_wrapper(meminfo, "pagestotal");
+      kstat_named_t* pageslocked = kstat_data_lookup_wrapper(meminfo, "pageslocked");
 
-      super->totalMem = totalmem_pgs->value.ui64 * this->pageSizeKB;
-      if (super->totalMem > freemem_pgs->value.ui64 * this->pageSizeKB) {
-         super->usedMem = super->totalMem - freemem_pgs->value.ui64 * this->pageSizeKB;
-      } else {
-         super->usedMem = 0;   // This can happen in non-global zone (in theory)
-      }
-      // Not sure how to implement this on Solaris - suggestions welcome!
-      super->cachedMem = 0;
-      // Not really "buffers" but the best Solaris analogue that I can find to
-      // "memory in use but not by programs or the kernel itself"
-      super->buffersMem = (totalmem_pgs->value.ui64 - pages->value.ui64) * this->pageSizeKB;
+      super->totalMem = physmem->value.ui64 * this->pageSizeKB;
+      this->usedMem = (pagestotal->value.ui64 - pageslocked->value.ui64 - pagesfree->value.ui64) * this->pageSizeKB;
+      this->lockedMem = pageslocked->value.ui64 * this->pageSizeKB;
    } else {
       // Fall back to basic sysconf if kstat isn't working
       super->totalMem = sysconf(_SC_PHYS_PAGES) * this->pageSize;
-      super->buffersMem = 0;
-      super->cachedMem = 0;
-      super->usedMem = super->totalMem - (sysconf(_SC_AVPHYS_PAGES) * this->pageSize);
+      this->usedMem = super->totalMem - (sysconf(_SC_AVPHYS_PAGES) * this->pageSize);
+      this->lockedMem = 0;
    }
 
    // Part 2 - swap
@@ -338,4 +328,16 @@ bool Machine_isCPUonline(const Machine* super, unsigned int id) {
    const SolarisMachine* this = (const SolarisMachine*) super;
 
    return (super->existingCPUs == 1) ? true : this->cpus[id + 1].online;
+}
+
+int Machine_getCPUPhysicalCoreID(const Machine* host, unsigned int id) {
+   assert(id < host->existingCPUs);
+   (void) host;
+   return (int)id;
+}
+
+int Machine_getCPUThreadIndex(const Machine* host, unsigned int id) {
+   assert(id < host->existingCPUs);
+   (void) host; (void) id;
+   return 0;
 }

@@ -13,7 +13,7 @@ diskdev.format = device
 diskdev.width = -8
 
 total.heading = TPS
-total.metric = rate(disk.dev.read) + rate(disk.dev.write) + rate(disk.dev.discard)
+total.metric = rate(disk.dev.read) + rate(disk.dev.write) + (defined(disk.dev.discard) ? rate(disk.dev.discard) : mkconst(0, type=double, semantics=instant, units="count/sec"))
 total.caption = Rate of read requests
 
 read.heading = RR/S
@@ -40,7 +40,7 @@ read_await.caption = Average time read requests queued and serviced
 read_await.default = false
 
 read_avqsz.heading = RARQSZ
-read_avqsz.metric = rescale(delta(disk.dev.read_bytes), "kbyte") / delta(disk.dev.read)
+read_avqsz.metric = defined(disk.dev.read_bytes) ? rescale(delta(disk.dev.read_bytes), "Kbyte") / delta(disk.dev.read) : novalue(type=double, semantics=instant, units="Kbytes/count")
 read_avqsz.caption = Average I/O request size for reads to the device
 read_avqsz.default = false
 
@@ -68,7 +68,7 @@ write_await.caption = Average time write requests queued and serviced
 write_await.default = false
 
 write_avqsz.heading = WARQSZ
-write_avqsz.metric = rescale(delta(disk.dev.write_bytes), "kbyte") / delta(disk.dev.write)
+write_avqsz.metric = rescale(delta(disk.dev.write_bytes), "Kbyte") / delta(disk.dev.write)
 write_avqsz.caption = Average I/O request size for writes to the device
 write_avqsz.default = false
 
@@ -98,7 +98,7 @@ discard_await.caption = Average time discard requests queued and serviced
 discard_await.default = false
 
 discard_avqsz.heading = DARQSZ
-discard_avqsz.metric = rescale(delta(disk.dev.discard_bytes), "kbyte") / delta(disk.dev.discard)
+discard_avqsz.metric = defined(disk.dev.discard) ? rescale(delta(disk.dev.discard_bytes), "Kbyte") / delta(disk.dev.discard) : novalue(type=double, semantics=instant, units="Kbytes/count")
 discard_avqsz.caption = Average I/O request size for discards to the device
 discard_avqsz.default = false
 

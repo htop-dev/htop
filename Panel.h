@@ -31,6 +31,7 @@ typedef enum HandlerResult_ {
 } HandlerResult;
 
 #define EVENT_SET_SELECTED (-1)
+#define EVENT_PANEL_LOST_FOCUS (-2)
 
 #define EVENT_HEADER_CLICK(x_) (-10000 + (x_))
 #define EVENT_IS_HEADER_CLICK(ev_) ((ev_) >= -10000 && (ev_) <= -9000)
@@ -66,6 +67,7 @@ struct Panel_ {
    struct Vector_* items;
    int selected;
    int oldSelected;
+   int prevSelected;
    size_t selectedLen;
    void* eventHandlerState;
    int scrollV;
@@ -73,6 +75,7 @@ struct Panel_ {
    bool needsRedraw;
    bool cursorOn;
    bool wasFocus;
+   int lastMouseBarClickX; /* X position of last mouse click on function bar (LINES-1) */
    struct FunctionBar_* currentBar;
    struct FunctionBar_* defaultBar;
    RichString header;
@@ -82,6 +85,10 @@ struct Panel_ {
 #define Panel_setDefaultBar(this_) do { (this_)->currentBar = (this_)->defaultBar; } while (0)
 
 #define KEY_CTRL(l) ((l)-'A'+1)
+
+/* Synthetic event: mouse click in the function-bar input field.
+   When set, Panel.lastMouseBarClickX holds the screen X of the click. */
+#define KEY_MOUSE_BAR_CLICK  (KEY_MAX + 50)
 
 extern const PanelClass Panel_class;
 

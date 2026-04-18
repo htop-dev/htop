@@ -51,6 +51,7 @@ static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
    switch (ch) {
       case 13:
       case KEY_ENTER:
+      case KEY_RECLICK:
       case KEY_F(5): {
          const ListItem* selected = (ListItem*) Panel_getSelected(super);
          if (!selected)

@@ -11,6 +11,7 @@ in the source distribution for its full text.
 
 #include "Object.h"
 
+#define NUMBERITEM_EDIT_MAX 10
 
 enum OptionItemType {
    OPTION_ITEM_TEXT,
@@ -55,6 +56,10 @@ typedef struct NumberItem_ {
    int scale;
    int min;
    int max;
+   bool editing;
+   char editBuffer[NUMBERITEM_EDIT_MAX + 1];
+   int editLen;
+   int savedValue;
 } NumberItem;
 
 extern const OptionItemClass OptionItem_class;
@@ -76,5 +81,11 @@ int NumberItem_get(const NumberItem* this);
 void NumberItem_decrease(NumberItem* this);
 void NumberItem_increase(NumberItem* this);
 void NumberItem_toggle(NumberItem* this);
+void NumberItem_startEditing(NumberItem* this);
+void NumberItem_startEditingFromValue(NumberItem* this);
+void NumberItem_cancelEditing(NumberItem* this);
+bool NumberItem_applyEditing(NumberItem* this);
+bool NumberItem_addChar(NumberItem* this, char c);
+void NumberItem_deleteChar(NumberItem* this);
 
 #endif

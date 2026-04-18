@@ -1,7 +1,7 @@
 /*
 htop - ScreensPanel.c
 (C) 2004-2011 Hisham H. Muhammad
-(C) 2020-2023 htop dev team
+(C) 2020-2026 htop dev team
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "FunctionBar.h"
 #include "Hashtable.h"
+#include "LineEditor.h"
 #include "ProvideCurses.h"
 #include "Settings.h"
 #include "XUtils.h"
@@ -48,8 +49,10 @@ ScreenListItem* ScreenListItem_new(const char* value, ScreenSettings* ss) {
 
 static const char* const ScreensFunctions[] = {"      ", "Rename", "      ", "      ", "New   ", "      ", "MoveUp", "MoveDn", "Remove", "Done  ", NULL};
 static const char* const DynamicFunctions[] = {"      ", "Rename", "      ", "      ", "      ", "      ", "MoveUp", "MoveDn", "Remove", "Done  ", NULL};
-static const char* const ScreensRenamingFunctions[] = {"Cancel", "Done  ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", NULL};
+static const char* const ScreensRenamingFunctions[] = {"      ", "Cancel", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 static FunctionBar* Screens_renamingBar = NULL;
+
+static void rebuildSettingsArray(Panel* super, int selected);
 
 void ScreensPanel_cleanup(void) {
    if (Screens_renamingBar) {
@@ -58,8 +61,33 @@ void ScreensPanel_cleanup(void) {
    }
 }
 
+static void ScreensPanel_cancelMoving(ScreensPanel* this) {
+   Panel* super = &this->super;
+   for (int i = 0; i < Panel_size(super); i++) {
+      ListItem* item = (ListItem*) Panel_get(super, i);
+      if (item)
+         item->moving = false;
+   }
+   this->moving = false;
+   Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
+}
+
 static void ScreensPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
+   ScreensPanel* const this = (ScreensPanel*) super;
+
+   /* cancel any pending edit action */
+   if (this->renamingItem) {
+      ListItem* item = (ListItem*) Panel_getSelected(super);
+      assert(item == this->renamingItem);
+
+      if (item)
+         item->value = this->saved;
+      this->renamingItem = NULL;
+      super->cursorOn = false;
+
+      Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
+   }
 
    /* do not delete screen settings still in use */
    int n = Panel_size(super);
@@ -74,38 +102,30 @@ static void ScreensPanel_delete(Object* object) {
 static HandlerResult ScreensPanel_eventHandlerRenaming(Panel* super, int ch) {
    ScreensPanel* const this = (ScreensPanel*) super;
 
-   if (ch >= 32 && ch < 127 && ch != '=') {
-      if (this->cursor < SCREEN_NAME_LEN - 1) {
-         this->buffer[this->cursor] = (char)ch;
-         this->cursor++;
-         super->selectedLen = strlen(this->buffer);
-         Panel_setCursorToSelection(super);
-      }
-
-      return HANDLED;
-   }
-
    switch (ch) {
-      case 127:
-      case KEY_BACKSPACE:
-         if (this->cursor > 0) {
-            this->cursor--;
-            this->buffer[this->cursor] = '\0';
-            super->selectedLen = strlen(this->buffer);
-            Panel_setCursorToSelection(super);
-         }
+      case EVENT_SET_SELECTED: {
+         ListItem* item = (ListItem*) Panel_getSelected(super);
+         if (item != this->renamingItem)
+            goto renameFinish;
          break;
+      }
+      case EVENT_PANEL_LOST_FOCUS:
+         goto renameFinish;
       case '\n':
       case '\r':
       case KEY_ENTER:
-      case KEY_F(2): {
+      case KEY_F(10): {
          ListItem* item = (ListItem*) Panel_getSelected(super);
          if (!item)
             break;
          assert(item == this->renamingItem);
+renameFinish:
+         if (!this->renamingItem)
+            break;
          free(this->saved);
-         item->value = xStrdup(this->buffer);
+         this->renamingItem->value = xStrdup(LineEditor_getText(&this->editor));
          this->renamingItem = NULL;
+         this->renamingNewItem = false;
          super->cursorOn = false;
          Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
          Panel_setDefaultBar(super);
@@ -113,16 +133,42 @@ static HandlerResult ScreensPanel_eventHandlerRenaming(Panel* super, int ch) {
          break;
       }
       case 27: // Esc
-      case KEY_F(1): {
+      case KEY_F(2): {
          ListItem* item = (ListItem*) Panel_getSelected(super);
          if (!item)
             break;
          assert(item == this->renamingItem);
+
+         // Restore item->value to the heap-allocated saved string.
+         // This is safe for both cases: existing items keep their name,
+         // and new items need this before deletion to avoid freeing the stack buffer.
          item->value = this->saved;
+
+         if (this->renamingNewItem) {
+            // If canceling a newly created item, delete it
+            Panel_remove(super, Panel_getSelectedIndex(super));
+            // Rebuild with the updated selection after removal
+            rebuildSettingsArray(super, Panel_getSelectedIndex(super));
+         }
+
+         this->renamingNewItem = false;
          this->renamingItem = NULL;
          super->cursorOn = false;
          Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
          Panel_setDefaultBar(super);
+         break;
+      }
+      default: {
+         /* Delegate editing keys (printable chars, cursor movement, etc.) to LineEditor.
+            Exclude '=' to not break the htop config format. */
+         if (ch == '=')
+            break;
+         LineEditor_handleKey(&this->editor, ch);
+         super->selectedLen = LineEditor_getCursor(&this->editor);
+         Panel_setCursorToSelection(super);
+         /* Keep item->value pointing to the display buffer */
+         if (this->renamingItem)
+            this->renamingItem->value = LineEditor_getText(&this->editor);
          break;
       }
    }
@@ -136,16 +182,19 @@ static void startRenaming(Panel* super) {
    ListItem* item = (ListItem*) Panel_getSelected(super);
    if (item == NULL)
       return;
+   if (this->moving)
+      ScreensPanel_cancelMoving(this);
    this->renamingItem = item;
    super->cursorOn = true;
    char* name = item->value;
    this->saved = name;
-   strncpy(this->buffer, name, SCREEN_NAME_LEN);
-   this->buffer[SCREEN_NAME_LEN] = '\0';
-   this->cursor = strlen(this->buffer);
-   item->value = this->buffer;
+   /* Initialise the line editor with the current name (limited to SCREEN_NAME_LEN - 1 chars) */
+   LineEditor_initWithMax(&this->editor, SCREEN_NAME_LEN - 1);
+   LineEditor_setText(&this->editor, name);
+   /* Point the item's value at the editor buffer so Panel draws it live */
+   item->value = LineEditor_getText(&this->editor);
    Panel_setSelectionColor(super, PANEL_EDIT);
-   super->selectedLen = strlen(this->buffer);
+   super->selectedLen = LineEditor_getCursor(&this->editor);
    Panel_setCursorToSelection(super);
    super->currentBar = Screens_renamingBar;
 }
@@ -185,8 +234,7 @@ static void addNewScreen(Panel* super) {
 static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
    ScreensPanel* const this = (ScreensPanel*) super;
 
-   int selected = Panel_getSelectedIndex(super);
-   ScreenListItem* oldFocus = (ScreenListItem*) Panel_getSelected(super);
+   const void* oldFocus = Panel_get(super, super->prevSelected);
    bool shouldRebuildArray = false;
    HandlerResult result = IGNORED;
 
@@ -194,17 +242,39 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
       case '\n':
       case '\r':
       case KEY_ENTER:
-      case KEY_MOUSE:
-      case KEY_RECLICK: {
-         this->moving = !this->moving;
-         Panel_setSelectionColor(super, this->moving ? PANEL_SELECTION_FOLLOW : PANEL_SELECTION_FOCUS);
-         ListItem* item = (ListItem*) Panel_getSelected(super);
-         if (item)
-            item->moving = this->moving;
+         if (this->moving) {
+            ScreensPanel_cancelMoving(this);
+         } else {
+            this->moving = true;
+            Panel_setSelectionColor(super, PANEL_SELECTION_FOLLOW);
+            ListItem* item = (ListItem*) Panel_getSelected(super);
+            if (item)
+               item->moving = true;
+         }
          result = HANDLED;
          break;
-      }
+      case KEY_MOUSE:
+         if (this->moving) {
+            /* Single click while in move mode: cancel move mode */
+            ScreensPanel_cancelMoving(this);
+            result = HANDLED;
+         }
+         /* else: just select the item, do not enter move mode */
+         break;
+      case KEY_RECLICK:
+         /* Double click: start renaming */
+         this->renamingNewItem = false;
+         startRenaming(super);
+         result = HANDLED;
+         break;
       case EVENT_SET_SELECTED:
+         if (this->moving)
+            ScreensPanel_cancelMoving(this);
+         result = HANDLED;
+         break;
+      case EVENT_PANEL_LOST_FOCUS:
+         if (this->moving)
+            ScreensPanel_cancelMoving(this);
          result = HANDLED;
          break;
       case KEY_NPAGE:
@@ -215,6 +285,7 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
          break;
       case KEY_F(2):
       case KEY_CTRL('R'):
+         this->renamingNewItem = false;
          startRenaming(super);
          result = HANDLED;
          break;
@@ -223,6 +294,7 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
          if (this->settings->dynamicScreens)
             break;
          addNewScreen(super);
+         this->renamingNewItem = true;
          startRenaming(super);
          shouldRebuildArray = true;
          result = HANDLED;
@@ -254,9 +326,10 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
          result = HANDLED;
          break;
       case KEY_F(9):
-      //case KEY_DC:
+      case KEY_DC:
+      case KEY_DEL_MAC:
          if (Panel_size(super) > 1)
-            Panel_remove(super, selected);
+            Panel_remove(super, super->selected);
          shouldRebuildArray = true;
          result = HANDLED;
          break;
@@ -276,8 +349,11 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
       result = HANDLED;
    }
 
+   super->prevSelected = super->selected;
+
    if (shouldRebuildArray)
-      rebuildSettingsArray(super, selected);
+      rebuildSettingsArray(super, super->selected);
+
    if (result == HANDLED)
       ScreensPanel_update(super);
 
@@ -319,8 +395,10 @@ ScreensPanel* ScreensPanel_new(Settings* settings) {
    this->availableColumns = AvailableColumnsPanel_new((Panel*) this->columns, columns);
    this->moving = false;
    this->renamingItem = NULL;
+   this->renamingNewItem = false;
+   this->saved = NULL;
    super->cursorOn = false;
-   this->cursor = 0;
+   LineEditor_initWithMax(&this->editor, SCREEN_NAME_LEN - 1);
    Panel_setHeader(super, "Screens");
 
    for (unsigned int i = 0; i < settings->nScreens; i++) {
@@ -328,6 +406,9 @@ ScreensPanel* ScreensPanel_new(Settings* settings) {
       char* name = ss->heading;
       Panel_add(super, (Object*) ScreenListItem_new(name, ss));
    }
+
+   super->prevSelected = super->selected;
+
    return this;
 }
 

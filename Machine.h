@@ -51,11 +51,6 @@ typedef struct Machine_ {
    #endif
 
    memory_t totalMem;
-   memory_t usedMem;
-   memory_t buffersMem;
-   memory_t cachedMem;
-   memory_t sharedMem;
-   memory_t availableMem;
 
    memory_t totalSwap;
    memory_t usedSwap;
@@ -87,6 +82,10 @@ void Machine_delete(Machine* this);
 void Machine_done(Machine* this);
 
 bool Machine_isCPUonline(const Machine* this, unsigned int id);
+
+int Machine_getCPUPhysicalCoreID(const Machine* this, unsigned int id);
+
+int Machine_getCPUThreadIndex(const Machine* this, unsigned int id);
 
 void Machine_populateTablesFromSettings(Machine* this, Settings* settings, Table* processTable);
 

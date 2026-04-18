@@ -18,6 +18,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "FunctionBar.h"
 #include "Hashtable.h"
+#include "LineEditor.h"
 #include "Macros.h"
 #include "ProvideCurses.h"
 #include "Settings.h"
@@ -171,7 +172,7 @@ ScreenNameListItem* ScreenNameListItem_new(const char* value, ScreenSettings* ss
 }
 
 static const char* const ScreenNamesFunctions[] = {"      ", "      ", "      ", "      ", "New   ", "      ", "      ", "      ", "      ", "Done  ", NULL};
-static const char* const ScreenNamesRenamingFunctions[] = {"Cancel", "Done  ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", NULL};
+static const char* const ScreenNamesRenamingFunctions[] = {"      ", "Cancel", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 static FunctionBar* ScreenNames_renamingBar = NULL;
 
 void ScreenTabsPanel_cleanup(void) {
@@ -192,7 +193,7 @@ static void ScreenNamesPanel_delete(Object* object) {
       item->ss = NULL;
    }
 
-   /* during renaming the ListItem's value points to our static buffer */
+   /* during renaming the ListItem's value points to the editor buffer */
    if (this->renamingItem)
       this->renamingItem->value = this->saved;
 
@@ -214,46 +215,37 @@ static void renameScreenSettings(ScreenNamesPanel* this, const ListItem* item) {
 static HandlerResult ScreenNamesPanel_eventHandlerRenaming(Panel* super, int ch) {
    ScreenNamesPanel* const this = (ScreenNamesPanel*) super;
 
-   if (ch >= 32 && ch < 127 && ch != '=') {
-      if (this->cursor < SCREEN_NAME_LEN - 1) {
-         this->buffer[this->cursor] = (char)ch;
-         this->cursor++;
-         super->selectedLen = strlen(this->buffer);
-         Panel_setCursorToSelection(super);
-      }
-
-      return HANDLED;
-   }
-
    switch (ch) {
-      case 127:
-      case KEY_BACKSPACE:
-         if (this->cursor > 0) {
-            this->cursor--;
-            this->buffer[this->cursor] = '\0';
-            super->selectedLen = strlen(this->buffer);
-            Panel_setCursorToSelection(super);
-         }
+      case EVENT_SET_SELECTED: {
+         ListItem* item = (ListItem*) Panel_getSelected(super);
+         if (item != this->renamingItem)
+            goto renameFinish;
          break;
+      }
+      case EVENT_PANEL_LOST_FOCUS:
+         goto renameFinish;
       case '\n':
       case '\r':
       case KEY_ENTER:
-      case KEY_F(2): {
+      case KEY_F(10): {
          ListItem* item = (ListItem*) Panel_getSelected(super);
          if (!item)
             break;
          assert(item == this->renamingItem);
+renameFinish:
+         if (!this->renamingItem)
+            break;
          free(this->saved);
-         item->value = xStrdup(this->buffer);
-         this->renamingItem = NULL;
+         this->renamingItem->value = xStrdup(LineEditor_getText(&this->editor));
          super->cursorOn = false;
          Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
          Panel_setDefaultBar(super);
-         renameScreenSettings(this, item);
+         renameScreenSettings(this, (ListItem*) this->renamingItem);
+         this->renamingItem = NULL;
          break;
       }
       case 27: // Esc
-      case KEY_F(1): {
+      case KEY_F(2): {
          ListItem* item = (ListItem*) Panel_getSelected(super);
          if (!item)
             break;
@@ -263,6 +255,17 @@ static HandlerResult ScreenNamesPanel_eventHandlerRenaming(Panel* super, int ch)
          super->cursorOn = false;
          Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
          Panel_setDefaultBar(super);
+         break;
+      }
+      default: {
+         /* Delegate editing keys to LineEditor. Exclude '=' which has special meaning. */
+         if (ch == '=')
+            break;
+         LineEditor_handleKey(&this->editor, ch);
+         super->selectedLen = LineEditor_getCursor(&this->editor);
+         Panel_setCursorToSelection(super);
+         if (this->renamingItem)
+            this->renamingItem->value = LineEditor_getText(&this->editor);
          break;
       }
    }
@@ -281,12 +284,11 @@ static void startRenaming(Panel* super) {
    super->cursorOn = true;
    char* name = item->value;
    this->saved = name;
-   strncpy(this->buffer, name, SCREEN_NAME_LEN);
-   this->buffer[SCREEN_NAME_LEN] = '\0';
-   this->cursor = strlen(this->buffer);
-   item->value = this->buffer;
+   LineEditor_initWithMax(&this->editor, SCREEN_NAME_LEN - 1);
+   LineEditor_setText(&this->editor, name);
+   item->value = LineEditor_getText(&this->editor);
    Panel_setSelectionColor(super, PANEL_EDIT);
-   super->selectedLen = strlen(this->buffer);
+   super->selectedLen = LineEditor_getCursor(&this->editor);
    Panel_setCursorToSelection(super);
    super->currentBar = ScreenNames_renamingBar;
 }
@@ -373,10 +375,9 @@ ScreenNamesPanel* ScreenNamesPanel_new(Settings* settings) {
 
    this->settings = settings;
    this->renamingItem = NULL;
-   memset(this->buffer, 0, sizeof(this->buffer));
+   LineEditor_initWithMax(&this->editor, SCREEN_NAME_LEN - 1);
    this->ds = NULL;
    this->saved = NULL;
-   this->cursor = 0;
    super->cursorOn = false;
    Panel_setHeader(super, "Screens");
 

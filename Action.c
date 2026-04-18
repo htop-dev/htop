@@ -27,7 +27,11 @@ in the source distribution for its full text.
 #include "ListItem.h"
 #include "Macros.h"
 #include "MainPanel.h"
+#include "MemoryMeter.h"
+#include "Object.h"
 #include "OpenFilesScreen.h"
+#include "Panel.h"
+#include "Platform.h"
 #include "Process.h"
 #include "ProcessLocksScreen.h"
 #include "ProvideCurses.h"
@@ -45,6 +49,10 @@ in the source distribution for its full text.
 #if (defined(HAVE_LIBHWLOC) || defined(HAVE_AFFINITY))
 #include "Affinity.h"
 #include "AffinityPanel.h"
+#endif
+
+#if defined(HAVE_BACKTRACE_SCREEN)
+#include "BacktraceScreen.h"
 #endif
 
 
@@ -604,6 +612,35 @@ static Htop_Reaction actionShowLocks(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
+#if defined(HAVE_BACKTRACE_SCREEN)
+static Htop_Reaction actionBacktrace(State *st) {
+   Process* selectedProcess = (Process *) Panel_getSelected((Panel *)st->mainPanel);
+   const Vector* allProcesses = st->mainPanel->super.items;
+
+   Vector* processes = Vector_new(Class(Process), false, VECTOR_DEFAULT_SIZE);
+   if (!Process_isUserlandThread(selectedProcess)) {
+      for (int i = 0; i < Vector_size(allProcesses); i++) {
+         Process* process = (Process *)Vector_get(allProcesses, i);
+         if (Process_getThreadGroup(process) == Process_getThreadGroup(selectedProcess)) {
+            Vector_add(processes, process);
+         }
+      }
+   } else {
+      Vector_add(processes, selectedProcess);
+   }
+
+   BacktracePanel* panel = BacktracePanel_new(processes, st->host->settings);
+   ScreenManager* screenManager = ScreenManager_new(NULL, st->host, st, false);
+   ScreenManager_add(screenManager, (Panel *)panel, 0);
+
+   ScreenManager_run(screenManager, NULL, NULL, NULL);
+   BacktracePanel_delete((Object *)panel);
+   ScreenManager_delete(screenManager);
+
+   return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
+}
+#endif
+
 static Htop_Reaction actionStrace(State* st) {
    if (!Action_writeableProcess(st))
       return HTOP_OK;
@@ -688,6 +725,9 @@ static const struct {
 #if (defined(HAVE_LIBHWLOC) || defined(HAVE_AFFINITY))
    { .key = "      a: ", .roInactive = true, .info = "set CPU affinity" },
 #endif
+#if defined(HAVE_BACKTRACE_SCREEN)
+   { .key = "      b: ", .roInactive = false, .info = "show process backtrace" },
+#endif
    { .key = "      e: ", .roInactive = false, .info = "show process environment" },
    { .key = "      i: ", .roInactive = true,  .info = "set IO priority" },
    { .key = "      l: ", .roInactive = true,  .info = "list open files with lsof" },
@@ -742,24 +782,32 @@ static Htop_Reaction actionHelp(State* st) {
       addbartext(CRT_colors[CPU_IOWAIT], "/", "io-wait");
       addbartext(CRT_colors[BAR_SHADOW], " ", "used%");
    } else {
-      addbartext(CRT_colors[CPU_GUEST], "/", "guest");
-      addbartext(CRT_colors[BAR_SHADOW], "                            ", "used%");
+      addbartext(CRT_colors[CPU_GUEST], "/", "virt");
+      addbartext(CRT_colors[BAR_SHADOW], "                             ", "used%");
    }
    addattrstr(CRT_colors[BAR_BORDER], "]");
 
    attrset(CRT_colors[DEFAULT_COLOR]);
    mvaddstr(line++, 0, "Memory bar:    ");
    addattrstr(CRT_colors[BAR_BORDER], "[");
-   addbartext(CRT_colors[MEMORY_USED], "", "used");
-   addbartext(CRT_colors[MEMORY_SHARED], "/", "shared");
-   addbartext(CRT_colors[MEMORY_COMPRESSED], "/", "compressed");
-   if (st->host->settings->showCachedMemory) {
-      addbartext(CRT_colors[MEMORY_BUFFERS_TEXT], "/", "buffers");
-      addbartext(CRT_colors[MEMORY_CACHE], "/", "cache");
-      addbartext(CRT_colors[BAR_SHADOW], "          ", "used");
-   } else {
-      addbartext(CRT_colors[BAR_SHADOW], "                        ", "used");
+   // memory classes are OS-specific and provided in their <os>/Platform.c implementation
+   // ideal length of memory bar == 56 chars. Any length < 45 requires padding to 45.
+   // [0        1         2         3         4         5      ]
+   // [12345678901234567890123456789012345678901234567890123456]
+   // [                                            ^    5      ]
+   // [class1/class2/class3/.../classN               used/total]
+   int barTxtLen = 0;
+   for (unsigned int i = 0; i < Platform_numberOfMemoryClasses; i++) {
+      if (!st->host->settings->showCachedMemory && Platform_memoryClasses[i].countsAsCache)
+         continue; // skip reclaimable cache memory classes if "show cached memory" is not ticked
+      if (!Platform_memoryClasses[i].countsAsUsed && !Platform_memoryClasses[i].countsAsCache)
+         continue; // skip available memory class (special case for the Linux platform)
+      addbartext(CRT_colors[Platform_memoryClasses[i].color], (i == 0 ? "" : "/"), Platform_memoryClasses[i].label);
+      barTxtLen += (i == 0 ? 0 : 1) + strlen (Platform_memoryClasses[i].label);
    }
+   for (int i = barTxtLen; i < 45; i++)
+      addattrstr(CRT_colors[BAR_SHADOW], " "); // pad to 45 chars if necessary
+   addbartext(CRT_colors[BAR_SHADOW], " ", "used");
    addbartext(CRT_colors[BAR_SHADOW], "/", "total");
    addattrstr(CRT_colors[BAR_BORDER], "]");
 
@@ -931,6 +979,9 @@ void Action_setBindings(Htop_Action* keys) {
    keys['\\'] = actionIncFilter;
    keys[']'] = actionHigherPriority;
    keys['a'] = actionSetAffinity;
+#if defined(HAVE_BACKTRACE_SCREEN)
+   keys['b'] = actionBacktrace;
+#endif
    keys['c'] = actionTagAllChildren;
    keys['e'] = actionShowEnvScreen;
    keys['h'] = actionHelp;

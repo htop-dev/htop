@@ -36,6 +36,13 @@ static const int CPUMeter_attributes[] = {
    CPU_IOWAIT
 };
 
+static const int CPUMeter_attributes_summary[] = {
+   CPU_NICE,
+   CPU_NORMAL,
+   CPU_SYSTEM,
+   CPU_GUEST
+};
+
 typedef struct CPUMeterData_ {
    unsigned int cpus;
    Meter** meters;
@@ -48,7 +55,21 @@ static void CPUMeter_init(Meter* this) {
       Meter_setCaption(this, "Avg");
    } else if (host->activeCPUs > 1) {
       char caption[10];
-      xSnprintf(caption, sizeof(caption), "%3u", Settings_cpuId(host->settings, cpu - 1));
+      if (host->settings->showCPUSMTLabels) {
+         int coreID = Machine_getCPUPhysicalCoreID(host, cpu - 1);
+         int threadIndex = Machine_getCPUThreadIndex(host, cpu - 1);
+         char threadLetter = 'a' + (char)(threadIndex % 26);
+         // if we have more than 26 threads per core, then add the capital
+         // letters into the mix. If we have more than 52 threads per core, then
+         // some letters will still be repeated, but they'll be far apart from
+         // each other.
+         if ((threadIndex % 52) > 26) {
+             threadLetter -= ('a' - 'A');
+         }
+         xSnprintf(caption, sizeof(caption), "%2d%c", Settings_cpuId(host->settings, coreID), threadLetter);
+      } else {
+         xSnprintf(caption, sizeof(caption), "%3u", Settings_cpuId(host->settings, cpu - 1));
+      }
       Meter_setCaption(this, caption);
    }
 }
@@ -58,7 +79,7 @@ static void CPUMeter_getUiName(const Meter* this, char* buffer, size_t length) {
    assert(length > 0);
 
    if (this->param > 0)
-      xSnprintf(buffer, length, "%s %u", Meter_uiName(this), this->param);
+      xSnprintf(buffer, length, "%s %u", Meter_uiName(this), Settings_cpuId(this->host->settings, this->param - 1));
    else
       xSnprintf(buffer, length, "%s", Meter_uiName(this));
 }
@@ -68,6 +89,11 @@ static void CPUMeter_updateValues(Meter* this) {
 
    const Machine* host = this->host;
    const Settings* settings = host->settings;
+   if (settings->detailedCPUTime) {
+      this->curAttributes = CPUMeter_attributes;
+   } else {
+      this->curAttributes = CPUMeter_attributes_summary;
+   }
 
    unsigned int cpu = this->param;
    if (cpu > host->existingCPUs) {

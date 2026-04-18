@@ -53,6 +53,9 @@ typedef struct SolarisMachine_ {
    size_t pageSize;
    size_t pageSizeKB;
 
+   memory_t usedMem;
+   memory_t lockedMem;
+
    ZfsArcStats zfs;
 } SolarisMachine;
 

@@ -67,9 +67,9 @@ static void TraceScreen_draw(InfoScreen* this) {
 }
 
 bool TraceScreen_forkTracer(TraceScreen* this) {
-   int fdpair[2] = {0, 0};
+   int fdpair[2] = {-1, -1};
 
-   if (pipe(fdpair) == -1)
+   if (pipe(fdpair) < 0)
       return false;
 
    if (fcntl(fdpair[0], F_SETFL, O_NONBLOCK) < 0)
@@ -79,7 +79,7 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
       goto err;
 
    pid_t child = fork();
-   if (child == -1)
+   if (child < 0)
       goto err;
 
    if (child == 0) {

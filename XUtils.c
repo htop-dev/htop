@@ -177,6 +177,29 @@ char** String_split(const char* s, char sep, size_t* n) {
    return out;
 }
 
+/* same as String_split() but only split on first occurrence of sep */
+char** String_splitFirst(const char* s, char sep, size_t* n) {
+   char** out = xCalloc(3, sizeof(char*));
+   size_t ctr = 0;
+   const char* where;
+   if ((where = strchr(s, sep)) != NULL) {
+      size_t size = (size_t)(where - s);
+      out[ctr] = xStrndup(s, size);
+      ctr++;
+      s += size + 1;
+   }
+   if (s[0] != '\0') {
+      out[ctr] = xStrdup(s);
+      ctr++;
+   }
+   out[ctr] = NULL;
+
+   if (n)
+      *n = ctr;
+
+   return out;
+}
+
 void String_freeArray(char** s) {
    if (!s) {
       return;

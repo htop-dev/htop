@@ -217,7 +217,7 @@ static void updateViaExec(bool user) {
    if (Settings_isReadonly())
       return;
 
-   int fdpair[2];
+   int fdpair[2] = {-1, -1};
    if (pipe(fdpair) < 0)
       return;
 
@@ -268,6 +268,7 @@ static void updateViaExec(bool user) {
 
    char lineBuffer[128];
    while (fgets(lineBuffer, sizeof(lineBuffer), commandOutput)) {
+      char* endptr;
       if (String_startsWith(lineBuffer, "SystemState=")) {
          char* newline = strchr(lineBuffer + strlen("SystemState="), '\n');
          if (newline) {
@@ -275,13 +276,21 @@ static void updateViaExec(bool user) {
          }
          free_and_xStrdup(&ctx->systemState, lineBuffer + strlen("SystemState="));
       } else if (String_startsWith(lineBuffer, "NFailedUnits=")) {
-         ctx->nFailedUnits = strtoul(lineBuffer + strlen("NFailedUnits="), NULL, 10);
+         unsigned long value = strtoul(lineBuffer + strlen("NFailedUnits="), &endptr, 10);
+         if (value <= UINT_MAX && *endptr == '\0')
+            ctx->nFailedUnits = (unsigned int) value;
       } else if (String_startsWith(lineBuffer, "NNames=")) {
-         ctx->nNames = strtoul(lineBuffer + strlen("NNames="), NULL, 10);
+         unsigned long value = strtoul(lineBuffer + strlen("NNames="), &endptr, 10);
+         if (value <= UINT_MAX && *endptr == '\0')
+            ctx->nNames = (unsigned int) value;
       } else if (String_startsWith(lineBuffer, "NJobs=")) {
-         ctx->nJobs = strtoul(lineBuffer + strlen("NJobs="), NULL, 10);
+         unsigned long value = strtoul(lineBuffer + strlen("NJobs="), &endptr, 10);
+         if (value <= UINT_MAX && *endptr == '\0')
+            ctx->nJobs = (unsigned int) value;
       } else if (String_startsWith(lineBuffer, "NInstalledJobs=")) {
-         ctx->nInstalledJobs = strtoul(lineBuffer + strlen("NInstalledJobs="), NULL, 10);
+         unsigned long value = strtoul(lineBuffer + strlen("NInstalledJobs="), &endptr, 10);
+         if (value <= UINT_MAX && *endptr == '\0')
+            ctx->nInstalledJobs = (unsigned int) value;
       }
    }
 
@@ -329,7 +338,7 @@ static int valueDigitColor(unsigned int value) {
 }
 
 
-static void _SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* out, SystemdMeterContext_t* ctx) {
+static void SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* out, SystemdMeterContext_t* ctx) {
    char buffer[16];
    int len;
    int color = METER_VALUE_ERROR;
@@ -387,12 +396,12 @@ static void _SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* ou
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " jobs)");
 }
 
-static void SystemdMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
-   _SystemdMeter_display(cast, out, &ctx_system);
+static void SystemdMeter_display_system(ATTR_UNUSED const Object* cast, RichString* out) {
+   SystemdMeter_display(cast, out, &ctx_system);
 }
 
-static void SystemdUserMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
-   _SystemdMeter_display(cast, out, &ctx_user);
+static void SystemdMeter_display_user(ATTR_UNUSED const Object* cast, RichString* out) {
+   SystemdMeter_display(cast, out, &ctx_user);
 }
 
 static const int SystemdMeter_attributes[] = {
@@ -403,7 +412,7 @@ const MeterClass SystemdMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
-      .display = SystemdMeter_display
+      .display = SystemdMeter_display_system,
    },
    .updateValues = SystemdMeter_updateValues,
    .done = SystemdMeter_done,
@@ -422,7 +431,7 @@ const MeterClass SystemdUserMeter_class = {
    .super = {
       .extends = Class(Meter),
       .delete = Meter_delete,
-      .display = SystemdUserMeter_display
+      .display = SystemdMeter_display_user,
    },
    .updateValues = SystemdMeter_updateValues,
    .done = SystemdMeter_done,

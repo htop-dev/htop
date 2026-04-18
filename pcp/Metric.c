@@ -173,12 +173,12 @@ pmAtomValue* Metric_instance_milliseconds(Metric metric, int inst, int offset, p
  *
  * Start it off by passing offset -1 into the routine.
  */
-bool Metric_iterate(Metric metric, int* instp, int* offsetp) {
+bool Metric_iterate(Metric metric, int* instp, int* offsetp, size_t entrylen) {
    if (!pcp->result)
       return false;
 
    pmValueSet* vset = pcp->result->vset[metric];
-   if (!vset || vset->numval <= 0)
+   if (!vset || vset->numval <= 0 || (size_t)vset->numval > LONG_MAX / entrylen)
       return false;
 
    int offset = *offsetp;

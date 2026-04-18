@@ -146,7 +146,7 @@ static void PCPProcess_rowWriteField(const Row* super, RichString* str, ProcessF
    case M_LRS: Row_printBytes(str, pp->m_lrs, coloring); return;
    case M_TRS: Row_printBytes(str, pp->m_trs, coloring); return;
    case M_SHARE: Row_printBytes(str, pp->m_share, coloring); return;
-   case M_PRIV: Row_printBytes(str, pp->m_priv, coloring); return;
+   case M_PRIV: Row_printKBytes(str, pp->m_priv, coloring); return;
    case M_PSS: Row_printKBytes(str, pp->m_pss, coloring); return;
    case M_SWAP: Row_printKBytes(str, pp->m_swap, coloring); return;
    case M_PSSWP: Row_printKBytes(str, pp->m_psswp, coloring); return;

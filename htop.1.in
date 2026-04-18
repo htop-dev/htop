@@ -279,6 +279,10 @@ Pause/resume process updates.
 .B m
 Merge exe, comm and cmdline, where applicable. (This is a toggle key.)
 .TP
+.B b
+Show the backtrace of a process. (This feature requires enabling
+at compile time.)
+.TP
 .B Ctrl-L
 Refresh: redraw screen and recalculate values.
 .TP
@@ -429,6 +433,10 @@ process's used physical memory).
 .TP
 .B M_SHARE (SHR)
 The size of the process's shared pages.
+.TP
+.B M_PRIV (PRIV)
+The private memory size of the process (i.e. the resident set size minus the
+shared memory size).
 .TP
 .B M_TRS (CODE)
 The text resident set size of the process (i.e. the size of the process's

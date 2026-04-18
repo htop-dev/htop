@@ -65,11 +65,14 @@ check_file() {
       }
 
       # Process name = value pairs with whitespace around the equals sign
-      /^[^=]+ = [^=]+$/ {
-         split($0, pair, " = ")
+      /^[^=]+ = .+$/ {
+         npart = split($0, pair, " = ")
 
          name = trim(pair[1])
          value = trim(pair[2])
+         for (i = 3; i <= npart; i++) {
+            value = value " " trim(pair[i])
+         }
          group = ""
 
          known = 0

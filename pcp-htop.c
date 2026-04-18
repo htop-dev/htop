@@ -19,6 +19,13 @@ const char* program = "pcp-htop";
 int main(int argc, char** argv) {
    pmSetProgname(program);
 
+#ifdef PCP_DERIVED_OPTION_NOVALUE
+   /*
+    * set OPTION_NOVALUE to map undefined metric operands to novalue()
+    */
+    (void)pmSetDerivedControl(PCP_DERIVED_OPTION_NOVALUE, 1);
+#endif
+
    /* extract environment variables */
    opts.flags |= PM_OPTFLAG_ENV_ONLY;
    (void)pmGetOptions(argc, argv, &opts);

@@ -252,3 +252,5 @@ If you open a PR you need to follow up to resolve any comments/change requests.
 Otherwise it may be closed without merging.
 
 Rebase early. Rebase often.
+
+Please check the [AI-Assisted Contributions Policy](ai-contributions-policy.md) for requirements and mandatory disclosure in your commits and PRs if you use AI assistance in creating your work.

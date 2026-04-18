@@ -18,11 +18,8 @@ typedef struct FunctionBar_ {
       const char* const* constKeys;
    } keys;
    int* events;
-   uint32_t size;
    bool staticData;
 } FunctionBar;
-
-#define FUNCTIONBAR_MAXEVENTS 15
 
 FunctionBar* FunctionBar_newEnterEsc(const char* enter, const char* esc);
 
@@ -37,6 +34,8 @@ int FunctionBar_draw(const FunctionBar* this);
 int FunctionBar_drawExtra(const FunctionBar* this, const char* buffer, int attr, bool setCursor);
 
 void FunctionBar_append(const char* buffer, int attr);
+
+int FunctionBar_getWidth(const FunctionBar* this);
 
 int FunctionBar_synthesizeEvent(const FunctionBar* this, int pos);
 

@@ -473,7 +473,7 @@ Meter* Meter_new(const Machine* host, unsigned int param, const MeterClass* type
 int Meter_humanUnit(char* buffer, double value, size_t size) {
    size_t i = 0;
 
-   assert(value >= 0.0);
+   assert(value >= 0.0 || isNaN(value));
    while (value >= ONE_K) {
       if (i >= ARRAYSIZE(unitPrefixes) - 1) {
          if (value > 9999.0) {

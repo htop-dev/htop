@@ -47,6 +47,8 @@ typedef struct MaskItem_ {
 
 static void MaskItem_delete(Object* cast) {
    MaskItem* this = (MaskItem*) cast;
+   assert(this != NULL);
+
    free(this->text);
    free(this->indent);
    Vector_delete(this->children);
@@ -59,7 +61,8 @@ static void MaskItem_delete(Object* cast) {
 
 static void MaskItem_display(const Object* cast, RichString* out) {
    const MaskItem* this = (const MaskItem*)cast;
-   assert (this != NULL);
+   assert(this != NULL);
+
    RichString_appendAscii(out, CRT_colors[CHECK_BOX], "[");
    if (this->value == 2) {
       RichString_appendAscii(out, CRT_colors[CHECK_MARK], "x");
@@ -137,6 +140,8 @@ typedef struct AffinityPanel_ {
 
 static void AffinityPanel_delete(Object* cast) {
    AffinityPanel* this = (AffinityPanel*) cast;
+   assert(this != NULL);
+
    Vector_delete(this->cpuids);
    #ifdef HAVE_LIBHWLOC
    hwloc_bitmap_free(this->workCpuset);
@@ -197,6 +202,7 @@ static void AffinityPanel_update(AffinityPanel* this, bool keepSelected) {
 
 static HandlerResult AffinityPanel_eventHandler(Panel* super, int ch) {
    AffinityPanel* this = (AffinityPanel*) super;
+   assert(this != NULL);
 
    HandlerResult result = IGNORED;
    MaskItem* selected = (MaskItem*) Panel_getSelected(super);
@@ -373,6 +379,7 @@ static const int AffinityPanelEvents[] = {13, 27, KEY_F(1), KEY_F(2), KEY_F(3)};
 Panel* AffinityPanel_new(Machine* host, const Affinity* affinity, int* width) {
    AffinityPanel* this = AllocThis(AffinityPanel);
    Panel* super = &this->super;
+   assert(this != NULL);
 
    Panel_init(super, 1, 1, 1, 1, Class(MaskItem), false, FunctionBar_new(AffinityPanelFunctions, AffinityPanelKeys, AffinityPanelEvents));
 

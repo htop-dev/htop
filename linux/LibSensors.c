@@ -206,6 +206,14 @@ int LibSensors_countCCDs(void) {
    return ccds;
 }
 
+static int LibSensors_stringToID(const char* str) {
+   char* endptr;
+   unsigned long parsedID = strtoul(str, &endptr, 10);
+   if (parsedID >= INT_MAX || *endptr != '\0')
+      return -1;
+   return (int)parsedID;
+}
+
 void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, unsigned int activeCPUs) {
    assert(existingCPUs > 0 && existingCPUs < 16384);
 
@@ -344,17 +352,21 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
          char *label = sym_sensors_get_label(chip, feature);
          if (label) {
             bool skip = true;
+            int ID;
             /* Intel coretemp names, labels mention package and physical id */
             if (String_startsWith(label, "Package id ")) {
-               physicalID = strtoul(label + strlen("Package id "), NULL, 10);
+               if ((ID = LibSensors_stringToID(label + strlen("Package id "))) != -1)
+                  physicalID = ID;
             } else if (String_startsWith(label, "Physical id ")) {
-               physicalID = strtoul(label + strlen("Physical id "), NULL, 10);
+               if ((ID = LibSensors_stringToID(label + strlen("Physical id "))) != -1)
+                  physicalID = ID;
             } else if (String_startsWith(label, "Core ")) {
-               int coreID = strtoul(label + strlen("Core "), NULL, 10);
-               for (size_t i = 1; i < existingCPUs + 1; i++) {
-                  if (cpus[i].physicalID == physicalID && cpus[i].coreID == coreID) {
-                     data[i] = temp;
-                     coreTempCount++;
+               if ((ID = LibSensors_stringToID(label + strlen("Core "))) != -1) {
+                  for (size_t i = 1; i < existingCPUs + 1; i++) {
+                     if (cpus[i].physicalID == physicalID && cpus[i].coreID == ID) {
+                        data[i] = temp;
+                        coreTempCount++;
+                     }
                   }
                }
             }

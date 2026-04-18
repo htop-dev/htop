@@ -42,17 +42,25 @@ bool Machine_isCPUonline(const Machine* host, unsigned int id) {
 }
 
 void Machine_scan(Machine* super) {
+   UnsupportedMachine* this = (UnsupportedMachine*) super;
    super->existingCPUs = 1;
    super->activeCPUs = 1;
-
-   super->totalMem = 0;
-   super->usedMem = 0;
-   super->buffersMem = 0;
-   super->cachedMem = 0;
-   super->sharedMem = 0;
-   super->availableMem = 0;
-
    super->totalSwap = 0;
    super->usedSwap = 0;
    super->cachedSwap = 0;
+   super->totalMem = 0;
+   this->usedMem = 0;
+   this->cachedMem = 0;
+}
+
+int Machine_getCPUPhysicalCoreID(const Machine* host, unsigned int id) {
+   assert(id < host->existingCPUs);
+   (void) host;
+   return (int)id;
+}
+
+int Machine_getCPUThreadIndex(const Machine* host, unsigned int id) {
+   assert(id < host->existingCPUs);
+   (void) host; (void) id;
+   return 0;
 }

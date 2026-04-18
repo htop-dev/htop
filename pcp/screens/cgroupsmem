@@ -38,7 +38,7 @@ swap.heading = SWAP
 swap.metric = cgroup.memory.stat.swap
 
 pgfault.heading = FAULTS
-pgfault.metric = cgroup.memory.stat.pgfaults
+pgfault.metric = cgroup.memory.stat.pgfault
 
 name.heading = Control group
 name.caption = Control group name

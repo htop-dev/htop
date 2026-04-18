@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "CRT.h"
 #include "Macros.h"
@@ -21,7 +22,7 @@ in the source distribution for its full text.
 
 static void OptionItem_delete(Object* cast) {
    OptionItem* this = (OptionItem*)cast;
-   assert (this != NULL);
+   assert(this != NULL);
 
    free(this->text);
    free(this);
@@ -29,14 +30,14 @@ static void OptionItem_delete(Object* cast) {
 
 static void TextItem_display(const Object* cast, RichString* out) {
    const TextItem* this = (const TextItem*)cast;
-   assert (this != NULL);
+   assert(this != NULL);
 
    RichString_appendWide(out, CRT_colors[HELP_BOLD], this->super.text);
 }
 
 static void CheckItem_display(const Object* cast, RichString* out) {
    const CheckItem* this = (const CheckItem*)cast;
-   assert (this != NULL);
+   assert(this != NULL);
 
    RichString_writeAscii(out, CRT_colors[CHECK_BOX], "[");
    if (CheckItem_get(this)) {
@@ -50,19 +51,24 @@ static void CheckItem_display(const Object* cast, RichString* out) {
 
 static void NumberItem_display(const Object* cast, RichString* out) {
    const NumberItem* this = (const NumberItem*)cast;
-   assert (this != NULL);
+   assert(this != NULL);
 
    char buffer[12];
    RichString_writeAscii(out, CRT_colors[CHECK_BOX], "[");
    int written;
-   if (this->scale < 0) {
+   if (this->editing) {
+      written = this->editLen;
+      RichString_appendnAscii(out, CRT_colors[CHECK_MARK], this->editBuffer, written);
+   } else if (this->scale < 0) {
       written = xSnprintf(buffer, sizeof(buffer), "%.*f", -this->scale, pow(10, this->scale) * NumberItem_get(this));
+      RichString_appendnAscii(out, CRT_colors[CHECK_MARK], buffer, written);
    } else if (this->scale > 0) {
       written = xSnprintf(buffer, sizeof(buffer), "%d", (int) (pow(10, this->scale) * NumberItem_get(this)));
+      RichString_appendnAscii(out, CRT_colors[CHECK_MARK], buffer, written);
    } else {
       written = xSnprintf(buffer, sizeof(buffer), "%d", NumberItem_get(this));
+      RichString_appendnAscii(out, CRT_colors[CHECK_MARK], buffer, written);
    }
-   RichString_appendnAscii(out, CRT_colors[CHECK_MARK], buffer, written);
    RichString_appendAscii(out, CRT_colors[CHECK_BOX], "]");
    for (int i = written; i < 5; i++) {
       RichString_appendAscii(out, CRT_colors[CHECK_BOX], " ");
@@ -162,6 +168,10 @@ NumberItem* NumberItem_newByRef(const char* text, int* ref, int scale, int min, 
    this->scale = scale;
    this->min = min;
    this->max = max;
+   this->editing = false;
+   this->editLen = 0;
+   this->editBuffer[0] = '\0';
+   this->savedValue = 0;
    return this;
 }
 
@@ -175,6 +185,10 @@ NumberItem* NumberItem_newByVal(const char* text, int value, int scale, int min,
    this->scale = scale;
    this->min = min;
    this->max = max;
+   this->editing = false;
+   this->editLen = 0;
+   this->editBuffer[0] = '\0';
+   this->savedValue = 0;
    return this;
 }
 
@@ -213,5 +227,99 @@ void NumberItem_toggle(NumberItem* this) {
          this->value = this->min;
       else
          this->value += 1;
+   }
+}
+
+void NumberItem_startEditing(NumberItem* this) {
+   this->savedValue = NumberItem_get(this);
+   this->editing = true;
+   this->editLen = 0;
+   this->editBuffer[0] = '\0';
+}
+
+void NumberItem_startEditingFromValue(NumberItem* this) {
+   this->savedValue = NumberItem_get(this);
+   this->editing = true;
+   char tmp[NUMBERITEM_EDIT_MAX + 1];
+   int len;
+   /* Format the initial edit buffer using scale for decimal display */
+   if (this->scale < 0) {
+      len = xSnprintf(tmp, sizeof(tmp), "%.*f", -this->scale, pow(10, this->scale) * this->savedValue);
+   } else {
+      len = xSnprintf(tmp, sizeof(tmp), "%d", this->savedValue);
+   }
+   this->editLen = MINIMUM(len, NUMBERITEM_EDIT_MAX);
+   memcpy(this->editBuffer, tmp, this->editLen);
+   this->editBuffer[this->editLen] = '\0';
+}
+
+void NumberItem_cancelEditing(NumberItem* this) {
+   this->editing = false;
+   this->editLen = 0;
+   this->editBuffer[0] = '\0';
+}
+
+bool NumberItem_applyEditing(NumberItem* this) {
+   this->editing = false;
+   if (this->editLen == 0) {
+      this->editBuffer[0] = '\0';
+      return false;
+   }
+   this->editBuffer[this->editLen] = '\0';
+   int newValue;
+   char* endptr;
+   if (this->scale < 0) {
+      double displayValue = strtod(this->editBuffer, &endptr);
+      if (endptr == this->editBuffer) {
+         this->editLen = 0;
+         this->editBuffer[0] = '\0';
+         return false;
+      }
+      newValue = (int) round(displayValue / pow(10, this->scale));
+   } else {
+      newValue = (int) strtol(this->editBuffer, &endptr, 10);
+      if (endptr == this->editBuffer) {
+         this->editLen = 0;
+         this->editBuffer[0] = '\0';
+         return false;
+      }
+   }
+   newValue = CLAMP(newValue, this->min, this->max);
+   if (this->ref) {
+      *(this->ref) = newValue;
+   } else {
+      this->value = newValue;
+   }
+   this->editLen = 0;
+   this->editBuffer[0] = '\0';
+   return true;
+}
+
+bool NumberItem_addChar(NumberItem* this, char c) {
+   if (c == ',') {
+      c = '.';
+   }
+   if (c == '.') {
+      if (this->scale >= 0) {
+         return false;
+      }
+      if (memchr(this->editBuffer, '.', this->editLen) != NULL) {
+         return false;
+      }
+   } else if (c < '0' || c > '9') {
+      return false;
+   }
+   if (this->editLen >= NUMBERITEM_EDIT_MAX) {
+      return false;
+   }
+   this->editBuffer[this->editLen++] = c;
+   this->editBuffer[this->editLen] = '\0';
+   return true;
+}
+
+void NumberItem_deleteChar(NumberItem* this) {
+   if (this->editLen > 0) {
+      this->editLen--;
+      this->editBuffer[this->editLen] = '\0';
    }
 }

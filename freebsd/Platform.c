@@ -99,6 +99,26 @@ const SignalItem Platform_signals[] = {
 
 const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 
+enum {
+   MEMORY_CLASS_WIRED = 0,
+   MEMORY_CLASS_BUFFERS,
+   MEMORY_CLASS_ACTIVE,
+   MEMORY_CLASS_LAUNDRY,
+   MEMORY_CLASS_INACTIVE,
+   MEMORY_CLASS_ARC,
+}; // N.B. the chart will display categories in this order
+
+const MemoryClass Platform_memoryClasses[] = {
+   [MEMORY_CLASS_WIRED] = { .label = "wired", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_1 },
+   [MEMORY_CLASS_BUFFERS] = { .label = "buffers", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_2 },
+   [MEMORY_CLASS_ACTIVE] = { .label = "active", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_3 },
+   [MEMORY_CLASS_LAUNDRY] = { .label = "laundry", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_4 },
+   [MEMORY_CLASS_INACTIVE] = { .label = "inactive", .countsAsUsed = false, .countsAsCache = true, .color = MEMORY_5 },
+   [MEMORY_CLASS_ARC] = { .label = "ARC", .countsAsUsed = false, .countsAsCache = true, .color = MEMORY_6 },
+};
+
+const unsigned int Platform_numberOfMemoryClasses = ARRAYSIZE(Platform_memoryClasses);
+
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
@@ -230,21 +250,25 @@ void Platform_setMemoryValues(Meter* this) {
    const FreeBSDMachine* fhost = (const FreeBSDMachine*) host;
 
    this->total = host->totalMem;
-   this->values[MEMORY_METER_USED] = host->usedMem;
-   this->values[MEMORY_METER_SHARED] = host->sharedMem;
-   // this->values[MEMORY_METER_COMPRESSED] = "compressed memory, like zswap on linux"
-   this->values[MEMORY_METER_BUFFERS] = host->buffersMem;
-   this->values[MEMORY_METER_CACHE] = host->cachedMem;
-   // this->values[MEMORY_METER_AVAILABLE] = "available memory"
+   if (host->settings->showCachedMemory) {
+      this->values[MEMORY_CLASS_WIRED]    = fhost->wiredMem;
+      this->values[MEMORY_CLASS_BUFFERS]  = fhost->buffersMem;
+   } else { // if showCachedMemory is disabled, merge buffers into the wired pages
+      this->values[MEMORY_CLASS_WIRED]    = fhost->wiredMem + fhost->buffersMem;
+      this->values[MEMORY_CLASS_BUFFERS]  = 0;
+   }
+   this->values[MEMORY_CLASS_ACTIVE]   = fhost->activeMem;
+   this->values[MEMORY_CLASS_LAUNDRY]  = fhost->laundryMem;
+   this->values[MEMORY_CLASS_INACTIVE] = fhost->inactiveMem;
 
    if (fhost->zfs.enabled) {
       // ZFS does not shrink below the value of zfs_arc_min.
       unsigned long long int shrinkableSize = 0;
       if (fhost->zfs.size > fhost->zfs.min)
          shrinkableSize = fhost->zfs.size - fhost->zfs.min;
-      this->values[MEMORY_METER_USED] -= shrinkableSize;
-      this->values[MEMORY_METER_CACHE] += shrinkableSize;
-      // this->values[MEMORY_METER_AVAILABLE] += shrinkableSize;
+      this->values[MEMORY_CLASS_ARC] = shrinkableSize;
+   } else {
+      this->values[MEMORY_CLASS_ARC] = 0;
    }
 }
 
@@ -253,8 +277,6 @@ void Platform_setSwapValues(Meter* this) {
 
    this->total = host->totalSwap;
    this->values[SWAP_METER_USED] = host->usedSwap;
-   // this->values[SWAP_METER_CACHE] = "pages that are both in swap and RAM, like SwapCached on linux"
-   // this->values[SWAP_METER_FRONTSWAP] = "pages that are accounted to swap but stored elsewhere, like frontswap on linux"
 }
 
 void Platform_setZfsArcValues(Meter* this) {

@@ -29,6 +29,8 @@ in the source distribution for its full text.
 #include "XUtils.h"
 
 
+static const char* const AvailableMetersFunctions[] = {"      ", "      ", "      ", "      ", "Add Lt", "Add Rt", "      ", "      ", "      ", "Done  ", NULL};
+
 static void AvailableMetersPanel_delete(Object* object) {
    AvailableMetersPanel* this = (AvailableMetersPanel*) object;
    free(this->meterPanels);
@@ -40,7 +42,6 @@ static inline void AvailableMetersPanel_addMeter(Header* header, MetersPanel* pa
    const Meter* meter = Header_addMeterByClass(header, type, param, column);
    Panel_add((Panel*)panel, (Object*) Meter_toListItem(meter, false));
    Panel_setSelected((Panel*)panel, Panel_size((Panel*)panel) - 1);
-   MetersPanel_setMoving(panel, true);
 }
 
 static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
@@ -70,6 +71,7 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
       case KEY_F(6):
       case 'r':
       case 'R':
+      case KEY_RECLICK:
          AvailableMetersPanel_addMeter(header, this->meterPanels[this->columns - 1], Platform_meterTypes[type], param, this->columns - 1);
          result = (KEY_LEFT << 16) | SYNTH_KEY;
          update = true;
@@ -146,7 +148,7 @@ AvailableMetersPanel* AvailableMetersPanel_new(Machine* host, Header* header, si
    AvailableMetersPanel* this = AllocThis(AvailableMetersPanel);
    Panel* super = &this->super;
 
-   FunctionBar* fuBar = FunctionBar_newEnterEsc("Add   ", "Done   ");
+   FunctionBar* fuBar = FunctionBar_new(AvailableMetersFunctions, NULL, NULL);
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
 
    this->host = host;

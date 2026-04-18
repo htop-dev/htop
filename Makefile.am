@@ -55,8 +55,10 @@ myhtopsources = \
 	Header.c \
 	HeaderOptionsPanel.c \
 	HostnameMeter.c \
+	History.c \
 	IncSet.c \
 	InfoScreen.c \
+	LineEditor.c \
 	ListItem.c \
 	LoadAverageMeter.c \
 	Machine.c \
@@ -122,8 +124,10 @@ myhtopheaders = \
 	HeaderLayout.h \
 	HeaderOptionsPanel.h \
 	HostnameMeter.h \
+	History.h \
 	IncSet.h \
 	InfoScreen.h \
+	LineEditor.h \
 	ListItem.h \
 	LoadAverageMeter.h \
 	Machine.h \
@@ -161,7 +165,23 @@ myhtopheaders = \
 	UptimeMeter.h \
 	UsersTable.h \
 	Vector.h \
-	XUtils.h
+	XUtils.h \
+	generic/ProvideDemangle.h
+
+if HAVE_BACKTRACE_SCREEN
+myhtopheaders += \
+	BacktraceScreen.h \
+	generic/UnwindPtrace.h
+
+myhtopsources += \
+	BacktraceScreen.c \
+	generic/UnwindPtrace.c
+
+if HAVE_DEMANGLING
+myhtopheaders += generic/Demangle.h
+myhtopsources += generic/Demangle.c
+endif
+endif
 
 # Linux
 # -----
@@ -180,6 +200,7 @@ linux_platform_headers = \
 	linux/LinuxMachine.h \
 	linux/LinuxProcess.h \
 	linux/LinuxProcessTable.h \
+	linux/OpenRCMeter.h \
 	linux/Platform.h \
 	linux/PressureStallMeter.h \
 	linux/ProcessField.h \
@@ -206,6 +227,7 @@ linux_platform_sources = \
 	linux/LinuxMachine.c \
 	linux/LinuxProcess.c \
 	linux/LinuxProcessTable.c \
+	linux/OpenRCMeter.c \
 	linux/Platform.c \
 	linux/PressureStallMeter.c \
 	linux/SELinuxMeter.c \

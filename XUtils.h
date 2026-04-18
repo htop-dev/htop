@@ -80,17 +80,20 @@ char* String_trim(const char* in);
 ATTR_NONNULL_N(1) ATTR_RETNONNULL
 char** String_split(const char* s, char sep, size_t* n);
 
+ATTR_NONNULL_N(1) ATTR_RETNONNULL
+char** String_splitFirst(const char* s, char sep, size_t* n);
+
 void String_freeArray(char** s);
 
 ATTR_NONNULL ATTR_MALLOC
 char* String_readLine(FILE* fp);
 
 ATTR_NONNULL ATTR_RETNONNULL
-static inline char* String_strchrnul(const char* s, int c) {
+static inline const char* String_strchrnul(const char* s, int c) {
 #ifdef HAVE_STRCHRNUL
    return strchrnul(s, c);
 #else
-   char* result = strchr(s, c);
+   const char* result = strchr(s, c);
    if (result)
       return result;
    return strchr(s, '\0');

@@ -93,12 +93,12 @@ typedef enum ColorElements_ {
    BAR_SHADOW,
    GRAPH_1,
    GRAPH_2,
-   MEMORY_USED,
-   MEMORY_BUFFERS,
-   MEMORY_BUFFERS_TEXT,
-   MEMORY_CACHE,
-   MEMORY_SHARED,
-   MEMORY_COMPRESSED,
+   MEMORY_1,
+   MEMORY_2,
+   MEMORY_3,
+   MEMORY_4,
+   MEMORY_5,
+   MEMORY_6,
    HUGEPAGE_1,
    HUGEPAGE_2,
    HUGEPAGE_3,
@@ -181,6 +181,16 @@ void CRT_handleSIGSEGV(int signal) ATTR_NORETURN;
 #define KEY_FOCUS_IN   (KEY_MAX + 'I')
 #define KEY_FOCUS_OUT  (KEY_MAX + 'O')
 #define KEY_DEL_MAC    127
+#define KEY_CTRL_LEFT  KEY_SLEFT   // we treat them the same
+#define KEY_CTRL_RIGHT KEY_SRIGHT  // we treat them, yup, the same
+
+#ifndef PADPLUS
+# define KEY_PADPLUS   583
+# define KEY_PADMINUS  588
+#else
+# define KEY_PADPLUS   PADPLUS
+# define KEY_PADMINUS  PADMINUS
+#endif
 
 extern char CRT_degreeSign[];
 

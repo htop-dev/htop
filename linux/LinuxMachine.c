@@ -72,9 +72,10 @@ static void LinuxMachine_updateCPUcount(LinuxMachine* this) {
          continue;
 
       char* endp;
-      unsigned long int id = strtoul(entry->d_name + 3, &endp, 10);
-      if (id == ULONG_MAX || endp == entry->d_name + 3 || *endp != '\0')
+      unsigned long int sysid = strtoul(entry->d_name + 3, &endp, 10);
+      if (sysid >= UINT_MAX || endp == entry->d_name + 3 || *endp != '\0')
          continue;
+      unsigned int cpuid = (unsigned int)sysid + 1;
 
 #ifdef HAVE_OPENAT
       int cpuDirFd = openat(xDirfd(dir), entry->d_name, O_DIRECTORY | O_PATH | O_NOFOLLOW);
@@ -88,7 +89,7 @@ static void LinuxMachine_updateCPUcount(LinuxMachine* this) {
       existing++;
 
       /* readdir() iterates with no specific order */
-      unsigned int max = MAXIMUM(existing, id + 1);
+      unsigned int max = MAXIMUM(existing, cpuid);
       if (max > currExisting) {
          this->cpuData = xReallocArrayZero(this->cpuData, currExisting ? (currExisting + 1) : 0, max + /* aggregate */ 1, sizeof(CPUData));
          this->cpuData[0].online = true; /* average is always "online" */
@@ -100,9 +101,9 @@ static void LinuxMachine_updateCPUcount(LinuxMachine* this) {
       /* If the file "online" does not exist or on failure count as active */
       if (res < 1 || buffer[0] != '0') {
          active++;
-         this->cpuData[id + 1].online = true;
+         this->cpuData[cpuid].online = true;
       } else {
-         this->cpuData[id + 1].online = false;
+         this->cpuData[cpuid].online = false;
       }
 
       Compat_openatArgClose(cpuDirFd);
@@ -204,12 +205,12 @@ static void LinuxMachine_scanMemoryInfo(LinuxMachine* this) {
     *    do not show twice by subtracting from Cached and do not subtract twice from used.
     */
    host->totalMem = totalMem;
-   host->cachedMem = cachedMem + sreclaimableMem - sharedMem;
-   host->sharedMem = sharedMem;
+   this->cachedMem = cachedMem + sreclaimableMem - sharedMem;
+   this->sharedMem = sharedMem;
    const memory_t usedDiff = freeMem + cachedMem + sreclaimableMem + buffersMem;
-   host->usedMem = (totalMem >= usedDiff) ? totalMem - usedDiff : totalMem - freeMem;
-   host->buffersMem = buffersMem;
-   host->availableMem = availableMem != 0 ? MINIMUM(availableMem, totalMem) : freeMem;
+   this->usedMem = (totalMem >= usedDiff) ? totalMem - usedDiff : totalMem - freeMem;
+   this->buffersMem = buffersMem;
+   this->availableMem = availableMem != 0 ? MINIMUM(availableMem, totalMem) : freeMem;
    host->totalSwap = swapTotalMem;
    host->usedSwap = swapTotalMem - swapFreeMem - swapCacheMem;
    host->cachedSwap = swapCacheMem;
@@ -407,8 +408,9 @@ static void LinuxMachine_scanCPUTime(LinuxMachine* this) {
    if (!file)
       CRT_fatalError("Cannot open " PROCSTATFILE);
 
-   // Add an extra phantom thread for a later loop
-   bool adjCpuIdProcessed[super->existingCPUs+2];
+   // One thread per CPU thread + one for the average
+   assert(super->existingCPUs < UINT_MAX - 1);
+   bool adjCpuIdProcessed[super->existingCPUs + 1];
    memset(adjCpuIdProcessed, 0, sizeof(adjCpuIdProcessed));
 
    for (unsigned int i = 0; i <= super->existingCPUs; i++) {
@@ -434,6 +436,8 @@ static void LinuxMachine_scanCPUTime(LinuxMachine* this) {
       } else {
          unsigned int cpuid;
          (void) sscanf(buffer, "cpu%4u %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
+         if (cpuid >= super->existingCPUs)
+            break;
          adjCpuId = cpuid + 1;
       }
 
@@ -481,16 +485,10 @@ static void LinuxMachine_scanCPUTime(LinuxMachine* this) {
       adjCpuIdProcessed[adjCpuId] = true;
    }
 
-   // Set the extra phantom thread as checked to make sure to mark trailing offline threads correctly in the loop
-   adjCpuIdProcessed[super->existingCPUs+1] = true;
-   unsigned int lastAdjCpuIdProcessed = 0;
-   for (unsigned int i = 0; i <= super->existingCPUs+1; i++) {
-      if (adjCpuIdProcessed[i]) {
-         for (unsigned int j = lastAdjCpuIdProcessed+1; j < i; j++) {
-            // Skipped an ID, but /proc/stat is ordered => threads in between are offline
-            memset(&(this->cpuData[j]), '\0', sizeof(CPUData));
-         }
-         lastAdjCpuIdProcessed = i;
+   for (unsigned int i = 0; i <= super->existingCPUs; i++) {
+      if (!adjCpuIdProcessed[i]) {
+         // Skipped an ID, but /proc/stat is ordered => threads in between are offline
+         memset(&this->cpuData[i], 0, sizeof(CPUData));
       }
    }
 
@@ -622,7 +620,6 @@ static void scanCPUFrequencyFromCPUinfo(LinuxMachine* this) {
    }
 }
 
-#ifdef HAVE_SENSORS_SENSORS_H
 static void LinuxMachine_fetchCPUTopologyFromCPUinfo(LinuxMachine* this) {
    const Machine* super = &this->super;
 
@@ -714,7 +711,47 @@ static void LinuxMachine_assignCCDs(LinuxMachine* this, int ccds) {
    }
 }
 
-#endif
+static void LinuxMachine_computeThreadIndices(LinuxMachine* this) {
+   /* For SMT/Hyperthreading: compute the thread index for each CPU.
+      CPUs sharing the same physicalID and coreID are SMT siblings.
+      threadIndex is 0 for the first thread, 1 for the second, etc. */
+
+   const Machine* super = &this->super;
+   CPUData* cpus = this->cpuData;
+
+   /* CPU 0 is the average, skip it. For each CPU, count how many
+      lower-indexed CPUs share the same physicalID and coreID. */
+   for (size_t i = 1; i <= super->existingCPUs; i++) {
+      int threadIndex = 0;
+      for (size_t j = 1; j < i; j++) {
+         if (cpus[i].physicalID == cpus[j].physicalID &&
+             cpus[i].coreID == cpus[j].coreID) {
+            threadIndex++;
+         }
+      }
+      cpus[i].threadIndex = threadIndex;
+   }
+
+   /* Now compute a normalized physical core index for each CPU.
+      On many systems, this index will match the following:
+        physicalID*(maxPhysicalID+1)+coreID
+      But there are some systems where this is not true, either
+      because CoreIDs are not contiguous or because cpus are
+      enumerated in an alternative order, or both. */
+   for (size_t i = 1; i <= super->existingCPUs; i++) {
+      cpus[i].coreIndex = 0;
+      for (size_t j = i - 1; j >= 1; j--) {
+         if (cpus[i].threadIndex == cpus[j].threadIndex) {
+            cpus[i].coreIndex = cpus[j].coreIndex + 1;
+            break;
+         }
+      }
+   }
+
+   /* Set core & thread indices to zero for cpu0 (average) */
+   cpus[0].coreIndex = 0;
+   cpus[0].threadIndex = 0;
+}
 
 static void LinuxMachine_scanCPUFrequency(LinuxMachine* this) {
    const Machine* super = &this->super;
@@ -793,12 +830,14 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    // Initialize CPU count
    LinuxMachine_updateCPUcount(this);
 
-   #ifdef HAVE_SENSORS_SENSORS_H
    // Fetch CPU topology
+   int ccds = 0;
    LinuxMachine_fetchCPUTopologyFromCPUinfo(this);
-   int ccds = LibSensors_countCCDs();
-   LinuxMachine_assignCCDs(this, ccds);
+   #ifdef HAVE_SENSORS_SENSORS_H
+   ccds = LibSensors_countCCDs();
    #endif
+   LinuxMachine_assignCCDs(this, ccds);
+   LinuxMachine_computeThreadIndices(this);
 
    return super;
 }
@@ -825,4 +864,18 @@ bool Machine_isCPUonline(const Machine* super, unsigned int id) {
 
    assert(id < super->existingCPUs);
    return this->cpuData[id + 1].online;
+}
+
+int Machine_getCPUPhysicalCoreID(const Machine* super, unsigned int id) {
+   const LinuxMachine* this = (const LinuxMachine*) super;
+
+   assert(id < super->existingCPUs);
+   return this->cpuData[id + 1].coreIndex;
+}
+
+int Machine_getCPUThreadIndex(const Machine* super, unsigned int id) {
+   const LinuxMachine* this = (const LinuxMachine*) super;
+
+   assert(id < super->existingCPUs);
+   return this->cpuData[id + 1].threadIndex;
 }
