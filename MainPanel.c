@@ -105,7 +105,8 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
          reaction = HTOP_REFRESH | HTOP_REDRAW_BAR;
       }
       if (this->inc->found && this->inc->active && !this->inc->active->isFilter) {
-         reaction |= Action_follow(this->state);
+         host->activeTable->following = MainPanel_selectedRow(this);
+         Panel_setSelectionColor(super, PANEL_SELECTION_FOLLOW);
          reaction |= HTOP_KEEP_FOLLOWING;
       }
       result = HANDLED;

@@ -246,8 +246,8 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
       IncSet_deactivate(this, panel);
       doSearch = false;
       filterChanged = mode->isFilter;
-   } else if (ch == 27) {
-      /* Esc aborts */
+   } else if (ch == 27 || ch == KEY_MOUSE || ch == KEY_RECLICK) {
+      /* Esc or panel click aborts */
       if (this->history)
          History_resetPosition(this->history);
       if (mode->isFilter) {
