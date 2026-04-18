@@ -18,10 +18,12 @@ in the source distribution for its full text.
 #include <strings.h>
 
 #include "CRT.h"
+#include "FunctionBar.h"
 #include "ListItem.h"
 #include "Macros.h"
 #include "ProvideCurses.h"
 #include "RichString.h"
+#include "Vector.h"
 #include "XUtils.h"
 
 
@@ -33,7 +35,7 @@ const PanelClass Panel_class = {
    .eventHandler = Panel_selectByTyping,
 };
 
-Panel* Panel_new(int x, int y, int w, int h, const ObjectClass* type, bool owner, FunctionBar* fuBar) {
+Panel* Panel_new(int x, int y, int w, int h, const ObjectClass* type, bool owner, struct FunctionBar_* fuBar) {
    Panel* this;
    this = xMalloc(sizeof(Panel));
    Object_setClass(this, Class(Panel));
@@ -47,7 +49,7 @@ void Panel_delete(Object* cast) {
    free(this);
 }
 
-void Panel_init(Panel* this, int x, int y, int w, int h, const ObjectClass* type, bool owner, FunctionBar* fuBar) {
+void Panel_init(Panel* this, int x, int y, int w, int h, const ObjectClass* type, bool owner, struct FunctionBar_* fuBar) {
    this->x = x;
    this->y = y;
    this->w = w;
@@ -211,7 +213,7 @@ void Panel_setSelected(Panel* this, int selected) {
    }
 }
 
-void Panel_splice(Panel* this, Vector* from) {
+void Panel_splice(Panel* this, struct Vector_* from) {
    assert (this != NULL);
    assert (from != NULL);
 

@@ -11,13 +11,12 @@ in the source distribution for its full text.
 #include <stdbool.h>
 
 #include "CRT.h"
-#include "FunctionBar.h"
 #include "Object.h"
 #include "RichString.h"
-#include "Vector.h"
 
+struct FunctionBar_;
+struct Vector_;
 
-struct Panel_;
 typedef struct Panel_ Panel;
 
 typedef enum HandlerResult_ {
@@ -64,7 +63,7 @@ struct Panel_ {
    Object super;
    int x, y, w, h;
    int cursorX, cursorY;
-   Vector* items;
+   struct Vector_* items;
    int selected;
    int oldSelected;
    size_t selectedLen;
@@ -74,8 +73,8 @@ struct Panel_ {
    bool needsRedraw;
    bool cursorOn;
    bool wasFocus;
-   FunctionBar* currentBar;
-   FunctionBar* defaultBar;
+   struct FunctionBar_* currentBar;
+   struct FunctionBar_* defaultBar;
    RichString header;
    ColorElements selectionColorId;
 };
@@ -86,11 +85,11 @@ struct Panel_ {
 
 extern const PanelClass Panel_class;
 
-Panel* Panel_new(int x, int y, int w, int h, const ObjectClass* type, bool owner, FunctionBar* fuBar);
+Panel* Panel_new(int x, int y, int w, int h, const ObjectClass* type, bool owner, struct FunctionBar_* fuBar);
 
 void Panel_delete(Object* cast);
 
-void Panel_init(Panel* this, int x, int y, int w, int h, const ObjectClass* type, bool owner, FunctionBar* fuBar);
+void Panel_init(Panel* this, int x, int y, int w, int h, const ObjectClass* type, bool owner, struct FunctionBar_* fuBar);
 
 void Panel_done(Panel* this);
 
@@ -130,7 +129,7 @@ void Panel_setSelected(Panel* this, int selected);
 
 void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelected, bool hideFunctionBar);
 
-void Panel_splice(Panel* this, Vector* from);
+void Panel_splice(Panel* this, struct Vector_* from);
 
 bool Panel_onKey(Panel* this, int key);
 
