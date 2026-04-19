@@ -44,6 +44,12 @@ static inline void AvailableMetersPanel_addMeter(Header* header, MetersPanel* pa
    Panel_setSelected((Panel*)panel, Panel_size((Panel*)panel) - 1);
 }
 
+static inline void AvailableMetersPanel_addMeterAndFocus(AvailableMetersPanel* this, size_t column, const MeterClass* type, unsigned int param) {
+   MetersPanel* target = this->meterPanels[column];
+   AvailableMetersPanel_addMeter(this->header, target, type, param, column);
+   ScreenManager_setPanelFocus(this->scr, (Panel*) target);
+}
+
 static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
    AvailableMetersPanel* this = (AvailableMetersPanel*) super;
    Header* header = this->header;
@@ -61,7 +67,7 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
       case KEY_F(5):
       case 'l':
       case 'L':
-         AvailableMetersPanel_addMeter(header, this->meterPanels[0], Platform_meterTypes[type], param, 0);
+         AvailableMetersPanel_addMeterAndFocus(this, 0, Platform_meterTypes[type], param);
          result = HANDLED;
          update = true;
          break;
@@ -72,8 +78,8 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
       case 'r':
       case 'R':
       case KEY_RECLICK:
-         AvailableMetersPanel_addMeter(header, this->meterPanels[this->columns - 1], Platform_meterTypes[type], param, this->columns - 1);
-         result = (KEY_LEFT << 16) | SYNTH_KEY;
+         AvailableMetersPanel_addMeterAndFocus(this, this->columns - 1, Platform_meterTypes[type], param);
+         result = HANDLED;
          update = true;
          break;
    }

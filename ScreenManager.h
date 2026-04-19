@@ -24,6 +24,8 @@ typedef struct ScreenManager_ {
    bool allowFocusChange;
    uint32_t panelCount;
    Vector* panels;
+   /* One-shot focus transfer requested by an event handler during ScreenManager_run(). */
+   Panel* pendingFocus;
    const char* name;
    Header* header;
    Machine* host;
@@ -43,6 +45,9 @@ void ScreenManager_insert(ScreenManager* this, Panel* item, int size, int idx);
 Panel* ScreenManager_remove(ScreenManager* this, int idx);
 
 void ScreenManager_resize(ScreenManager* this);
+
+/* Request that the next ScreenManager_run() iteration redraw with this panel focused. */
+void ScreenManager_setPanelFocus(ScreenManager* this, Panel* panel);
 
 void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, const char* name);
 

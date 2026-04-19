@@ -37,6 +37,7 @@ ScreenManager* ScreenManager_new(Header* header, Machine* host, State* state, bo
    this->y2 = -1;
    this->panels = Vector_new(Class(Panel), owner, VECTOR_DEFAULT_SIZE);
    this->panelCount = 0;
+   this->pendingFocus = NULL;
    this->header = header;
    this->host = host;
    this->state = state;
@@ -117,6 +118,31 @@ void ScreenManager_resize(ScreenManager* this) {
    Panel* panel = (Panel*) Vector_get(this->panels, panels - 1);
    Panel_resize(panel, COLS - this->x1 + this->x2 - lastX, LINES - y1_header + this->y2);
    Panel_move(panel, lastX, y1_header);
+}
+
+void ScreenManager_setPanelFocus(ScreenManager* this, Panel* panel) {
+   this->pendingFocus = panel;
+}
+
+static void ScreenManager_applyPendingFocus(ScreenManager* this, size_t* focus, Panel** panelFocus) {
+   Panel* target = this->pendingFocus;
+   if (!target)
+      return;
+
+   this->pendingFocus = NULL;
+
+   for (size_t i = 0; i < this->panelCount; i++) {
+      Panel* panel = (Panel*) Vector_get(this->panels, i);
+      if (panel != target)
+         continue;
+
+      if (panel != *panelFocus && Panel_eventHandlerFn(*panelFocus)) {
+         Panel_eventHandler(*panelFocus, EVENT_PANEL_LOST_FOCUS);
+      }
+      *focus = i;
+      *panelFocus = panel;
+      return;
+   }
 }
 
 static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTimeout, bool* redraw, bool* rescan, bool* timedOut, bool* force_redraw) {
@@ -377,6 +403,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
          rescan = true;
          sortTimeout = 0;
       }
+      ScreenManager_applyPendingFocus(this, &focus, &panelFocus);
       if (result & HANDLED) {
          continue;
       } else if (result & BREAK_LOOP) {
