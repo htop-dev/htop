@@ -364,18 +364,19 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
-void Platform_getBattery(double* percent, ACPresence* isOnAC) {
+void Platform_getBattery(BatteryInfo* info) {
+   *info = (BatteryInfo) {
+      .ac = AC_ERROR,
+      .percent = NAN,
+   };
+
    int life;
    size_t life_len = sizeof(life);
-   if (sysctlbyname("hw.acpi.battery.life", &life, &life_len, NULL, 0) == -1)
-      *percent = NAN;
-   else
-      *percent = life;
+   if (sysctlbyname("hw.acpi.battery.life", &life, &life_len, NULL, 0) != -1)
+      info->percent = life;
 
    int acline;
    size_t acline_len = sizeof(acline);
-   if (sysctlbyname("hw.acpi.acline", &acline, &acline_len, NULL, 0) == -1)
-      *isOnAC = AC_ERROR;
-   else
-      *isOnAC = acline == 0 ? AC_ABSENT : AC_PRESENT;
+   if (sysctlbyname("hw.acpi.acline", &acline, &acline_len, NULL, 0) != -1)
+      info->ac = (acline == 0) ? AC_ABSENT : AC_PRESENT;
 }
