@@ -98,8 +98,8 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
       const char* ptr = caption;
       int nCols = String_mbswidth(&ptr, 256, captionWidth);
-      int len = (int)(ptr - caption);
-      mvprintw(y, x, "%-*.*s", len + captionWidth - nCols, len, caption);
+      int captionLen = (int)(ptr - caption);
+      mvprintw(y, x, "%-*.*s", captionLen + captionWidth - nCols, captionLen, caption);
    }
    w -= captionWidth;
 
@@ -125,71 +125,92 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    attrset(CRT_colors[RESET_COLOR]); // Clear the bold attribute
    x++;
 
-   // The text in the bar is right aligned;
-   // Pad with maximal spaces and then calculate needed starting position offset
-   RichString_begin(bar);
-   RichString_appendChr(&bar, 0, ' ', w);
-   RichString_appendWide(&bar, 0, this->txtBuffer);
+   // Calculate the number of terminal columns needed for the meter text.
+   // The text in the bar is right aligned
 
-   int startPos = RichString_sizeVal(bar) - w;
-   if (startPos > w) {
-      // Text is too large for bar
-      // Truncate meter text at a space character
-      for (int pos = 2 * w; pos > w; pos--) {
-         if (RichString_getCharVal(bar, pos) == ' ') {
-            while (pos > w && RichString_getCharVal(bar, pos - 1) == ' ')
-               pos--;
-            startPos = pos - w;
+   RichString_begin(bar);
+   {
+      const char* ptr = this->txtBuffer;
+      int padWidth = w - String_lineBreakWidth(&ptr, sizeof(this->txtBuffer) - 1, w, ' ');
+      RichString_appendChr(&bar, 0, ' ', padWidth);
+      RichString_appendnWide(&bar, 0, this->txtBuffer, (size_t)(ptr - this->txtBuffer));
+   }
+
+#ifdef HAVE_LIBNCURSESW
+   // If the character takes zero columns, include the character in the
+   // substring if the working encoding is UTF-8, and ignore it otherwise.
+   // In Unicode, combining characters are always placed after the base
+   // character, but some legacy 8-bit encodings instead place combining
+   // characters before the base character.
+   const bool isUnicode = CRT_utf8;
+#else
+   const bool isUnicode = false;
+#endif
+
+   int offset = 0;
+   size_t len = RichString_sizeVal(bar);
+   size_t charPos = 0;
+   for (uint8_t i = 0; i < this->curItems; i++) {
+      if (!(this->total > 0.0))
+         break;
+      if (offset >= w)
+         break;
+
+      double value = this->values[i];
+      if (!isPositive(value))
+         continue;
+      value = MINIMUM(value, this->total);
+      int blockSize = ceil((value / this->total) * w);
+      blockSize = MINIMUM(blockSize, w - offset);
+      if (blockSize < 1)
+         continue;
+
+      int nextOffset = offset + blockSize;
+
+      size_t startPos = charPos;
+      while (charPos < len && (offset < nextOffset || isUnicode)) {
+         assert(offset <= nextOffset);
+
+#ifdef HAVE_LIBNCURSESW
+         wchar_t ch = RichString_getCharVal(bar, charPos);
+#else
+         char ch = RichString_getCharVal(bar, charPos);
+#endif
+         assert(ch != 0);
+
+#ifdef HAVE_LIBNCURSESW
+         int nCols = wcwidth(ch);
+         assert(nCols >= 0);
+
+         if (offset >= nextOffset && nCols > 0) {
+            // This break condition is for UTF-8.
             break;
          }
-      }
-
-      // If still too large, print the start not the end
-      startPos = MINIMUM(startPos, w);
-   }
-
-   assert(startPos >= 0);
-   assert(startPos <= w);
-   assert(startPos + w <= RichString_sizeVal(bar));
-
-   int blockSizes[10];
-
-   // First draw in the bar[] buffer...
-   int offset = 0;
-   for (uint8_t i = 0; i < this->curItems; i++) {
-      double value = this->values[i];
-      if (isPositive(value) && this->total > 0.0) {
-         value = MINIMUM(value, this->total);
-         blockSizes[i] = ceil((value / this->total) * w);
-         blockSizes[i] = MINIMUM(blockSizes[i], w - offset);
-      } else {
-         blockSizes[i] = 0;
-      }
-      int nextOffset = offset + blockSizes[i];
-      for (int j = offset; j < nextOffset; j++)
-         if (RichString_getCharVal(bar, startPos + j) == ' ') {
+#else
+         const int nCols = 1;
+#endif
+         if (ch == ' ') {
             if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
                assert(i < strlen(BarMeterMode_characters));
-               RichString_setChar(&bar, startPos + j, BarMeterMode_characters[i]);
+               RichString_setChar(&bar, charPos, BarMeterMode_characters[i]);
             } else {
-               RichString_setChar(&bar, startPos + j, '|');
+               RichString_setChar(&bar, charPos, '|');
             }
          }
-      offset = nextOffset;
-   }
 
-   // ...then print the buffer.
-   offset = 0;
-   for (uint8_t i = 0; i < this->curItems; i++) {
+         offset += nCols;
+         charPos++;
+      }
+      if (charPos <= startPos)
+         continue;
+
       int attr = this->curAttributes ? this->curAttributes[i] : Meter_attributes(this)[i];
-      RichString_setAttrn(&bar, CRT_colors[attr], startPos + offset, blockSizes[i]);
-      RichString_printoffnVal(bar, y, x + offset, startPos + offset, blockSizes[i]);
-      offset += blockSizes[i];
+      RichString_setAttrn(&bar, CRT_colors[attr], startPos, charPos - startPos);
    }
-   if (offset < w) {
-      RichString_setAttrn(&bar, CRT_colors[BAR_SHADOW], startPos + offset, w - offset);
-      RichString_printoffnVal(bar, y, x + offset, startPos + offset, w - offset);
+   if (charPos < len) {
+      RichString_setAttrn(&bar, CRT_colors[BAR_SHADOW], charPos, len - charPos);
    }
+   RichString_printVal(bar, y, x);
 
    RichString_delete(&bar);
 
