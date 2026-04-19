@@ -373,16 +373,20 @@ static bool findDevice(const char* name, int* mib, struct sensordev* snsrdev, si
    }
 }
 
-void Platform_getBattery(double* percent, ACPresence* isOnAC) {
+void Platform_getBattery(BatteryInfo* info) {
    int mib[] = {CTL_HW, HW_SENSORS, 0, 0, 0};
    struct sensor s;
    size_t slen = sizeof(struct sensor);
    struct sensordev snsrdev;
    size_t sdlen = sizeof(struct sensordev);
 
+   *info = (BatteryInfo) {
+      .ac = AC_ERROR,
+      .percent = NAN,
+   };
+
    bool found = findDevice("acpibat0", mib, &snsrdev, &sdlen);
 
-   *percent = NAN;
    if (found) {
       /* See "sys/dev/acpi/acpibat.c" of OpenBSD source code for the indices
          of the last field. */
@@ -396,23 +400,21 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
          mib[4] = 3; /* "remaining capacity" */
          if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1) {
             double charge = s.value;
-            *percent = 100 * (charge / last_full_capacity);
-            if (charge >= last_full_capacity) {
-               *percent = 100;
-            }
+            info->percent = 100 * (charge / last_full_capacity);
+            if (charge >= last_full_capacity)
+               info->percent = 100;
          }
       }
    }
 
    found = findDevice("acpiac0", mib, &snsrdev, &sdlen);
 
-   *isOnAC = AC_ERROR;
    if (found) {
       /* See "sys/dev/acpi/acpiac.c" of OpenBSD source code.
          There is only one "sensor" for this device. */
       mib[3] = SENSOR_INDICATOR;
       mib[4] = 0; /* "power supply" (status indicator) */
       if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1)
-         *isOnAC = s.value != 0 ? AC_PRESENT : AC_ABSENT;
+         info->ac = s.value != 0 ? AC_PRESENT : AC_ABSENT;
    }
 }

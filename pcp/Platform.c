@@ -863,9 +863,11 @@ void Platform_getFileDescriptors(double* used, double* max) {
       *max = value.l;
 }
 
-void Platform_getBattery(double* level, ACPresence* isOnAC) {
-   *level = NAN;
-   *isOnAC = AC_ERROR;
+void Platform_getBattery(BatteryInfo* info) {
+   *info = (BatteryInfo) {
+      .ac = AC_ERROR,
+      .percent = NAN,
+   };
 }
 
 const char* Platform_getFailedState(void) {
