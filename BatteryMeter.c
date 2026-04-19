@@ -25,21 +25,23 @@ static const int BatteryMeter_attributes[] = {
 };
 
 static void BatteryMeter_updateValues(Meter* this) {
-   ACPresence isOnAC;
-   double percent;
+   BatteryInfo info = {
+      .ac = AC_ERROR,
+      .percent = NAN,
+   };
 
-   Platform_getBattery(&percent, &isOnAC);
+   Platform_getBattery(&info);
 
-   if (!isNonnegative(percent)) {
+   if (!isNonnegative(info.percent)) {
       this->values[0] = NAN;
       xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "N/A");
       return;
    }
 
-   this->values[0] = percent;
+   this->values[0] = info.percent;
 
    const char* text;
-   switch (isOnAC) {
+   switch (info.ac) {
       case AC_PRESENT:
          text = this->mode == TEXT_METERMODE ? " (Running on A/C)" : "(A/C)";
          break;
@@ -52,7 +54,7 @@ static void BatteryMeter_updateValues(Meter* this) {
          break;
    }
 
-   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%.1f%%%s", percent, text);
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%.1f%%%s", info.percent, text);
 }
 
 const MeterClass BatteryMeter_class = {
