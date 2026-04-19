@@ -618,10 +618,10 @@ static Htop_Reaction actionBacktrace(State *st) {
    const Vector* allProcesses = st->mainPanel->super.items;
 
    Vector* processes = Vector_new(Class(Process), false, VECTOR_DEFAULT_SIZE);
-   if (!Process_isUserlandThread(selectedProcess)) {
+   if (selectedProcess && !Process_isUserlandThread(selectedProcess)) {
       for (int i = 0; i < Vector_size(allProcesses); i++) {
          Process* process = (Process *)Vector_get(allProcesses, i);
-         if (Process_getThreadGroup(process) == Process_getThreadGroup(selectedProcess)) {
+         if (process && Process_getThreadGroup(process) == Process_getThreadGroup(selectedProcess)) {
             Vector_add(processes, process);
          }
       }
