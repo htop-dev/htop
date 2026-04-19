@@ -83,7 +83,7 @@ bool Platform_getDiskIO(DiskIOData* data);
 
 bool Platform_getNetworkIO(NetworkIOData* data);
 
-void Platform_getBattery(double* percent, ACPresence* isOnAC);
+void Platform_getBattery(BatteryInfo* info);
 
 static inline void Platform_getHostname(char* buffer, size_t size) {
    Generic_hostname(buffer, size);
