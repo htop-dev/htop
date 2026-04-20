@@ -76,11 +76,13 @@ myhtopsources = \
 	ProcessLocksScreen.c \
 	ProcessTable.c \
 	Row.c \
+	RunScript.c \
 	RichString.c \
 	Scheduling.c \
 	ScreenManager.c \
 	ScreensPanel.c \
 	ScreenTabsPanel.c \
+	ScriptOutputScreen.c \
 	Settings.c \
 	SignalsPanel.c \
 	SwapMeter.c \
@@ -150,11 +152,13 @@ myhtopheaders = \
 	ProvideTerm.h \
 	RichString.h \
 	Row.h \
+	RunScript.h \
 	RowField.h \
 	Scheduling.h \
 	ScreenManager.h \
 	ScreensPanel.h \
 	ScreenTabsPanel.h \
+	ScriptOutputScreen.h \
 	Settings.h \
 	SignalsPanel.h \
 	SwapMeter.h \

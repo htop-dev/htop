@@ -103,6 +103,7 @@ typedef struct Settings_ {
    bool headerMargin;
    bool screenTabs;
    bool showCachedMemory;
+   char* scriptLocation;
    #ifdef HAVE_GETMOUSE
    bool enableMouse;
    #endif
