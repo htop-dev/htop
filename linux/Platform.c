@@ -228,6 +228,14 @@ void Platform_setBindings(Htop_Action* keys) {
    keys[KEY_F(20)] = Platform_actionHigherAutogroupPriority; // Shift-F8
 }
 
+static bool Platform_isVirtualNetworkInterface(const char* name) {
+   char path[PATH_MAX];
+
+   // Since kerel 2.6.13 virtual interfaces are listed in /sys/devices/virtual/net
+   xSnprintf(path, sizeof(path), "/sys/devices/virtual/net/%s", name);
+   return access(path, F_OK) == 0;
+}
+
 const MeterClass* const Platform_meterTypes[] = {
    &CPUMeter_class,
    &ClockMeter_class,
@@ -737,7 +745,9 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
                              &packetsTransmitted) != 5)
          continue;
 
-      if (String_eq(interfaceName, "lo:"))
+      if (String_eq(interfaceName, "lo:") || // Loopback must be always ignored
+         (data->ignoreVirtualIntf && Platform_isVirtualNetworkInterface(interfaceName))
+      )
          continue;
 
       data->bytesReceived += bytesReceived;
