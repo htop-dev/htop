@@ -22,6 +22,8 @@ typedef struct BatteryInfo_ {
    ACPresence ac;
 
    double percent;          /* [0..100], NAN if unknown */
+   double energyCurr;       /* Wh, NAN if unknown */
+   double energyFull;       /* Wh, NAN if unknown */
 } BatteryInfo;
 
 extern const MeterClass BatteryMeter_class;
