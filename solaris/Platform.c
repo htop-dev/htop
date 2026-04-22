@@ -347,5 +347,7 @@ void Platform_getBattery(BatteryInfo* info) {
    *info = (BatteryInfo) {
       .ac = AC_ERROR,
       .percent = NAN,
+      .energyCurr = NAN,
+      .energyFull = NAN,
    };
 }

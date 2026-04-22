@@ -384,6 +384,8 @@ void Platform_getBattery(BatteryInfo* info) {
    *info = (BatteryInfo) {
       .ac = AC_ERROR,
       .percent = NAN,
+      .energyCurr = NAN,
+      .energyFull = NAN,
    };
 
    bool found = findDevice("acpibat0", mib, &snsrdev, &sdlen);
@@ -404,6 +406,8 @@ void Platform_getBattery(BatteryInfo* info) {
             info->percent = 100 * (charge / last_full_capacity);
             if (charge >= last_full_capacity)
                info->percent = 100;
+            info->energyCurr = charge;
+            info->energyFull = last_full_capacity;
          }
       }
    }

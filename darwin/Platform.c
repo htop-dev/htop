@@ -679,6 +679,8 @@ void Platform_getBattery(BatteryInfo* info) {
    *info = (BatteryInfo) {
       .ac = AC_ERROR,
       .percent = NAN,
+      .energyCurr = NAN,
+      .energyFull = NAN,
    };
 
    CFArrayRef list = NULL;
@@ -721,8 +723,11 @@ void Platform_getBattery(BatteryInfo* info) {
       cap_max += tmp;
    }
 
-   if (cap_max > 0.0)
+   if (cap_max > 0.0) {
       info->percent = 100.0 * cap_current / cap_max;
+      info->energyCurr = cap_current;
+      info->energyFull = cap_max;
+   }
 
 cleanup:
    if (list)
