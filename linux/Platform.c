@@ -166,6 +166,8 @@ static time_t Platform_Battery_cacheTime;
 static BatteryInfo Platform_Battery_cache = {
    .ac = AC_ERROR,
    .percent = NAN,
+   .energyCurr = NAN,
+   .energyFull = NAN,
 };
 
 #ifdef HAVE_LIBCAP
@@ -850,6 +852,8 @@ static void Platform_Battery_getProcData(BatteryInfo* info) {
 static void Platform_Battery_getSysData(BatteryInfo* info) {
    info->percent = NAN;
    info->ac = AC_ERROR;
+   info->energyCurr = NAN;
+   info->energyFull = NAN;
 
    DIR* dir = opendir(SYS_POWERSUPPLY_DIR);
    if (!dir)
@@ -964,6 +968,10 @@ next:
    closedir(dir);
 
    info->percent = totalFull > 0 ? ((double) totalRemain * 100.0) / (double) totalFull : NAN;
+   if (totalFull > 0) {
+      info->energyCurr = (double) totalRemain;
+      info->energyFull = (double) totalFull;
+   }
 }
 
 void Platform_getBattery(BatteryInfo* info) {
@@ -977,6 +985,8 @@ void Platform_getBattery(BatteryInfo* info) {
    Platform_Battery_cache = (BatteryInfo) {
       .ac = AC_ERROR,
       .percent = NAN,
+      .energyCurr = NAN,
+      .energyFull = NAN,
    };
 
    if (Platform_Battery_method == BAT_PROC) {
