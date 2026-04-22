@@ -247,36 +247,36 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
    case CMAJFLT: Row_printCount(str, lp->cmajflt, coloring); return;
    case GPU_PERCENT: Row_printPercentage(lp->gpu_percent, buffer, n, 5, &attr); break;
    case GPU_TIME: Row_printNanoseconds(str, lp->gpu_time, coloring); return;
-   case M_DRS: Row_printBytes(str, lp->m_drs * lhost->pageSize, coloring); return;
+   case M_DRS: Row_printBytes(str, lp->m_drs * lhost->pageSize, coloring, host->settings->decimalUnits); return;
    case M_LRS:
       if (lp->m_lrs) {
-         Row_printBytes(str, lp->m_lrs * lhost->pageSize, coloring);
+         Row_printBytes(str, lp->m_lrs * lhost->pageSize, coloring, host->settings->decimalUnits);
          return;
       }
 
       attr = CRT_colors[PROCESS_SHADOW];
       xSnprintf(buffer, n, "  N/A ");
       break;
-   case M_TRS: Row_printBytes(str, lp->m_trs * lhost->pageSize, coloring); return;
-   case M_SHARE: Row_printBytes(str, lp->m_share * lhost->pageSize, coloring); return;
-   case M_PRIV: Row_printKBytes(str, lp->m_priv, coloring); return;
-   case M_PSS: Row_printKBytes(str, lp->m_pss, coloring); return;
-   case M_SWAP: Row_printKBytes(str, lp->m_swap, coloring); return;
-   case M_PSSWP: Row_printKBytes(str, lp->m_psswp, coloring); return;
+   case M_TRS: Row_printBytes(str, lp->m_trs * lhost->pageSize, coloring, host->settings->decimalUnits); return;
+   case M_SHARE: Row_printBytes(str, lp->m_share * lhost->pageSize, coloring, host->settings->decimalUnits); return;
+   case M_PRIV: Row_printKBytes(str, lp->m_priv, coloring, host->settings->decimalUnits); return;
+   case M_PSS: Row_printKBytes(str, lp->m_pss, coloring, host->settings->decimalUnits); return;
+   case M_SWAP: Row_printKBytes(str, lp->m_swap, coloring, host->settings->decimalUnits); return;
+   case M_PSSWP: Row_printKBytes(str, lp->m_psswp, coloring, host->settings->decimalUnits); return;
    case UTIME: Row_printTime(str, lp->utime, coloring); return;
    case STIME: Row_printTime(str, lp->stime, coloring); return;
    case CUTIME: Row_printTime(str, lp->cutime, coloring); return;
    case CSTIME: Row_printTime(str, lp->cstime, coloring); return;
-   case RCHAR:  Row_printBytes(str, lp->io_rchar, coloring); return;
-   case WCHAR:  Row_printBytes(str, lp->io_wchar, coloring); return;
+   case RCHAR:  Row_printBytes(str, lp->io_rchar, coloring, host->settings->decimalUnits); return;
+   case WCHAR:  Row_printBytes(str, lp->io_wchar, coloring, host->settings->decimalUnits); return;
    case SYSCR:  Row_printCount(str, lp->io_syscr, coloring); return;
    case SYSCW:  Row_printCount(str, lp->io_syscw, coloring); return;
-   case RBYTES: Row_printBytes(str, lp->io_read_bytes, coloring); return;
-   case WBYTES: Row_printBytes(str, lp->io_write_bytes, coloring); return;
-   case CNCLWB: Row_printBytes(str, lp->io_cancelled_write_bytes, coloring); return;
-   case IO_READ_RATE:  Row_printRate(str, lp->io_rate_read_bps, coloring); return;
-   case IO_WRITE_RATE: Row_printRate(str, lp->io_rate_write_bps, coloring); return;
-   case IO_RATE: Row_printRate(str, LinuxProcess_totalIORate(lp), coloring); return;
+   case RBYTES: Row_printBytes(str, lp->io_read_bytes, coloring, host->settings->decimalUnits); return;
+   case WBYTES: Row_printBytes(str, lp->io_write_bytes, coloring, host->settings->decimalUnits); return;
+   case CNCLWB: Row_printBytes(str, lp->io_cancelled_write_bytes, coloring, host->settings->decimalUnits); return;
+   case IO_READ_RATE:  Row_printRate(str, lp->io_rate_read_bps, coloring, host->settings->decimalUnits); return;
+   case IO_WRITE_RATE: Row_printRate(str, lp->io_rate_write_bps, coloring, host->settings->decimalUnits); return;
+   case IO_RATE: Row_printRate(str, LinuxProcess_totalIORate(lp), coloring, host->settings->decimalUnits); return;
    #ifdef HAVE_OPENVZ
    case CTID: xSnprintf(buffer, n, "%-8s ", lp->ctid ? lp->ctid : ""); break;
    case VPID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, lp->vpid); break;

@@ -674,8 +674,8 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
    }
    case MAJFLT: Row_printCount(str, this->majflt, coloring); return;
    case MINFLT: Row_printCount(str, this->minflt, coloring); return;
-   case M_RESIDENT: Row_printKBytes(str, this->m_resident, coloring); return;
-   case M_VIRT: Row_printKBytes(str, this->m_virt, coloring); return;
+   case M_RESIDENT: Row_printKBytes(str, this->m_resident, coloring, host->settings->decimalUnits); return;
+   case M_VIRT: Row_printKBytes(str, this->m_virt, coloring, host->settings->decimalUnits); return;
    case NICE:
       if (this->nice == PROCESS_NICE_UNKNOWN) {
          xSnprintf(buffer, n, "N/A ");

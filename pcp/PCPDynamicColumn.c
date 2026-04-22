@@ -444,9 +444,9 @@ void PCPDynamicColumn_writeAtomValue(PCPDynamicColumn* column, RichString* str, 
    bool coloring = settings->highlightMegabytes;
    pmUnits units = desc->units;
    if (units.dimSpace && units.dimTime)
-      Row_printRate(str, value, coloring);
+      Row_printRate(str, value, coloring, settings->decimalUnits);
    else if (units.dimSpace)
-      Row_printBytes(str, value, coloring);
+      Row_printBytes(str, value, coloring, settings->decimalUnits);
    else if (units.dimCount)
       Row_printCount(str, value, coloring);
    else if (units.dimTime)
