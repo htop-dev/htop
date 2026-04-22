@@ -456,6 +456,8 @@ void Platform_getBattery(BatteryInfo* info) {
    *info = (BatteryInfo) {
       .ac = AC_ERROR,
       .percent = NAN,
+      .energyCurr = NAN,
+      .energyFull = NAN,
    };
 
    int fd = open(_PATH_SYSMON, O_RDONLY);
@@ -529,7 +531,11 @@ void Platform_getBattery(BatteryInfo* info) {
       }
    }
 
-   info->percent = totalCapacity > 0 ? ((double)totalCharge / (double)totalCapacity) * 100.0 : NAN;
+   if (totalCapacity > 0) {
+      info->percent = ((double)totalCharge / (double)totalCapacity) * 100.0;
+      info->energyCurr = (double) totalCharge;
+      info->energyFull = (double) totalCapacity;
+   }
 
 error:
    if (fd != -1)
