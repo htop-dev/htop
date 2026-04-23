@@ -166,6 +166,7 @@ static time_t Platform_Battery_cacheTime;
 static BatteryInfo Platform_Battery_cache = {
    .ac = AC_ERROR,
    .percent = NAN,
+   .powerCurr = NAN,
    .energyCurr = NAN,
    .energyFull = NAN,
 };
@@ -852,6 +853,7 @@ static void Platform_Battery_getProcData(BatteryInfo* info) {
 static void Platform_Battery_getSysData(BatteryInfo* info) {
    info->percent = NAN;
    info->ac = AC_ERROR;
+   info->powerCurr = NAN;
    info->energyCurr = NAN;
    info->energyFull = NAN;
 
@@ -861,6 +863,9 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
 
    uint64_t totalFull = 0;
    uint64_t totalRemain = 0;
+   int64_t totalPower = 0;
+
+   bool havePower = false;
 
    const struct dirent* dirEntry;
    while ((dirEntry = readdir(dir))) {
@@ -913,6 +918,9 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
          uint8_t haveBatteryVoltage = 0; // 0 = no, 1 = min_voltage, 2 = curr_voltage
          bool haveBatteryLevel = false;
 
+         bool haveBatteryCurrent = false;
+         bool haveBatteryPower = false;
+
          uint64_t batteryEnergyFull = 0;
          uint64_t batteryEnergyCurr = 0;
 
@@ -921,6 +929,11 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
 
          uint64_t batteryVoltage = 0;
          uint64_t batteryLevel = 0;
+
+         int64_t batteryCurrent = 0;
+         int64_t batteryPower = 0;
+
+         bool batteryIsDischarging = false;
 
          const char* line;
 
@@ -978,6 +991,18 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
                haveBatteryVoltage = 2;
                continue;
             }
+
+            if (String_eq(field, "CURRENT_NOW")) {
+               batteryCurrent = val;
+               haveBatteryCurrent = true;
+               continue;
+            }
+
+            if (String_eq(field, "POWER_NOW")) {
+               batteryPower += val;
+               haveBatteryPower = true;
+               continue;
+            }
          }
 
          if (haveBatteryLevel) {
@@ -1007,6 +1032,19 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
             totalFull += batteryEnergyFull;
             totalRemain += batteryEnergyCurr > batteryEnergyFull ? batteryEnergyFull : batteryEnergyCurr;
          }
+
+         if (!haveBatteryPower && haveBatteryCurrent && haveBatteryVoltage) {
+            batteryPower = (batteryCurrent * batteryVoltage) / 1000000;
+            haveBatteryPower = true;
+         }
+
+         if (haveBatteryPower) {
+            if (batteryIsDischarging)
+               batteryPower = -batteryPower;
+
+            totalPower += batteryPower;
+            havePower = true;
+         }
       } else if (type == AC) {
          if (info->ac != AC_ERROR)
             goto next;
@@ -1035,6 +1073,10 @@ next:
       info->energyCurr = (double) totalRemain / 1000000.0;
       info->energyFull = (double) totalFull / 1000000.0;
    }
+
+   if (havePower) {
+      info->powerCurr = (double) totalPower / 1000000.0;
+   }
 }
 
 void Platform_getBattery(BatteryInfo* info) {
@@ -1048,6 +1090,7 @@ void Platform_getBattery(BatteryInfo* info) {
    Platform_Battery_cache = (BatteryInfo) {
       .ac = AC_ERROR,
       .percent = NAN,
+      .powerCurr = NAN,
       .energyCurr = NAN,
       .energyFull = NAN,
    };
