@@ -12,9 +12,13 @@ in the source distribution for its full text.
 
 #include <devstat.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <ifaddrs.h>
 #include <math.h>
 #include <time.h>
+#include <unistd.h>
+#include <dev/acpica/acpiio.h>
+#include <sys/ioctl.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/sysctl.h>
@@ -367,6 +371,7 @@ void Platform_getBattery(BatteryInfo* info) {
    *info = (BatteryInfo) {
       .ac = AC_ERROR,
       .percent = NAN,
+      .powerCurr = NAN,
       .energyCurr = NAN,
       .energyFull = NAN,
    };
@@ -393,9 +398,11 @@ void Platform_getBattery(BatteryInfo* info) {
 
    bool haveTotalRemain = false;
    bool haveTotalFull = false;
+   bool haveTotalPower = false;
 
    int64_t totalRemain = 0;
    int64_t totalFull = 0;
+   int64_t totalPower = 0;
 
    for (int u = 0; u < units; u++) {
       union acpi_battery_ioctl_arg bifArg = { .unit = u };
@@ -411,9 +418,11 @@ void Platform_getBattery(BatteryInfo* info) {
 
       bool haveBatteryEnergyCurr = false;
       bool haveBatteryEnergyFull = false;
+      bool haveBatteryPower = false;
 
       int64_t batteryEnergyCurr = 0;
       int64_t batteryEnergyFull = 0;
+      int64_t batteryPower = 0;
 
       if (bif->lfcap != ACPI_BATT_UNKNOWN && bst->cap != ACPI_BATT_UNKNOWN) {
          if (bif->units == ACPI_BIF_UNITS_MW) {
@@ -439,6 +448,31 @@ void Platform_getBattery(BatteryInfo* info) {
          totalFull += batteryEnergyFull;
          haveTotalFull = true;
       }
+
+      if (bst->rate == ACPI_BATT_UNKNOWN)
+         continue;
+
+      if (bif->units == ACPI_BIF_UNITS_MW) {
+         batteryPower = (int64_t) bst->rate * 1000;
+         haveBatteryPower = true;
+      } else {
+         uint32_t batteryVoltage = (bst->volt != ACPI_BATT_UNKNOWN) ? bst->volt : bif->dvol;
+
+         if (batteryVoltage != ACPI_BATT_UNKNOWN && batteryVoltage != 0) {
+            batteryPower = (int64_t) bst->rate * batteryVoltage;
+            haveBatteryPower = true;
+         }
+      }
+
+      if (!haveBatteryPower)
+         continue;
+
+      if ((bst->state & ACPI_BATT_STAT_DISCHARG) == 0 &&
+         (bst->state & ACPI_BATT_STAT_CHARGING) != 0)
+         batteryPower = -batteryPower;
+
+      totalPower += batteryPower;
+      haveTotalPower = true;
    }
 
    close(fd);
@@ -450,5 +484,9 @@ void Platform_getBattery(BatteryInfo* info) {
 
       info->energyCurr = (double) totalRemain / 1000000.0;
       info->energyFull = (double) totalFull / 1000000.0;
+   }
+
+   if (haveTotalPower) {
+      info->powerCurr = (double) totalPower / 1000000.0;
    }
 }

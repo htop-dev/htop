@@ -383,6 +383,7 @@ void Platform_getBattery(BatteryInfo* info) {
    *info = (BatteryInfo) {
       .ac = AC_ERROR,
       .percent = NAN,
+      .powerCurr = NAN,
       .energyCurr = NAN,
       .energyFull = NAN,
    };
@@ -392,9 +393,11 @@ void Platform_getBattery(BatteryInfo* info) {
    if (found) {
       bool haveTotalFull = false;
       bool haveTotalRemain = false;
+      bool haveTotalPower = false;
 
       int64_t totalFull = 0;
       int64_t totalRemain = 0;
+      int64_t totalPower = 0;
 
       /* See "sys/dev/acpi/acpibat.c" of OpenBSD source code for the indices
          of the last field. */
@@ -429,6 +432,27 @@ void Platform_getBattery(BatteryInfo* info) {
 
          info->energyCurr = (double) totalRemain / 1000000.0;
          info->energyFull = (double) totalFull / 1000000.0;
+      }
+
+      mib[3] = SENSOR_INTEGER;
+      mib[4] = 0; /* "battery state" */
+      int64_t batteryState = 0;
+      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1)
+         batteryState = s.value;
+
+      mib[3] = SENSOR_WATTS;
+      mib[4] = 0; /* "rate" */
+      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1) {
+         int64_t batteryPower = s.value;
+         if (batteryState & 0x02)
+            batteryPower = -batteryPower;
+
+         totalPower += batteryPower;
+         haveTotalPower = true;
+      }
+
+      if (haveTotalPower) {
+         info->powerCurr = (double) totalPower / 1000000.0;
       }
    }
 

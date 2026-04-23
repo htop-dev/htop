@@ -453,9 +453,13 @@ void Platform_getBattery(BatteryInfo* info) {
    intmax_t totalCharge = 0;
    intmax_t totalCapacity = 0;
 
+   bool havePower = false;
+   intmax_t totalPower = 0;
+
    *info = (BatteryInfo) {
       .ac = AC_ERROR,
       .percent = NAN,
+      .powerCurr = NAN,
       .energyCurr = NAN,
       .energyFull = NAN,
    };
@@ -488,11 +492,17 @@ void Platform_getBattery(BatteryInfo* info) {
       intmax_t isConnected = 0;
       intmax_t curCharge = 0;
       intmax_t maxCharge = 0;
+      intmax_t chargeRate = 0;
+      intmax_t dischargeRate = 0;
       intmax_t voltage = 0;
       intmax_t designVoltage = 0;
 
       bool haveCharge = false;
+      bool haveChargeRate = false;
+      bool haveDischargeRate = false;
       bool chargeIsAmpHours = false;
+      bool chargeRateIsAmps = false;
+      bool dischargeRateIsAmps = false;
 
       while ((fields = prop_object_iterator_next(fieldsIter)) != NULL) {
          props = prop_dictionary_get(fields, "device-properties");
@@ -531,14 +541,29 @@ void Platform_getBattery(BatteryInfo* info) {
             haveCharge = true;
             chargeIsAmpHours = typeField != NULL &&
                prop_string_equals_string(typeField, "Ampere hour");
+         } else if (prop_string_equals_string(descField, "charge rate")) {
+            chargeRate = prop_number_signed_value(curValue);
+            chargeRateIsAmps = typeField != NULL &&
+               prop_string_equals_string(typeField, "Ampere");
+            haveChargeRate = true;
+         } else if (prop_string_equals_string(descField, "discharge rate")) {
+            dischargeRate = prop_number_signed_value(curValue);
+            dischargeRateIsAmps = typeField != NULL &&
+               prop_string_equals_string(typeField, "Ampere");
+            haveDischargeRate = true;
          }
       }
 
       if (isBattery && isPresent) {
          intmax_t batteryVoltage = (voltage != 0) ? voltage : designVoltage;
 
+         bool haveBatteryChargeRate = false;
+         bool haveBatteryDischargeRate = false;
+
          bool haveBatteryCharge = false;
 
+         intmax_t batteryChargeRate = 0;
+         intmax_t batteryDischargeRate = 0;
          intmax_t batteryCharge = 0;
          intmax_t batteryCapacity = 0;
 
@@ -556,11 +581,39 @@ void Platform_getBattery(BatteryInfo* info) {
             }
          }
 
+         if (haveChargeRate) {
+            if (chargeRateIsAmps) {
+               if (batteryVoltage > 0) {
+                  batteryChargeRate = chargeRate * batteryVoltage / 1000000;
+                  haveBatteryChargeRate = true;
+               }
+            } else {
+               batteryChargeRate = chargeRate;
+               haveBatteryChargeRate = true;
+            }
+         }
+
+         if (haveDischargeRate) {
+            if (dischargeRateIsAmps) {
+               if (batteryVoltage > 0) {
+                  batteryDischargeRate = dischargeRate * batteryVoltage / 1000000;
+                  haveBatteryDischargeRate = true;
+               }
+            } else {
+               batteryDischargeRate = dischargeRate;
+               haveBatteryDischargeRate = true;
+            }
+         }
+
          if (haveBatteryCharge) {
             totalCharge += batteryCharge;
             totalCapacity += batteryCapacity;
          }
 
+         if (haveBatteryChargeRate || haveBatteryDischargeRate) {
+            totalPower += batteryDischargeRate - batteryChargeRate;
+            havePower = true;
+         }
       }
 
       if (isACAdapter && info->ac != AC_PRESENT) {
@@ -575,6 +628,10 @@ void Platform_getBattery(BatteryInfo* info) {
 
       info->energyCurr = (double) totalCharge / 1000000.0;
       info->energyFull = (double) totalCapacity / 1000000.0;
+   }
+
+   if (havePower) {
+      info->powerCurr = (double) totalPower / 1000000.0;
    }
 
 error:

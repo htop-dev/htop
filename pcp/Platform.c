@@ -234,6 +234,7 @@ static const char* Platform_metricNames[] = {
    [PCP_MEM_ZSWAPPED] = "mem.util.zswapped",
    [PCP_VFS_FILES_COUNT] = "vfs.files.count",
    [PCP_VFS_FILES_MAX] = "vfs.files.max",
+   [PCP_DENKI_POWER_NOW] = "denki.bat.power_now",
    [PCP_DENKI_ENERGY_NOW] = "denki.bat.energy_now",
    [PCP_DENKI_ENERGY_FULL] = "denki.bat.capacity",
 
@@ -868,6 +869,7 @@ void Platform_getFileDescriptors(double* used, double* max) {
 void Platform_getBattery(BatteryInfo* info) {
    info->ac = AC_ERROR;
    info->percent = NAN;
+   info->powerCurr = NAN;
    info->energyCurr = NAN;
    info->energyFull = NAN;
 
@@ -897,6 +899,19 @@ void Platform_getBattery(BatteryInfo* info) {
    }
    free(batteryEnergyCurr);
    free(batteryEnergyFull);
+
+   pmAtomValue* batteryPowerCurr = xCalloc(count, sizeof(pmAtomValue));
+   if (Metric_values(PCP_DENKI_POWER_NOW, batteryPowerCurr, count, PM_TYPE_DOUBLE)) {
+      info->powerCurr = 0.0;
+      for (i = 0; i < count; i++) {
+         info->powerCurr += batteryPowerCurr[i].d;
+      }
+   }
+   free(batteryPowerCurr);
+
+   if (info->powerCurr < 0) {
+      info->ac = AC_ABSENT;
+   }
 }
 
 const char* Platform_getFailedState(void) {

@@ -404,6 +404,7 @@ void Platform_getBattery(BatteryInfo* info) {
    *info = (BatteryInfo) {
       .ac = AC_ERROR,
       .percent = NAN,
+      .powerCurr = NAN,
       .energyCurr = NAN,
       .energyFull = NAN,
    };
@@ -429,9 +430,11 @@ void Platform_getBattery(BatteryInfo* info) {
 
    bool haveTotalRemain = false;
    bool haveTotalFull = false;
+   bool haveTotalPower = false;
 
    int64_t totalRemain = 0;
    int64_t totalFull = 0;
+   int64_t totalPower = 0;
 
    for (int u = 0; u < units; u++) {
       union acpi_battery_ioctl_arg bixArg = { .unit = u };
@@ -447,9 +450,11 @@ void Platform_getBattery(BatteryInfo* info) {
 
       bool haveBatteryEnergyCurr = false;
       bool haveBatteryEnergyFull = false;
+      bool haveBatteryPower = false;
 
       int64_t batteryEnergyCurr = 0;
       int64_t batteryEnergyFull = 0;
+      int64_t batteryPower = 0;
 
       if (bix->lfcap != ACPI_BATT_UNKNOWN && bst->cap != ACPI_BATT_UNKNOWN) {
          if (bix->units == ACPI_BIX_UNITS_MW) {
@@ -474,6 +479,25 @@ void Platform_getBattery(BatteryInfo* info) {
          haveTotalRemain = true;
          haveTotalFull = true;
       }
+
+      if (bst->rate != ACPI_BATT_UNKNOWN && bst->rate > 0) {
+         if (bix->units == ACPI_BIX_UNITS_MW) {
+            batteryPower = (int64_t) bst->rate * 1000;
+            haveBatteryPower = true;
+         } else {
+            uint32_t rateVoltage = (bst->volt != ACPI_BATT_UNKNOWN) ? bst->volt : bix->dvol;
+
+            if (rateVoltage != ACPI_BATT_UNKNOWN && rateVoltage != 0) {
+               batteryPower = (int64_t) bst->rate * rateVoltage;
+               haveBatteryPower = true;
+            }
+         }
+      }
+
+      if (haveBatteryPower) {
+         totalPower += batteryPower;
+         haveTotalPower = true;
+      }
    }
 
    close(fd);
@@ -485,5 +509,9 @@ void Platform_getBattery(BatteryInfo* info) {
 
       info->energyCurr = (double) totalRemain / 1000000.0;
       info->energyFull = (double) totalFull / 1000000.0;
+   }
+
+   if (haveTotalPower) {
+      info->powerCurr = (double) totalPower / 1000000.0;
    }
 }
