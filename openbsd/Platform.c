@@ -383,18 +383,33 @@ void Platform_getBattery(BatteryInfo* info) {
    *info = (BatteryInfo) {
       .ac = AC_ERROR,
       .percent = NAN,
+      .powerCurr = NAN,
       .energyCurr = NAN,
       .energyFull = NAN,
    };
 
-   bool found = findDevice("acpibat0", mib, &snsrdev, &sdlen);
+   bool haveTotalFull = false;
+   bool haveTotalRemain = false;
+   bool haveTotalPower = false;
 
-   if (found) {
-      bool haveTotalFull = false;
-      bool haveTotalRemain = false;
+   int64_t totalFull = 0;
+   int64_t totalRemain = 0;
+   int64_t totalPower = 0;
 
-      int64_t totalFull = 0;
-      int64_t totalRemain = 0;
+   bool found = false;
+   for (int devn = 0;; devn++) {
+      mib[2] = devn;
+      sdlen = sizeof(struct sensordev);
+      if (sysctl(mib, 3, &snsrdev, &sdlen, NULL, 0) == -1) {
+         if (errno == ENXIO)
+            continue;
+         if (errno == ENOENT)
+            break;
+      }
+      if (!String_startsWith(snsrdev.xname, "acpibat"))
+         continue;
+
+      found = true;
 
       /* See "sys/dev/acpi/acpibat.c" of OpenBSD source code for the indices
          of the last field. */
@@ -422,6 +437,25 @@ void Platform_getBattery(BatteryInfo* info) {
          }
       }
 
+      mib[3] = SENSOR_INTEGER;
+      mib[4] = 0; /* "battery state" */
+      int64_t batteryState = 0;
+      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1)
+         batteryState = s.value;
+
+      mib[3] = SENSOR_WATTS;
+      mib[4] = 0; /* "rate" */
+      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1) {
+         int64_t batteryPower = s.value;
+         if (batteryState & 0x01)
+            batteryPower = -batteryPower;
+
+         totalPower += batteryPower;
+         haveTotalPower = true;
+      }
+   }
+
+   if (found) {
       if (haveTotalRemain && haveTotalFull && totalFull > 0) {
          info->percent = ((double) totalRemain * 100.0) / (double) totalFull;
          if (totalRemain >= totalFull)
@@ -429,6 +463,10 @@ void Platform_getBattery(BatteryInfo* info) {
 
          info->energyCurr = (double) totalRemain / 1000000.0;
          info->energyFull = (double) totalFull / 1000000.0;
+      }
+
+      if (haveTotalPower) {
+         info->powerCurr = (double) totalPower / 1000000.0;
       }
    }
 
