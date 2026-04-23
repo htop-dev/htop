@@ -682,6 +682,7 @@ void Platform_getBattery(BatteryInfo* info) {
    *info = (BatteryInfo) {
       .ac = AC_ERROR,
       .percent = NAN,
+      .powerCurr = NAN,
       .energyCurr = NAN,
       .energyFull = NAN,
    };
@@ -732,9 +733,21 @@ void Platform_getBattery(BatteryInfo* info) {
 
    io_service_t batt = IOServiceGetMatchingService(iokit_port, IOServiceMatching("AppleSmartBattery"));
    if (batt) {
+      CFNumberRef ampRef = IORegistryEntryCreateCFProperty(batt, CFSTR("Amperage"), kCFAllocatorDefault, 0);
       CFNumberRef voltRef = IORegistryEntryCreateCFProperty(batt, CFSTR("Voltage"), kCFAllocatorDefault, 0);
       CFNumberRef currCapRef = IORegistryEntryCreateCFProperty(batt, CFSTR("AppleRawCurrentCapacity"), kCFAllocatorDefault, 0);
       CFNumberRef maxCapRef = IORegistryEntryCreateCFProperty(batt, CFSTR("AppleRawMaxCapacity"), kCFAllocatorDefault, 0);
+
+      if (ampRef && voltRef) {
+         double ampMA = 0.0;
+         CFNumberGetValue(ampRef, kCFNumberDoubleType, &ampMA);
+
+         double voltMV = 0.0;
+         CFNumberGetValue(voltRef, kCFNumberDoubleType, &voltMV);
+
+         // Follows the Smart Battery System (SBS) Standard
+         info->powerCurr = ampMA * voltMV / 1e6;
+      }
 
       if (currCapRef && maxCapRef && voltRef) {
          double currMAh = 0.0;
@@ -759,6 +772,8 @@ void Platform_getBattery(BatteryInfo* info) {
          CFRelease(currCapRef);
       if (voltRef)
          CFRelease(voltRef);
+      if (ampRef)
+         CFRelease(ampRef);
 
       IOObjectRelease(batt);
    }

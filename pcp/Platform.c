@@ -234,6 +234,7 @@ static const char* Platform_metricNames[] = {
    [PCP_MEM_ZSWAPPED] = "mem.util.zswapped",
    [PCP_VFS_FILES_COUNT] = "vfs.files.count",
    [PCP_VFS_FILES_MAX] = "vfs.files.max",
+   [PCP_DENKI_POWER_NOW] = "denki.bat.power_now",
    [PCP_DENKI_ENERGY_NOW] = "denki.bat.energy_now",
    [PCP_DENKI_ENERGY_FULL] = "denki.bat.capacity",
 
@@ -868,6 +869,7 @@ void Platform_getFileDescriptors(double* used, double* max) {
 void Platform_getBattery(BatteryInfo* info) {
    info->ac = AC_ERROR;
    info->percent = NAN;
+   info->powerCurr = NAN;
    info->energyCurr = NAN;
    info->energyFull = NAN;
 
@@ -876,7 +878,12 @@ void Platform_getBattery(BatteryInfo* info) {
       energyCount = Metric_instanceCount(PCP_DENKI_ENERGY_NOW);
    }
 
-   if (energyCount < 1) {
+   int powerCount = 0;
+   if (Metric_desc(PCP_DENKI_POWER_NOW) != NULL) {
+      powerCount = Metric_instanceCount(PCP_DENKI_POWER_NOW);
+   }
+
+   if (energyCount < 1 && powerCount < 1) {
       info->ac = AC_PRESENT;
       return;
    }
@@ -900,6 +907,21 @@ void Platform_getBattery(BatteryInfo* info) {
       }
       free(batteryEnergyCurr);
       free(batteryEnergyFull);
+   }
+
+   if (powerCount > 0) {
+      pmAtomValue* batteryPowerCurr = xCalloc(powerCount, sizeof(pmAtomValue));
+      if (Metric_values(PCP_DENKI_POWER_NOW, batteryPowerCurr, powerCount, PM_TYPE_DOUBLE)) {
+         info->powerCurr = 0.0;
+         for (int i = 0; i < powerCount; i++) {
+            info->powerCurr += batteryPowerCurr[i].d;
+         }
+      }
+      free(batteryPowerCurr);
+   }
+
+   if (info->powerCurr < 0) {
+      info->ac = AC_ABSENT;
    }
 }
 
