@@ -384,6 +384,7 @@ void Platform_getBattery(BatteryInfo* info) {
    *info = (BatteryInfo) {
       .ac = AC_ERROR,
       .percent = NAN,
+      .powerCurr = NAN,
       .energyCurr = NAN,
       .energyFull = NAN,
    };
@@ -409,6 +410,20 @@ void Platform_getBattery(BatteryInfo* info) {
             info->energyCurr = charge;
             info->energyFull = last_full_capacity;
          }
+      }
+
+      mib[3] = SENSOR_INTEGER;
+      mib[4] = 0; /* "battery state" */
+      int64_t batteryState = 0;
+      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1)
+         batteryState = s.value;
+
+      mib[3] = SENSOR_WATTS;
+      mib[4] = 0; /* "rate" */
+      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1) {
+         info->powerCurr = (double)s.value / 1000000.0;
+         if (batteryState & 0x02)
+            info->powerCurr = -info->powerCurr;
       }
    }
 

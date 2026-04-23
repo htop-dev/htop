@@ -166,6 +166,7 @@ static time_t Platform_Battery_cacheTime;
 static BatteryInfo Platform_Battery_cache = {
    .ac = AC_ERROR,
    .percent = NAN,
+   .powerCurr = NAN,
    .energyCurr = NAN,
    .energyFull = NAN,
 };
@@ -850,6 +851,7 @@ static void Platform_Battery_getProcData(BatteryInfo* info) {
 static void Platform_Battery_getSysData(BatteryInfo* info) {
    info->percent = NAN;
    info->ac = AC_ERROR;
+   info->powerCurr = NAN;
    info->energyCurr = NAN;
    info->energyFull = NAN;
 
@@ -859,6 +861,8 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
 
    uint64_t totalFull = 0;
    uint64_t totalRemain = 0;
+   int64_t totalPower = 0;
+   bool hasPower = false;
 
    const struct dirent* dirEntry;
    while ((dirEntry = readdir(dir))) {
@@ -937,6 +941,12 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
                   break;
                continue;
             }
+
+            if (String_eq(field, "POWER_NOW")) {
+               totalPower += val;
+               hasPower = true;
+               continue;
+            }
          }
 
          if (!now && full && isNonnegative(capacityLevel))
@@ -970,6 +980,8 @@ next:
       info->energyCurr = (double) totalRemain;
       info->energyFull = (double) totalFull;
    }
+   if (hasPower)
+      info->powerCurr = (double) totalPower;
 }
 
 void Platform_getBattery(BatteryInfo* info) {
@@ -983,6 +995,7 @@ void Platform_getBattery(BatteryInfo* info) {
    Platform_Battery_cache = (BatteryInfo) {
       .ac = AC_ERROR,
       .percent = NAN,
+      .powerCurr = NAN,
       .energyCurr = NAN,
       .energyFull = NAN,
    };

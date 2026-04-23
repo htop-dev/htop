@@ -405,6 +405,7 @@ void Platform_getBattery(BatteryInfo* info) {
    *info = (BatteryInfo) {
       .ac = AC_ERROR,
       .percent = NAN,
+      .powerCurr = NAN,
       .energyCurr = NAN,
       .energyFull = NAN,
    };
@@ -430,6 +431,7 @@ void Platform_getBattery(BatteryInfo* info) {
 
    double totalRemain = 0.0;
    double totalFull = 0.0;
+   double totalPower = 0.0;
 
    for (int u = 0; u < units; u++) {
       union acpi_battery_ioctl_arg bixArg = { .unit = u };
@@ -466,6 +468,17 @@ void Platform_getBattery(BatteryInfo* info) {
          totalRemain += remain;
          totalFull   += full;
       }
+
+      if (bst->rate != ACPI_BATT_UNKNOWN && bst->rate > 0) {
+         if (bix->units == ACPI_BIX_UNITS_MW) {
+            totalPower += bst->rate / 1000.0;
+         } else {
+            uint32_t rateVoltMV = (bst->volt != ACPI_BATT_UNKNOWN) ? bst->volt : bix->dvol;
+
+            if (rateVoltMV != ACPI_BATT_UNKNOWN && rateVoltMV != 0)
+               totalPower += bst->rate * (double)rateVoltMV / 1e6;
+         }
+      }
    }
 
    close(fd);
@@ -474,4 +487,6 @@ void Platform_getBattery(BatteryInfo* info) {
       info->energyCurr = totalRemain;
       info->energyFull = totalFull;
    }
+   if (totalPower > 0.0)
+      info->powerCurr = totalPower;
 }
