@@ -28,6 +28,7 @@ static void BatteryMeter_updateValues(Meter* this) {
    BatteryInfo info = {
       .ac = AC_ERROR,
       .percent = NAN,
+      .powerCurr = NAN,
       .energyCurr = NAN,
       .energyFull = NAN,
    };
