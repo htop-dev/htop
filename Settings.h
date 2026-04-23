@@ -52,6 +52,7 @@ typedef struct ScreenSettings_ {
    bool treeView;
    bool treeViewAlwaysByPID;
    bool allBranchesCollapsed;
+   int stableTreeView;   /* 0=off, 1=soft, 2=hard (allow empty space above PID 1) */
 } ScreenSettings;
 
 typedef struct Settings_ {

@@ -112,6 +112,10 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       result = HANDLED;
    } else if (ch == 27) {
       this->state->hideSelection = true;
+      if (host->activeTable->following != -1) {
+         host->activeTable->following = -1;
+         Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
+      }
       return HANDLED;
    } else if (ch != ERR && ch > 0 && ch < KEY_MAX && this->keys[ch]) {
       reaction |= (this->keys[ch])(this->state);
@@ -149,8 +153,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    if ((reaction & HTOP_QUIT) == HTOP_QUIT) {
       return BREAK_LOOP;
    }
-   if ((reaction & HTOP_KEEP_FOLLOWING) != HTOP_KEEP_FOLLOWING) {
-      host->activeTable->following = -1;
+   if (host->activeTable->following == -1) {
       Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
    }
    return result;

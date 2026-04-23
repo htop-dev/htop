@@ -34,6 +34,8 @@ typedef struct Table_ {
    const char* incFilter;
    bool needsSort;
    int following;         /* -1 or row being visually tracked in the user interface */
+   int stableId;          /* stable tree view: row ID to keep at fixed screen position (-1 = inactive) */
+   int stableLastIdx;     /* panel index where stableId row was placed in the last rebuild */
 
    struct Panel_* panel;
 } Table;
