@@ -142,11 +142,11 @@ void Row_setPidColumnWidth(pid_t maxPid);
 /* Sets the size of the UID column based on the passed UID */
 void Row_setUidColumnWidth(uid_t maxUid);
 
-/* Takes number in kibibytes (base 1024). Prints 6 columns. */
-void Row_printKBytes(RichString* str, unsigned long long number, bool coloring);
+/* Takes number in kibibytes (base 1024) or kilobytes (base 1000) per 'decimal'. Prints 6 columns. */
+void Row_printKBytes(RichString* str, unsigned long long number, bool coloring, bool decimal);
 
-/* Takes number in bytes (base 1024). Prints 6 columns. */
-void Row_printBytes(RichString* str, unsigned long long number, bool coloring);
+/* Takes number in bytes. Prints 6 columns. */
+void Row_printBytes(RichString* str, unsigned long long number, bool coloring, bool decimal);
 
 /* Takes number as count (base 1000). Prints 12 columns. */
 void Row_printCount(RichString* str, unsigned long long number, bool coloring);
@@ -158,7 +158,7 @@ void Row_printTime(RichString* str, unsigned long long totalHundredths, bool col
 void Row_printNanoseconds(RichString* str, unsigned long long totalNanoseconds, bool coloring);
 
 /* Takes rate in bare unit (base 1024) per second. Prints 12 columns. */
-void Row_printRate(RichString* str, double rate, bool coloring);
+void Row_printRate(RichString* str, double rate, bool coloring, bool decimal);
 
 int Row_printPercentage(float val, char* buffer, size_t n, uint8_t width, int* attr);
 

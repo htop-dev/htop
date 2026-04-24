@@ -190,7 +190,7 @@ RowField RowField_keyAt(const Settings* settings, int at) {
    return COMM;
 }
 
-void Row_printKBytes(RichString* str, unsigned long long number, bool coloring) {
+void Row_printKBytes(RichString* str, unsigned long long number, bool coloring, bool decimal) {
    char buffer[16];
    int len;
 
@@ -231,11 +231,18 @@ void Row_printKBytes(RichString* str, unsigned long long number, bool coloring) 
    // 100000 KiB (97.6 MiB) or greater. A unit prefix would be added.
    const size_t maxUnitIndex = (sizeof(number) * CHAR_BIT - 1) / 10 + 1;
    const bool canOverflow = maxUnitIndex >= ARRAYSIZE(unitPrefixes);
+   const unsigned long long unit_k = decimal ? ONE_DECIMAL_K : ONE_K;
 
    size_t i = 1;
    int prevUnitColor;
-   // Convert KiB to (1/100) of MiB
-   unsigned long long hundredths = (number / 256) * 25 + (number % 256) * 25 / 256;
+   unsigned long long hundredths;
+   if (decimal) {
+      // Convert KB to (1/100) of MB
+      hundredths = number / 10;
+   } else {
+      // Convert KiB to (1/100) of MiB
+      hundredths = (number / 256) * 25 + (number % 256) * 25 / 256;
+   }
    while (true) {
       if (canOverflow && i >= ARRAYSIZE(unitPrefixes))
          goto invalidNumber;
@@ -249,7 +256,7 @@ void Row_printKBytes(RichString* str, unsigned long long number, bool coloring) 
       if (hundredths < 1000000)
          break;
 
-      hundredths /= ONE_K;
+      hundredths /= unit_k;
       i++;
    }
 
@@ -292,11 +299,11 @@ invalidNumber:
    RichString_appendAscii(str, color, "  N/A ");
 }
 
-void Row_printBytes(RichString* str, unsigned long long number, bool coloring) {
+void Row_printBytes(RichString* str, unsigned long long number, bool coloring, bool decimal) {
    if (number == ULLONG_MAX)
-      Row_printKBytes(str, ULLONG_MAX, coloring);
+      Row_printKBytes(str, ULLONG_MAX, coloring, decimal);
    else
-      Row_printKBytes(str, number / ONE_K, coloring);
+      Row_printKBytes(str, number / (decimal ? ONE_DECIMAL_K : ONE_K), coloring, decimal);
 }
 
 void Row_printCount(RichString* str, unsigned long long number, bool coloring) {
@@ -459,7 +466,7 @@ void Row_printNanoseconds(RichString* str, unsigned long long totalNanoseconds, 
    Row_printTime(str, totalHundredths, coloring);
 }
 
-void Row_printRate(RichString* str, double rate, bool coloring) {
+void Row_printRate(RichString* str, double rate, bool coloring, bool decimal) {
    char buffer[16];
 
    int largeNumberColor = CRT_colors[LARGE_NUMBER];
@@ -474,28 +481,26 @@ void Row_printRate(RichString* str, double rate, bool coloring) {
 
    if (!isNonnegative(rate)) {
       RichString_appendAscii(str, shadowColor, "        N/A ");
-   } else if (rate < 0.005) {
-      int len = snprintf(buffer, sizeof(buffer), "%7.2f B/s ", rate);
-      RichString_appendnAscii(str, shadowColor, buffer, len);
-   } else if (rate < ONE_K) {
-      int len = snprintf(buffer, sizeof(buffer), "%7.2f B/s ", rate);
-      RichString_appendnAscii(str, baseColor, buffer, len);
-   } else if (rate < ONE_M) {
-      int len = snprintf(buffer, sizeof(buffer), "%7.2f K/s ", rate / ONE_K);
-      RichString_appendnAscii(str, baseColor, buffer, len);
-   } else if (rate < ONE_G) {
-      int len = snprintf(buffer, sizeof(buffer), "%7.2f M/s ", rate / ONE_M);
-      RichString_appendnAscii(str, megabytesColor, buffer, len);
-   } else if (rate < ONE_T) {
-      int len = snprintf(buffer, sizeof(buffer), "%7.2f G/s ", rate / ONE_G);
-      RichString_appendnAscii(str, largeNumberColor, buffer, len);
-   } else if (rate < ONE_P) {
-      int len = snprintf(buffer, sizeof(buffer), "%7.2f T/s ", rate / ONE_T);
-      RichString_appendnAscii(str, largeNumberColor, buffer, len);
-   } else {
-      int len = snprintf(buffer, sizeof(buffer), "%7.2f P/s ", rate / ONE_P);
-      RichString_appendnAscii(str, largeNumberColor, buffer, len);
+      return;
    }
+
+   static const char prefixes[] = { 'B', 'K', 'M', 'G', 'T', 'P' };
+   const int colors[ARRAYSIZE(prefixes)] = {
+      baseColor, baseColor, megabytesColor,
+      largeNumberColor, largeNumberColor, largeNumberColor
+   };
+
+   const double base = decimal ? ONE_DECIMAL_K : ONE_K;
+   size_t i = 0;
+   double scaled = rate;
+   while (scaled >= base && i + 1 < ARRAYSIZE(prefixes)) {
+      scaled /= base;
+      i++;
+   }
+
+   int color = (rate < 0.005) ? shadowColor : colors[i];
+   int len = snprintf(buffer, sizeof(buffer), "%7.2f %c/s ", scaled, prefixes[i]);
+   RichString_appendnAscii(str, color, buffer, len);
 }
 
 void Row_printLeftAlignedField(RichString* str, int attr, const char* content, unsigned int width) {
