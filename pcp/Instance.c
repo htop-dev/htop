@@ -103,8 +103,8 @@ static int Instance_compareByKey(const Row* v1, const Row* v2, int key) {
    unsigned int type = Metric_type(metric);
 
    pmAtomValue atom1 = {0}, atom2 = {0};
-   if (!Metric_instance(metric, i1->offset, i1->offset, &atom1, type) ||
-       !Metric_instance(metric, i2->offset, i2->offset, &atom2, type)) {
+   if (!Metric_instance(metric, Instance_getId(i1), i1->offset, &atom1, type) ||
+       !Metric_instance(metric, Instance_getId(i2), i2->offset, &atom2, type)) {
       if (type == PM_TYPE_STRING) {
          free(atom1.cp);
          free(atom2.cp);
