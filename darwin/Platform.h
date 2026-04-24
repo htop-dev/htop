@@ -91,6 +91,8 @@ static inline void Platform_getHostname(char* buffer, size_t size) {
 
 const char* Platform_getRelease(void);
 
+void Platform_setGPUProcesses(DarwinProcessTable* dpt);
+
 static inline const char* Platform_getFailedState(void) {
    return NULL;
 }
