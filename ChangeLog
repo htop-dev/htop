@@ -1,3 +1,14 @@
+What's new in version 3.5.1
+
+* Darwin: Fix unsigned underflow in memory meter on ARM64 (Apple Silicon 16K pages showing ~64TB used)
+* Linux/PCP: Replace M_SHARE (SHR) with M_PRIV (PRIV) in default Main screen columns
+* PCP: Fix dynamic screen column (instance) sorting (incorrect cast and field offsets)
+* PCP: Fix units used when printing M_PRIV memory column values
+* PCP: Add Darwin swap metric values and a fallback on Linux for SwapMeter
+* Fix null pointer dereference in actionBacktrace() (GCC LTO -O2 -flto, Ubuntu 24.04)
+* Make search function activate following on find consistently
+* Make a panel click abort the search function
+
 What's new in version 3.5.0
 
 * Implement line editor for Search, Filter and (re)naming Screens
