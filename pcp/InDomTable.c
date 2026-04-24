@@ -35,7 +35,7 @@ InDomTable* InDomTable_new(Machine* host, pmInDom indom, int metricKey) {
    this->id = indom;
 
    Table* super = &this->super;
-   Table_init(super, Class(Row), host);
+   Table_init(super, Class(Instance), host);
 
    return this;
 }
