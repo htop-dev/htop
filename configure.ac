@@ -454,7 +454,7 @@ if test "$my_htop_platform" = darwin; then
 fi
 
 if test "$my_htop_platform" = pcp; then
-   AC_CHECK_FUNCS([pmLookupDescs])
+   AC_CHECK_FUNCS([pmLookupDescs pmtimespecToReal pmtimevalTotimespec])
 fi
 
 if test "$my_htop_platform" = linux && test "x$enable_static" = xyes; then

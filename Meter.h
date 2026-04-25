@@ -10,7 +10,7 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <sys/time.h>
+#include <time.h>
 
 #include "ListItem.h"
 #include "Machine.h"
@@ -104,7 +104,7 @@ typedef struct MeterClass_ {
 #define Meter_isPercentChart(this_)    As_Meter(this_)->isPercentChart
 
 typedef struct GraphData_ {
-   struct timeval time;
+   struct timespec time;
    size_t nValues;
    double* values;
 } GraphData;

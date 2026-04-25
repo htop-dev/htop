@@ -16,7 +16,7 @@ in the source distribution for its full text.
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/time.h>
+#include <time.h>
 
 #include "Machine.h"
 #include "Macros.h"
@@ -364,12 +364,12 @@ void Machine_scan(Machine* super) {
    Metric_enable(PCP_PROC_SMAPS_SWAP, host->smaps_flag);
    Metric_enable(PCP_PROC_SMAPS_SWAPPSS, host->smaps_flag);
 
-   struct timeval timestamp;
+   struct timespec timestamp;
    if (Metric_fetch(&timestamp) != true)
       return;
 
    double sample = host->timestamp;
-   host->timestamp = pmtimevalToReal(&timestamp);
+   host->timestamp = pmtimespecToReal(&timestamp);
    host->period = (host->timestamp - sample) * 100;
 
    PCPMachine_scan(host);
@@ -381,9 +381,9 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
 
    Machine_init(super, usersTable, userId);
 
-   struct timeval timestamp;
-   gettimeofday(&timestamp, NULL);
-   this->timestamp = pmtimevalToReal(&timestamp);
+   struct timespec timestamp;
+   pmtimespecNow(&timestamp);
+   this->timestamp = pmtimespecToReal(&timestamp);
 
    this->sys = SYSTEM_NAME_UNKNOWN;
    PCPMachine_updateSystemName(this);

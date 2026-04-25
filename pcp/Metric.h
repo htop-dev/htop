@@ -176,7 +176,7 @@ bool Metric_enabled(Metric metric);
 
 void Metric_enableThreads(void);
 
-bool Metric_fetch(struct timeval* timestamp);
+bool Metric_fetch(struct timespec* timestamp);
 
 bool Metric_iterate(Metric metric, int* instp, int* offsetp, size_t entrylen);
 

@@ -11,7 +11,7 @@ in the source distribution for its full text.
 #include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <sys/time.h>
+#include <time.h>
 #include <sys/types.h>
 
 #include "Panel.h"
@@ -38,7 +38,7 @@ typedef unsigned long long int memory_t;
 typedef struct Machine_ {
    struct Settings_* settings;
 
-   struct timeval realtime;   /* time of the current sample */
+   struct timespec realtime;  /* time of the current sample */
    uint64_t realtimeMs;       /* current time in milliseconds */
    uint64_t monotonicMs;      /* same, but from monotonic clock */
    uint64_t prevMonotonicMs;  /* time in milliseconds from monotonic clock of previous scan */

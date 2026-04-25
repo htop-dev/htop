@@ -123,7 +123,7 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
    Machine* host = this->host;
 
    Platform_gettime_realtime(&host->realtime, &host->realtimeMs);
-   double newTime = ((double)host->realtime.tv_sec * 10) + ((double)host->realtime.tv_usec / 100000);
+   double newTime = ((double)host->realtime.tv_sec * 10) + ((double)host->realtime.tv_nsec / 100000000L);
 
    *timedOut = (newTime - *oldTime > host->settings->delay);
    *rescan |= *timedOut;

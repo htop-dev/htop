@@ -84,7 +84,7 @@ static inline CommandLineStatus Platform_getLongOption(ATTR_UNUSED int opt, ATTR
    return STATUS_ERROR_EXIT;
 }
 
-static inline void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec) {
+static inline void Platform_gettime_realtime(struct timespec* tv, uint64_t* msec) {
    Generic_gettime_realtime(tv, msec);
 }
 

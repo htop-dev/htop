@@ -24,6 +24,7 @@ in the source distribution for its full text.
 #include "Row.h"
 #include "Settings.h"
 #include "XUtils.h"
+#include "generic/gettime.h"
 
 
 #ifndef UINT32_WIDTH
@@ -255,10 +256,10 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
    // Record new value if necessary
    const Machine* host = this->host;
-   if (!timercmp(&host->realtime, &(data->time), <)) {
+   if (timespec_cmp(&host->realtime, &(data->time)) >= 0) {
       int globalDelay = host->settings->delay;
-      struct timeval delay = { .tv_sec = globalDelay / 10, .tv_usec = (globalDelay % 10) * 100000L };
-      timeradd(&host->realtime, &delay, &(data->time));
+      struct timespec delay = { .tv_sec = globalDelay / 10, .tv_nsec = (globalDelay % 10) * 100000000L };
+      timespec_add(&host->realtime, &delay, &(data->time));
 
       memmove(&data->values[0], &data->values[1], (nValues - 1) * sizeof(*data->values));
 

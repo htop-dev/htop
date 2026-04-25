@@ -117,7 +117,7 @@ void Platform_longOptionsUsage(const char* name);
 
 CommandLineStatus Platform_getLongOption(int opt, int argc, char** argv);
 
-static inline void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec) {
+static inline void Platform_gettime_realtime(struct timespec* tv, uint64_t* msec) {
    Generic_gettime_realtime(tv, msec);
 }
 

@@ -54,12 +54,20 @@ typedef struct Platform_ {
    PCPDynamicMeters meters;   /* dynamic meters via configuration files */
    PCPDynamicColumns columns; /* dynamic columns via configuration files */
    PCPDynamicScreens screens; /* dynamic screens via configuration files */
-   struct timeval offset;     /* time offset used in archive mode only */
+   struct timespec offset;    /* time offset used in archive mode only */
    long long btime;           /* boottime in seconds since the epoch */
    char* release;             /* uname and distro from this context */
    int pidmax;                /* maximum platform process identifier */
    unsigned int ncpu;         /* maximum processor count configured */
 } Platform;
+
+/* older pcp/pmapi.h versions lack these libpcp declarations */
+#ifndef HAVE_PMTIMEVALTOTIMESPEC
+void pmtimevalTotimespec(struct timeval *, struct timespec *);
+#endif
+#ifndef HAVE_PMTIMESPECTOREAL
+double pmtimespecToReal(const struct timespec *);
+#endif
 
 extern const ScreenDefaults Platform_defaultScreens[];
 
@@ -142,7 +150,7 @@ size_t Platform_addMetric(Metric id, const char* name);
 
 void Platform_getFileDescriptors(double* used, double* max);
 
-void Platform_gettime_realtime(struct timeval* tv, uint64_t* msec);
+void Platform_gettime_realtime(struct timespec* tv, uint64_t* msec);
 
 void Platform_gettime_monotonic(uint64_t* msec);
 
