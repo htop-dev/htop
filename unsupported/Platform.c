@@ -167,9 +167,14 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return false;
 }
 
-void Platform_getBattery(double* percent, ACPresence* isOnAC) {
-   *percent = NAN;
-   *isOnAC = AC_ERROR;
+void Platform_getBattery(BatteryInfo* info) {
+   *info = (BatteryInfo) {
+      .ac = AC_ERROR,
+      .percent = NAN,
+      .powerCurr = NAN,
+      .energyCurr = NAN,
+      .energyFull = NAN,
+   };
 }
 
 void Platform_getHostname(char* buffer, size_t size) {

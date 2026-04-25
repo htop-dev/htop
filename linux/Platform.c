@@ -163,8 +163,13 @@ const unsigned int Platform_numberOfMemoryClasses = ARRAYSIZE(Platform_memoryCla
 
 static enum { BAT_PROC, BAT_SYS, BAT_ERR } Platform_Battery_method = BAT_PROC;
 static time_t Platform_Battery_cacheTime;
-static double Platform_Battery_cachePercent = NAN;
-static ACPresence Platform_Battery_cacheIsOnAC;
+static BatteryInfo Platform_Battery_cache = {
+   .ac = AC_ERROR,
+   .percent = NAN,
+   .powerCurr = NAN,
+   .energyCurr = NAN,
+   .energyFull = NAN,
+};
 
 #ifdef HAVE_LIBCAP
 static enum CapMode Platform_capabilitiesMode = CAP_MODE_BASIC;
@@ -834,18 +839,21 @@ static ACPresence procAcpiCheck(void) {
    return String_eq(buffer, "on-line") ? AC_PRESENT : AC_ABSENT;
 }
 
-static void Platform_Battery_getProcData(double* percent, ACPresence* isOnAC) {
-   *isOnAC = procAcpiCheck();
-   *percent = AC_ERROR != *isOnAC ? Platform_Battery_getProcBatInfo() : NAN;
+static void Platform_Battery_getProcData(BatteryInfo* info) {
+   info->ac = procAcpiCheck();
+   info->percent = AC_ERROR != info->ac ? Platform_Battery_getProcBatInfo() : NAN;
 }
 
 // ----------------------------------------
 // READ FROM /sys
 // ----------------------------------------
 
-static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
-   *percent = NAN;
-   *isOnAC = AC_ERROR;
+static void Platform_Battery_getSysData(BatteryInfo* info) {
+   info->percent = NAN;
+   info->ac = AC_ERROR;
+   info->powerCurr = NAN;
+   info->energyCurr = NAN;
+   info->energyFull = NAN;
 
    DIR* dir = opendir(SYS_POWERSUPPLY_DIR);
    if (!dir)
@@ -853,6 +861,8 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
 
    uint64_t totalFull = 0;
    uint64_t totalRemain = 0;
+   int64_t totalPower = 0;
+   bool hasPower = false;
 
    const struct dirent* dirEntry;
    while ((dirEntry = readdir(dir))) {
@@ -931,26 +941,32 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
                   break;
                continue;
             }
+
+            if (String_eq(field, "POWER_NOW")) {
+               totalPower += val;
+               hasPower = true;
+               continue;
+            }
          }
 
          if (!now && full && isNonnegative(capacityLevel))
             totalRemain += capacityLevel * fullCharge;
 
       } else if (type == AC) {
-         if (*isOnAC != AC_ERROR)
+         if (info->ac != AC_ERROR)
             goto next;
 
          char buffer[2];
          ssize_t r = Compat_readfileat(entryFd, "online", buffer, sizeof(buffer));
          if (r < 1) {
-            *isOnAC = AC_ERROR;
+            info->ac = AC_ERROR;
             goto next;
          }
 
          if (buffer[0] == '0')
-            *isOnAC = AC_ABSENT;
+            info->ac = AC_ABSENT;
          else if (buffer[0] == '1')
-            *isOnAC = AC_PRESENT;
+            info->ac = AC_PRESENT;
       }
 
 next:
@@ -959,37 +975,48 @@ next:
 
    closedir(dir);
 
-   *percent = totalFull > 0 ? ((double) totalRemain * 100.0) / (double) totalFull : NAN;
+   info->percent = totalFull > 0 ? ((double) totalRemain * 100.0) / (double) totalFull : NAN;
+   if (totalFull > 0) {
+      info->energyCurr = (double) totalRemain;
+      info->energyFull = (double) totalFull;
+   }
+   if (hasPower)
+      info->powerCurr = (double) totalPower;
 }
 
-void Platform_getBattery(double* percent, ACPresence* isOnAC) {
+void Platform_getBattery(BatteryInfo* info) {
    time_t now = time(NULL);
    // update battery reading is slow. Update it each 10 seconds only.
    if (now < Platform_Battery_cacheTime + 10) {
-      *percent = Platform_Battery_cachePercent;
-      *isOnAC = Platform_Battery_cacheIsOnAC;
+      *info = Platform_Battery_cache;
       return;
    }
 
+   Platform_Battery_cache = (BatteryInfo) {
+      .ac = AC_ERROR,
+      .percent = NAN,
+      .powerCurr = NAN,
+      .energyCurr = NAN,
+      .energyFull = NAN,
+   };
+
    if (Platform_Battery_method == BAT_PROC) {
-      Platform_Battery_getProcData(percent, isOnAC);
-      if (!isNonnegative(*percent))
+      Platform_Battery_getProcData(&Platform_Battery_cache);
+      if (!isNonnegative(Platform_Battery_cache.percent))
          Platform_Battery_method = BAT_SYS;
    }
    if (Platform_Battery_method == BAT_SYS) {
-      Platform_Battery_getSysData(percent, isOnAC);
-      if (!isNonnegative(*percent))
+      Platform_Battery_getSysData(&Platform_Battery_cache);
+      if (!isNonnegative(Platform_Battery_cache.percent))
          Platform_Battery_method = BAT_ERR;
    }
-   if (Platform_Battery_method == BAT_ERR) {
-      *percent = NAN;
-      *isOnAC = AC_ERROR;
-   } else {
-      *percent = CLAMP(*percent, 0.0, 100.0);
+   if (Platform_Battery_method != BAT_ERR) {
+      Platform_Battery_cache.percent = CLAMP(Platform_Battery_cache.percent, 0.0, 100.0);
    }
-   Platform_Battery_cachePercent = *percent;
-   Platform_Battery_cacheIsOnAC = *isOnAC;
+
    Platform_Battery_cacheTime = now;
+
+   *info = Platform_Battery_cache;
 }
 
 void Platform_longOptionsUsage(const char* name)

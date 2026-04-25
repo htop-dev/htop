@@ -447,15 +447,20 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
-void Platform_getBattery(double* percent, ACPresence* isOnAC) {
+void Platform_getBattery(BatteryInfo* info) {
    prop_dictionary_t dict, fields, props;
    prop_object_t device, class;
 
    intmax_t totalCharge = 0;
    intmax_t totalCapacity = 0;
 
-   *percent = NAN;
-   *isOnAC = AC_ERROR;
+   *info = (BatteryInfo) {
+      .ac = AC_ERROR,
+      .percent = NAN,
+      .powerCurr = NAN,
+      .energyCurr = NAN,
+      .energyFull = NAN,
+   };
 
    int fd = open(_PATH_SYSMON, O_RDONLY);
    if (fd == -1)
@@ -523,11 +528,16 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
          totalCapacity += maxCharge;
       }
 
-      if (isACAdapter && *isOnAC != AC_PRESENT) {
-         *isOnAC = isConnected ? AC_PRESENT : AC_ABSENT;
+      if (isACAdapter && info->ac != AC_PRESENT) {
+         info->ac = isConnected ? AC_PRESENT : AC_ABSENT;
       }
    }
-   *percent = totalCapacity > 0 ? ((double)totalCharge / (double)totalCapacity) * 100.0 : NAN;
+
+   if (totalCapacity > 0) {
+      info->percent = ((double)totalCharge / (double)totalCapacity) * 100.0;
+      info->energyCurr = (double) totalCharge;
+      info->energyFull = (double) totalCapacity;
+   }
 
 error:
    if (fd != -1)

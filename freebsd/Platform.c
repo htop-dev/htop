@@ -10,14 +10,18 @@ in the source distribution for its full text.
 #include "freebsd/Platform.h"
 
 #include <devstat.h>
+#include <fcntl.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
+#include <dev/acpica/acpiio.h>
 #include <net/if.h>
 #include <net/if_mib.h>
 #include <sys/_types.h>
 #include <sys/devicestat.h>
+#include <sys/ioctl.h>
 #include <sys/param.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
@@ -397,18 +401,92 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
-void Platform_getBattery(double* percent, ACPresence* isOnAC) {
+void Platform_getBattery(BatteryInfo* info) {
+   *info = (BatteryInfo) {
+      .ac = AC_ERROR,
+      .percent = NAN,
+      .powerCurr = NAN,
+      .energyCurr = NAN,
+      .energyFull = NAN,
+   };
+
    int life;
    size_t life_len = sizeof(life);
-   if (sysctlbyname("hw.acpi.battery.life", &life, &life_len, NULL, 0) == -1)
-      *percent = NAN;
-   else
-      *percent = life;
+   if (sysctlbyname("hw.acpi.battery.life", &life, &life_len, NULL, 0) != -1)
+      info->percent = life;
 
    int acline;
    size_t acline_len = sizeof(acline);
-   if (sysctlbyname("hw.acpi.acline", &acline, &acline_len, NULL, 0) == -1)
-      *isOnAC = AC_ERROR;
-   else
-      *isOnAC = acline == 0 ? AC_ABSENT : AC_PRESENT;
+   if (sysctlbyname("hw.acpi.acline", &acline, &acline_len, NULL, 0) != -1)
+      info->ac = (acline == 0) ? AC_ABSENT : AC_PRESENT;
+
+   int units = 0;
+   size_t units_len = sizeof(units);
+   if (sysctlbyname("hw.acpi.battery.units", &units, &units_len, NULL, 0) == -1 || units <= 0)
+      return;
+
+   int fd = open("/dev/acpi", O_RDONLY | O_CLOEXEC);
+   if (fd == -1)
+      return;
+
+   double totalRemain = 0.0;
+   double totalFull = 0.0;
+   double totalPower = 0.0;
+
+   for (int u = 0; u < units; u++) {
+      union acpi_battery_ioctl_arg bixArg = { .unit = u };
+      if (ioctl(fd, ACPIIO_BATT_GET_BIX, &bixArg) == -1)
+         continue;
+
+      union acpi_battery_ioctl_arg bstArg = { .unit = u };
+      if (ioctl(fd, ACPIIO_BATT_GET_BST, &bstArg) == -1)
+         continue;
+
+      const struct acpi_bix* bix = &bixArg.bix;
+      const struct acpi_bst* bst = &bstArg.bst;
+
+      if (bix->lfcap == ACPI_BATT_UNKNOWN || bst->cap == ACPI_BATT_UNKNOWN)
+         continue;
+
+      double remain, full;
+
+      if (bix->units == ACPI_BIX_UNITS_MW) {
+         /* capacity in mWh -> Wh */
+         remain = bst->cap   / 1000.0;
+         full   = bix->lfcap / 1000.0;
+      } else {
+         /* capacity in mAh: Wh = mAh * mV / 1e6 */
+         uint32_t voltMV = (bst->volt != ACPI_BATT_UNKNOWN) ? bst->volt : bix->dvol;
+         if (voltMV == ACPI_BATT_UNKNOWN || voltMV == 0)
+            continue;
+
+         remain = bst->cap * (double)voltMV / 1e6;
+         full = bix->lfcap * (double)voltMV / 1e6;
+      }
+
+      if (full > 0.0) {
+         totalRemain += remain;
+         totalFull   += full;
+      }
+
+      if (bst->rate != ACPI_BATT_UNKNOWN && bst->rate > 0) {
+         if (bix->units == ACPI_BIX_UNITS_MW) {
+            totalPower += bst->rate / 1000.0;
+         } else {
+            uint32_t rateVoltMV = (bst->volt != ACPI_BATT_UNKNOWN) ? bst->volt : bix->dvol;
+
+            if (rateVoltMV != ACPI_BATT_UNKNOWN && rateVoltMV != 0)
+               totalPower += bst->rate * (double)rateVoltMV / 1e6;
+         }
+      }
+   }
+
+   close(fd);
+
+   if (totalFull > 0.0) {
+      info->energyCurr = totalRemain;
+      info->energyFull = totalFull;
+   }
+   if (totalPower > 0.0)
+      info->powerCurr = totalPower;
 }

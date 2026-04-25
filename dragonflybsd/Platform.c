@@ -12,9 +12,13 @@ in the source distribution for its full text.
 
 #include <devstat.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <ifaddrs.h>
 #include <math.h>
 #include <time.h>
+#include <unistd.h>
+#include <dev/acpica/acpiio.h>
+#include <sys/ioctl.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/sysctl.h>
@@ -364,18 +368,77 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
-void Platform_getBattery(double* percent, ACPresence* isOnAC) {
+void Platform_getBattery(BatteryInfo* info) {
+   *info = (BatteryInfo) {
+      .ac = AC_ERROR,
+      .percent = NAN,
+      .powerCurr = NAN,
+      .energyCurr = NAN,
+      .energyFull = NAN,
+   };
+
    int life;
    size_t life_len = sizeof(life);
-   if (sysctlbyname("hw.acpi.battery.life", &life, &life_len, NULL, 0) == -1)
-      *percent = NAN;
-   else
-      *percent = life;
+   if (sysctlbyname("hw.acpi.battery.life", &life, &life_len, NULL, 0) != -1)
+      info->percent = life;
 
    int acline;
    size_t acline_len = sizeof(acline);
-   if (sysctlbyname("hw.acpi.acline", &acline, &acline_len, NULL, 0) == -1)
-      *isOnAC = AC_ERROR;
-   else
-      *isOnAC = acline == 0 ? AC_ABSENT : AC_PRESENT;
+   if (sysctlbyname("hw.acpi.acline", &acline, &acline_len, NULL, 0) != -1)
+      info->ac = (acline == 0) ? AC_ABSENT : AC_PRESENT;
+
+   int units = 0;
+   int fd = open("/dev/acpi", O_RDONLY | O_CLOEXEC);
+   if (fd == -1)
+      return;
+
+   if (ioctl(fd, ACPIIO_BATT_GET_UNITS, &units) == -1 || units <= 0) {
+      close(fd);
+      return;
+   }
+
+   double totalPower = 0.0;
+   bool hasPower = false;
+
+   for (int u = 0; u < units; u++) {
+      union acpi_battery_ioctl_arg bifArg = { .unit = u };
+      if (ioctl(fd, ACPIIO_BATT_GET_BIF, &bifArg) == -1)
+         continue;
+
+      union acpi_battery_ioctl_arg bstArg = { .unit = u };
+      if (ioctl(fd, ACPIIO_BATT_GET_BST, &bstArg) == -1)
+         continue;
+
+      const struct acpi_bif* bif = &bifArg.bif;
+      const struct acpi_bst* bst = &bstArg.bst;
+
+      if (bst->rate == ACPI_BATT_UNKNOWN)
+         continue;
+
+      double rate = NAN;
+
+      if (bif->units == ACPI_BIF_UNITS_MW) {
+         rate = bst->rate / 1000.0;
+      } else {
+         uint32_t voltMV = (bst->volt != ACPI_BATT_UNKNOWN) ? bst->volt : bif->dvol;
+
+         if (voltMV != ACPI_BATT_UNKNOWN && voltMV != 0)
+            rate = bst->rate * (double)voltMV / 1e6;
+      }
+
+      if (!isNonnegative(rate))
+         continue;
+
+      if ((bst->state & ACPI_BATT_STAT_DISCHARG) == 0 &&
+         (bst->state & ACPI_BATT_STAT_CHARGING) != 0)
+         rate = -rate;
+
+      totalPower += rate;
+      hasPower = true;
+   }
+
+   close(fd);
+
+   if (hasPower)
+      info->powerCurr = totalPower;
 }

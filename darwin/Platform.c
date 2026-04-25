@@ -682,9 +682,14 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
-void Platform_getBattery(double* percent, ACPresence* isOnAC) {
-   *percent = NAN;
-   *isOnAC = AC_ERROR;
+void Platform_getBattery(BatteryInfo* info) {
+   *info = (BatteryInfo) {
+      .ac = AC_ERROR,
+      .percent = NAN,
+      .powerCurr = NAN,
+      .energyCurr = NAN,
+      .energyFull = NAN,
+   };
 
    CFArrayRef list = NULL;
 
@@ -715,8 +720,8 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
       /* Determine the AC state */
       CFStringRef power_state = CFDictionaryGetValue(power_source, CFSTR(kIOPSPowerSourceStateKey));
 
-      if (*isOnAC != AC_PRESENT)
-         *isOnAC = (kCFCompareEqualTo == CFStringCompare(power_state, CFSTR(kIOPSACPowerValue), 0)) ? AC_PRESENT : AC_ABSENT;
+      if (info->ac != AC_PRESENT)
+         info->ac = (kCFCompareEqualTo == CFStringCompare(power_state, CFSTR(kIOPSACPowerValue), 0)) ? AC_PRESENT : AC_ABSENT;
 
       /* Get the percentage remaining */
       double tmp;
@@ -726,8 +731,11 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
       cap_max += tmp;
    }
 
-   if (cap_max > 0.0)
-      *percent = 100.0 * cap_current / cap_max;
+   if (cap_max > 0.0) {
+      info->percent = 100.0 * cap_current / cap_max;
+      info->energyCurr = cap_current;
+      info->energyFull = cap_max;
+   }
 
 cleanup:
    if (list)
