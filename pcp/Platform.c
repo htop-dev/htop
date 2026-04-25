@@ -19,7 +19,6 @@ in the source distribution for its full text.
 
 #include "BatteryMeter.h"
 #include "CPUMeter.h"
-#include "ClockMeter.h"
 #include "DateTimeMeter.h"
 #include "DiskIOMeter.h"
 #include "DynamicColumn.h"

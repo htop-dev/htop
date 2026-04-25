@@ -37,7 +37,6 @@ in the source distribution for its full text.
 #include <sys/types.h>
 
 #include "CPUMeter.h"
-#include "ClockMeter.h"
 #include "DateTimeMeter.h"
 #include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"

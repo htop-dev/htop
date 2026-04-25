@@ -22,7 +22,6 @@ in the source distribution for its full text.
 #include <sys/types.h>
 #include <vm/vm_param.h>
 
-#include "ClockMeter.h"
 #include "CPUMeter.h"
 #include "DateTimeMeter.h"
 #include "FileDescriptorMeter.h"
