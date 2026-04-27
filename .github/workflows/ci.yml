@@ -13,7 +13,9 @@ jobs:
     steps:
     - uses: actions/checkout@v6
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends libncursesw5-dev
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install --no-install-recommends libncursesw5-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -39,9 +41,10 @@ jobs:
         ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
         sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" -y
-        sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends clang-22 libncursesw5-dev
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install --no-install-recommends clang-22 libncursesw5-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -60,7 +63,9 @@ jobs:
     steps:
     - uses: actions/checkout@v6
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev libiberty-dev libunwind-dev
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install --no-install-recommends libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev libiberty-dev libunwind-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -81,9 +86,10 @@ jobs:
         ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
         sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" -y
-        sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends clang-22 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev libiberty-dev libunwind-dev
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install --no-install-recommends clang-22 libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev libiberty-dev libunwind-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -102,7 +108,9 @@ jobs:
     steps:
     - uses: actions/checkout@v6
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends libncursesw5-dev libtinfo-dev libgpm-dev libsensors-dev libcap-dev
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install --no-install-recommends libncursesw5-dev libtinfo-dev libgpm-dev libsensors-dev libcap-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -118,7 +126,9 @@ jobs:
     steps:
     - uses: actions/checkout@v6
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends libpcp3-dev libncursesw5-dev libtinfo-dev libgpm-dev
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install --no-install-recommends libpcp3-dev libncursesw5-dev libtinfo-dev libgpm-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -132,7 +142,9 @@ jobs:
     steps:
     - uses: actions/checkout@v6
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends libncursesw5-dev libtinfo-dev libgpm-dev
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install --no-install-recommends libncursesw5-dev libtinfo-dev libgpm-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -151,9 +163,10 @@ jobs:
         ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
         sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" -y
-        sudo apt-get update -q
     - name: Install Dependencies
-      run: sudo apt-get install --no-install-recommends clang-22 clang-tools-22 libncursesw5-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev libiberty-dev libunwind-dev
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install --no-install-recommends clang-22 clang-tools-22 libncursesw5-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev libiberty-dev libunwind-dev
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
@@ -178,9 +191,10 @@ jobs:
         ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
         sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" -y
-        sudo apt-get update -q
     - name: Install LLVM Toolchain
-      run: sudo apt-get install --no-install-recommends clang-22 libclang-rt-22-dev llvm-22
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install --no-install-recommends clang-22 libclang-rt-22-dev llvm-22
     - name: Install Dependencies
       run: sudo apt-get install --no-install-recommends libncursesw5-dev libhwloc-dev libnl-3-dev libnl-genl-3-dev libsensors-dev libcap-dev libiberty-dev libunwind-dev
     - name: Bootstrap
