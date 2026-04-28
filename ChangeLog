@@ -1,5 +1,6 @@
 What's new in version 3.5.1
 
+* Consolidate ClockMeter code into DateTimeMeter code
 * Darwin: Fix unsigned underflow in memory meter on ARM64 (Apple Silicon 16K pages showing ~64TB used)
 * Linux/PCP: Replace M_SHARE (SHR) with M_PRIV (PRIV) in default Main screen columns
 * PCP: Fix dynamic screen column (instance) sorting (incorrect cast and field offsets)
