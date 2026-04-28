@@ -35,7 +35,6 @@ myhtopsources = \
 	AvailableMetersPanel.c \
 	BatteryMeter.c \
 	CategoriesPanel.c \
-	ClockMeter.c \
 	ColorsPanel.c \
 	ColumnsPanel.c \
 	CommandLine.c \
@@ -103,7 +102,6 @@ myhtopheaders = \
 	CPUMeter.h \
 	CRT.h \
 	CategoriesPanel.h \
-	ClockMeter.h \
 	ColorsPanel.h \
 	ColumnsPanel.h \
 	CommandLine.h \

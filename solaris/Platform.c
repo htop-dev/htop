@@ -30,7 +30,6 @@ in the source distribution for its full text.
 #include "SwapMeter.h"
 #include "TasksMeter.h"
 #include "LoadAverageMeter.h"
-#include "ClockMeter.h"
 #include "DateTimeMeter.h"
 #include "HostnameMeter.h"
 #include "SysArchMeter.h"
