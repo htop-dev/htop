@@ -49,6 +49,7 @@ in the source distribution for its full text.
 #include "SysArchMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
+#include "XUtils.h"
 #include "darwin/DarwinMachine.h"
 #include "darwin/PlatformHelpers.h"
 #include "generic/fdstat_sysctl.h"
@@ -727,8 +728,39 @@ void Platform_getBattery(BatteryInfo* info) {
 
    if (cap_max > 0.0) {
       info->percent = 100.0 * cap_current / cap_max;
-      info->energyCurr = cap_current;
-      info->energyFull = cap_max;
+   }
+
+   io_service_t batt = IOServiceGetMatchingService(iokit_port, IOServiceMatching("AppleSmartBattery"));
+   if (batt) {
+      CFNumberRef voltRef = IORegistryEntryCreateCFProperty(batt, CFSTR("Voltage"), kCFAllocatorDefault, 0);
+      CFNumberRef currCapRef = IORegistryEntryCreateCFProperty(batt, CFSTR("AppleRawCurrentCapacity"), kCFAllocatorDefault, 0);
+      CFNumberRef maxCapRef = IORegistryEntryCreateCFProperty(batt, CFSTR("AppleRawMaxCapacity"), kCFAllocatorDefault, 0);
+
+      if (currCapRef && maxCapRef && voltRef) {
+         double currMAh = 0.0;
+         CFNumberGetValue(currCapRef, kCFNumberDoubleType, &currMAh);
+
+         double maxMAh = 0.0;
+         CFNumberGetValue(maxCapRef, kCFNumberDoubleType, &maxMAh);
+
+         double voltMV = 0.0;
+         CFNumberGetValue(voltRef, kCFNumberDoubleType, &voltMV);
+
+         /* Approximate energy from charge and current battery voltage: mAh * mV / 1e6 = Wh. */
+         if (maxMAh > 0.0 && voltMV > 0.0) {
+            info->energyCurr = CLAMP(currMAh, 0.0, maxMAh) * voltMV / 1e6;
+            info->energyFull = maxMAh * voltMV / 1e6;
+         }
+      }
+
+      if (maxCapRef)
+         CFRelease(maxCapRef);
+      if (currCapRef)
+         CFRelease(currCapRef);
+      if (voltRef)
+         CFRelease(voltRef);
+
+      IOObjectRelease(batt);
    }
 
 cleanup:
