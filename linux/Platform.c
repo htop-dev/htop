@@ -901,46 +901,103 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
          if (r < 0)
             goto next;
 
-         bool full = false;
-         bool now = false;
+         bool haveBatteryEnergyFull = false;
+         bool haveBatteryEnergyCurr = false;
 
-         double fullCharge = 0;
-         double capacityLevel = NAN;
+         bool haveBatteryChargeFull = false;
+         bool haveBatteryChargeCurr = false;
+
+         uint8_t haveBatteryVoltage = 0; // 0 = no, 1 = min_voltage, 2 = curr_voltage
+         bool haveBatteryLevel = false;
+
+         uint64_t batteryEnergyFull = 0;
+         uint64_t batteryEnergyCurr = 0;
+
+         uint64_t batteryChargeFull = 0;
+         uint64_t batteryChargeCurr = 0;
+
+         uint64_t batteryVoltage = 0;
+         uint64_t batteryLevel = 0;
+
          const char* line;
 
          char* buf = buffer;
          while ((line = strsep(&buf, "\n")) != NULL) {
             char field[100] = {0};
-            int val = 0;
-            if (2 != sscanf(line, "POWER_SUPPLY_%99[^=]=%d", field, &val))
+            int64_t val = 0;
+            if (2 != sscanf(line, "POWER_SUPPLY_%99[^=]=%" SCNd64, field, &val))
                continue;
 
             if (String_eq(field, "CAPACITY")) {
-               capacityLevel = val / 100.0;
+               batteryLevel = val;
+               haveBatteryLevel = true;
                continue;
             }
 
-            if (String_eq(field, "ENERGY_FULL") || String_eq(field, "CHARGE_FULL")) {
-               fullCharge = val;
-               totalFull += fullCharge;
-               full = true;
-               if (now)
-                  break;
+            if (String_eq(field, "ENERGY_FULL")) {
+               batteryEnergyFull = val;
+               haveBatteryEnergyFull = true;
                continue;
             }
 
-            if (String_eq(field, "ENERGY_NOW") || String_eq(field, "CHARGE_NOW")) {
-               totalRemain += val;
-               now = true;
-               if (full)
-                  break;
+            if (String_eq(field, "CHARGE_FULL")) {
+               batteryChargeFull = val;
+               haveBatteryChargeFull = true;
+               continue;
+            }
+
+            if (String_eq(field, "ENERGY_NOW")) {
+               batteryEnergyCurr = val;
+               haveBatteryEnergyCurr = true;
+               continue;
+            }
+
+            if (String_eq(field, "CHARGE_NOW")) {
+               batteryChargeCurr = val;
+               haveBatteryChargeCurr = true;
+               continue;
+            }
+
+            if (haveBatteryVoltage < 1 && String_eq(field, "VOLTAGE_MIN_DESIGN")) {
+               batteryVoltage = val;
+               haveBatteryVoltage = 1;
+               continue;
+            }
+
+            if (haveBatteryVoltage < 2 && String_eq(field, "VOLTAGE_NOW")) {
+               batteryVoltage = val;
+               haveBatteryVoltage = 2;
                continue;
             }
          }
 
-         if (!now && full && isNonnegative(capacityLevel))
-            totalRemain += capacityLevel * fullCharge;
+         if (haveBatteryLevel) {
+            // If we have capacity level but not charge or energy, we infer approximate values
+            if (haveBatteryChargeFull && !haveBatteryChargeCurr) {
+               batteryChargeCurr = batteryChargeFull * batteryLevel / 100.0;
+               haveBatteryChargeCurr = true;
+            }
+            if (haveBatteryEnergyFull && !haveBatteryEnergyCurr) {
+               batteryEnergyCurr = batteryEnergyFull * batteryLevel / 100.0;
+               haveBatteryEnergyCurr = true;
+            }
+         }
 
+         if (haveBatteryEnergyFull && haveBatteryEnergyCurr) {
+            // No need for conversion needed
+         } else if (haveBatteryChargeFull && haveBatteryChargeCurr && haveBatteryVoltage) {
+            // Convert charge to energy using voltage
+            batteryEnergyFull = (batteryChargeFull * batteryVoltage) / 1000000;
+            haveBatteryEnergyFull = true;
+
+            batteryEnergyCurr = (batteryChargeCurr * batteryVoltage) / 1000000;
+            haveBatteryEnergyCurr = true;
+         }
+
+         if (haveBatteryEnergyFull && haveBatteryEnergyCurr && batteryEnergyFull > 0) {
+            totalFull += batteryEnergyFull;
+            totalRemain += batteryEnergyCurr > batteryEnergyFull ? batteryEnergyFull : batteryEnergyCurr;
+         }
       } else if (type == AC) {
          if (info->ac != AC_ERROR)
             goto next;
@@ -964,10 +1021,10 @@ next:
 
    closedir(dir);
 
-   info->percent = totalFull > 0 ? ((double) totalRemain * 100.0) / (double) totalFull : NAN;
    if (totalFull > 0) {
-      info->energyCurr = (double) totalRemain;
-      info->energyFull = (double) totalFull;
+      info->percent = ((double) totalRemain * 100.0) / (double) totalFull;
+      info->energyCurr = (double) totalRemain / 1000000.0;
+      info->energyFull = (double) totalFull / 1000000.0;
    }
 }
 
