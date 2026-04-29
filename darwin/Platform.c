@@ -736,6 +736,29 @@ void Platform_getBattery(BatteryInfo* info) {
       info->energyFull = cap_max;
    }
 
+   io_service_t batt = IOServiceGetMatchingService(iokit_port, IOServiceMatching("AppleSmartBattery"));
+   if (batt) {
+      CFNumberRef ampRef = IORegistryEntryCreateCFProperty(batt, CFSTR("Amperage"), kCFAllocatorDefault, 0);
+      CFNumberRef voltRef = IORegistryEntryCreateCFProperty(batt, CFSTR("Voltage"), kCFAllocatorDefault, 0);
+
+      if (ampRef && voltRef) {
+         double ampMA = 0.0;
+         CFNumberGetValue(ampRef, kCFNumberDoubleType, &ampMA);
+
+         double voltMV = 0.0;
+         CFNumberGetValue(voltRef, kCFNumberDoubleType, &voltMV);
+
+         info->powerCurr = ampMA * voltMV / 1e6;
+      }
+
+      if (ampRef)
+         CFRelease(ampRef);
+      if (voltRef)
+         CFRelease(voltRef);
+
+      IOObjectRelease(batt);
+   }
+
 cleanup:
    if (list)
       CFRelease(list);
