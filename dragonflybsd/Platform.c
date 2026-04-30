@@ -380,4 +380,75 @@ void Platform_getBattery(BatteryInfo* info) {
    size_t acline_len = sizeof(acline);
    if (sysctlbyname("hw.acpi.acline", &acline, &acline_len, NULL, 0) != -1)
       info->ac = (acline == 0) ? AC_ABSENT : AC_PRESENT;
+
+   int units = 0;
+   int fd = open("/dev/acpi", O_RDONLY | O_CLOEXEC);
+   if (fd == -1)
+      return;
+
+   if (ioctl(fd, ACPIIO_BATT_GET_UNITS, &units) == -1 || units <= 0) {
+      close(fd);
+      return;
+   }
+
+   bool haveTotalRemain = false;
+   bool haveTotalFull = false;
+
+   int64_t totalRemain = 0;
+   int64_t totalFull = 0;
+
+   for (int u = 0; u < units; u++) {
+      union acpi_battery_ioctl_arg bifArg = { .unit = u };
+      if (ioctl(fd, ACPIIO_BATT_GET_BIF, &bifArg) == -1)
+         continue;
+
+      union acpi_battery_ioctl_arg bstArg = { .unit = u };
+      if (ioctl(fd, ACPIIO_BATT_GET_BST, &bstArg) == -1)
+         continue;
+
+      const struct acpi_bif* bif = &bifArg.bif;
+      const struct acpi_bst* bst = &bstArg.bst;
+
+      bool haveBatteryEnergyCurr = false;
+      bool haveBatteryEnergyFull = false;
+
+      int64_t batteryEnergyCurr = 0;
+      int64_t batteryEnergyFull = 0;
+
+      if (bif->lfcap != ACPI_BATT_UNKNOWN && bst->cap != ACPI_BATT_UNKNOWN) {
+         if (bif->units == ACPI_BIF_UNITS_MW) {
+            batteryEnergyCurr = (int64_t) bst->cap * 1000;
+            batteryEnergyFull = (int64_t) bif->lfcap * 1000;
+            haveBatteryEnergyCurr = true;
+            haveBatteryEnergyFull = true;
+         } else {
+            uint32_t batteryVoltage = (bst->volt != ACPI_BATT_UNKNOWN) ? bst->volt : bif->dvol;
+            if (batteryVoltage != ACPI_BATT_UNKNOWN && batteryVoltage != 0) {
+               batteryEnergyCurr = (int64_t) bst->cap * batteryVoltage;
+               batteryEnergyFull = (int64_t) bif->lfcap * batteryVoltage;
+               haveBatteryEnergyCurr = true;
+               haveBatteryEnergyFull = true;
+            }
+         }
+      }
+
+      if (haveBatteryEnergyCurr && haveBatteryEnergyFull && batteryEnergyFull > 0) {
+         totalRemain += batteryEnergyCurr;
+         haveTotalRemain = true;
+
+         totalFull += batteryEnergyFull;
+         haveTotalFull = true;
+      }
+   }
+
+   close(fd);
+
+   if (haveTotalRemain && haveTotalFull && totalFull > 0) {
+      info->percent = ((double) totalRemain * 100.0) / (double) totalFull;
+      if (totalRemain >= totalFull)
+         info->percent = 100;
+
+      info->energyCurr = (double) totalRemain / 1000000.0;
+      info->energyFull = (double) totalFull / 1000000.0;
+   }
 }
