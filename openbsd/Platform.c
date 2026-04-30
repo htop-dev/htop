@@ -390,24 +390,45 @@ void Platform_getBattery(BatteryInfo* info) {
    bool found = findDevice("acpibat0", mib, &snsrdev, &sdlen);
 
    if (found) {
+      bool haveTotalFull = false;
+      bool haveTotalRemain = false;
+
+      int64_t totalFull = 0;
+      int64_t totalRemain = 0;
+
       /* See "sys/dev/acpi/acpibat.c" of OpenBSD source code for the indices
          of the last field. */
       mib[3] = SENSOR_WATTHOUR;
       mib[4] = 0; /* "last full capacity" */
-      double last_full_capacity = 0;
+      bool haveBatteryFull = false;
+      int64_t batteryFull = 0;
       if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1)
-         last_full_capacity = s.value;
-      if (last_full_capacity > 0) {
+         batteryFull = s.value;
+
+      if (batteryFull > 0)
+         haveBatteryFull = true;
+
+      if (haveBatteryFull) {
          mib[3] = SENSOR_WATTHOUR;
          mib[4] = 3; /* "remaining capacity" */
          if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1) {
-            double charge = s.value;
-            info->percent = 100 * (charge / last_full_capacity);
-            if (charge >= last_full_capacity)
-               info->percent = 100;
-            info->energyCurr = charge;
-            info->energyFull = last_full_capacity;
+            int64_t batteryRemain = s.value;
+            if (batteryRemain >= 0) {
+               totalRemain += batteryRemain;
+               totalFull += batteryFull;
+               haveTotalRemain = true;
+               haveTotalFull = true;
+            }
          }
+      }
+
+      if (haveTotalRemain && haveTotalFull && totalFull > 0) {
+         info->percent = ((double) totalRemain * 100.0) / (double) totalFull;
+         if (totalRemain >= totalFull)
+            info->percent = 100;
+
+         info->energyCurr = (double) totalRemain / 1000000.0;
+         info->energyFull = (double) totalFull / 1000000.0;
       }
    }
 
