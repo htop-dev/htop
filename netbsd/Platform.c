@@ -488,6 +488,11 @@ void Platform_getBattery(BatteryInfo* info) {
       intmax_t isConnected = 0;
       intmax_t curCharge = 0;
       intmax_t maxCharge = 0;
+      intmax_t voltage = 0;
+      intmax_t designVoltage = 0;
+
+      bool haveCharge = false;
+      bool chargeIsAmpHours = false;
 
       while ((fields = prop_object_iterator_next(fieldsIter)) != NULL) {
          props = prop_dictionary_get(fields, "device-properties");
@@ -505,6 +510,7 @@ void Platform_getBattery(BatteryInfo* info) {
          prop_object_t curValue = prop_dictionary_get(fields, "cur-value");
          prop_object_t maxValue = prop_dictionary_get(fields, "max-value");
          prop_object_t descField = prop_dictionary_get(fields, "description");
+         prop_object_t typeField = prop_dictionary_get(fields, "type");
 
          if (descField == NULL || curValue == NULL)
             continue;
@@ -513,17 +519,48 @@ void Platform_getBattery(BatteryInfo* info) {
             isConnected = prop_number_signed_value(curValue);
          } else if (prop_string_equals_string(descField, "present")) {
             isPresent = prop_number_signed_value(curValue);
+         } else if (prop_string_equals_string(descField, "voltage")) {
+            voltage = prop_number_signed_value(curValue);
+         } else if (prop_string_equals_string(descField, "design voltage")) {
+            designVoltage = prop_number_signed_value(curValue);
          } else if (prop_string_equals_string(descField, "charge")) {
             if (maxValue == NULL)
                continue;
             curCharge = prop_number_signed_value(curValue);
             maxCharge = prop_number_signed_value(maxValue);
+            haveCharge = true;
+            chargeIsAmpHours = typeField != NULL &&
+               prop_string_equals_string(typeField, "Ampere hour");
          }
       }
 
       if (isBattery && isPresent) {
-         totalCharge += curCharge;
-         totalCapacity += maxCharge;
+         intmax_t batteryVoltage = (voltage != 0) ? voltage : designVoltage;
+
+         bool haveBatteryCharge = false;
+
+         intmax_t batteryCharge = 0;
+         intmax_t batteryCapacity = 0;
+
+         if (haveCharge) {
+            if (chargeIsAmpHours) {
+               if (batteryVoltage > 0) {
+                  batteryCharge = curCharge * batteryVoltage / 1000000;
+                  batteryCapacity = maxCharge * batteryVoltage / 1000000;
+                  haveBatteryCharge = true;
+               }
+            } else {
+               batteryCharge = curCharge;
+               batteryCapacity = maxCharge;
+               haveBatteryCharge = true;
+            }
+         }
+
+         if (haveBatteryCharge) {
+            totalCharge += batteryCharge;
+            totalCapacity += batteryCapacity;
+         }
+
       }
 
       if (isACAdapter && info->ac != AC_PRESENT) {
@@ -532,9 +569,12 @@ void Platform_getBattery(BatteryInfo* info) {
    }
 
    if (totalCapacity > 0) {
-      info->percent = ((double)totalCharge / (double)totalCapacity) * 100.0;
-      info->energyCurr = (double) totalCharge;
-      info->energyFull = (double) totalCapacity;
+      info->percent = ((double) totalCharge * 100.0) / (double) totalCapacity;
+      if (totalCharge >= totalCapacity)
+         info->percent = 100.0;
+
+      info->energyCurr = (double) totalCharge / 1000000.0;
+      info->energyFull = (double) totalCapacity / 1000000.0;
    }
 
 error:
