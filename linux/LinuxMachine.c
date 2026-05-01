@@ -274,47 +274,75 @@ static void LinuxMachine_scanHugePages(LinuxMachine* this) {
    closedir(dir);
 }
 
+static bool LinuxMachine_isZramBlockName(const char* name) {
+   if (!String_startsWith(name, "zram"))
+      return false;
+
+   name += strlen("zram");
+   if (*name == '\0')
+      return false;
+
+   for (; *name != '\0'; name++) {
+      if (*name < '0' || *name > '9')
+         return false;
+   }
+
+   return true;
+}
+
+static void LinuxMachine_scanZramDevice(openat_arg_t blockDirFd, const char* name, memory_t* totalZram, memory_t* usedZramComp, memory_t* usedZramOrig) {
+#ifdef HAVE_OPENAT
+   int zramDirFd = Compat_openat(blockDirFd, name, O_DIRECTORY | O_PATH | O_NOFOLLOW);
+   if (zramDirFd < 0)
+      return;
+#else
+   char zramDirFd[4096];
+   xSnprintf(zramDirFd, sizeof(zramDirFd), "%s/%s", blockDirFd, name);
+#endif
+
+   memory_t size = 0;
+   memory_t orig_data_size = 0;
+   memory_t compr_data_size = 0;
+   char disksize[64];
+   char mm_stat[256];
+
+   ssize_t disksizeRead = Compat_readfileat(zramDirFd, "disksize", disksize, sizeof(disksize));
+   ssize_t mmStatRead = Compat_readfileat(zramDirFd, "mm_stat", mm_stat, sizeof(mm_stat));
+
+   if (disksizeRead > 0 && mmStatRead > 0 &&
+       1 == sscanf(disksize, "%llu", &size) &&
+       2 == sscanf(mm_stat, "%llu %llu", &orig_data_size, &compr_data_size)) {
+      *totalZram += size;
+      *usedZramComp += compr_data_size;
+      *usedZramOrig += orig_data_size;
+   }
+
+   Compat_openatArgClose(zramDirFd);
+}
+
 static void LinuxMachine_scanZramInfo(LinuxMachine* this) {
    memory_t totalZram = 0;
    memory_t usedZramComp = 0;
    memory_t usedZramOrig = 0;
 
-   char mm_stat[34];
-   char disksize[34];
+   DIR* dir = opendir("/sys/block");
+   if (dir) {
+#ifdef HAVE_OPENAT
+      openat_arg_t blockDirFd = xDirfd(dir);
+#else
+      openat_arg_t blockDirFd = "/sys/block";
+#endif
+      const struct dirent* entry;
+      while ((entry = readdir(dir)) != NULL) {
+         /* zram devices are named zramN; enumerate existing sysfs entries
+          * instead of probing zram0, zram1, ... until an absent device. */
+         if (!LinuxMachine_isZramBlockName(entry->d_name))
+            continue;
 
-   unsigned int i = 0;
-   for (;;) {
-      xSnprintf(mm_stat, sizeof(mm_stat), "/sys/block/zram%u/mm_stat", i);
-      xSnprintf(disksize, sizeof(disksize), "/sys/block/zram%u/disksize", i);
-      i++;
-      FILE* disksize_file = fopen(disksize, "r");
-      FILE* mm_stat_file = fopen(mm_stat, "r");
-      if (disksize_file == NULL || mm_stat_file == NULL) {
-         if (disksize_file) {
-            fclose(disksize_file);
-         }
-         if (mm_stat_file) {
-            fclose(mm_stat_file);
-         }
-         break;
-      }
-      memory_t size = 0;
-      memory_t orig_data_size = 0;
-      memory_t compr_data_size = 0;
-
-      if (1 != fscanf(disksize_file, "%llu\n", &size) ||
-          2 != fscanf(mm_stat_file, "    %llu       %llu", &orig_data_size, &compr_data_size)) {
-         fclose(disksize_file);
-         fclose(mm_stat_file);
-         break;
+         LinuxMachine_scanZramDevice(blockDirFd, entry->d_name, &totalZram, &usedZramComp, &usedZramOrig);
       }
 
-      totalZram += size;
-      usedZramComp += compr_data_size;
-      usedZramOrig += orig_data_size;
-
-      fclose(disksize_file);
-      fclose(mm_stat_file);
+      closedir(dir);
    }
 
    this->zram.totalZram = totalZram / 1024;
