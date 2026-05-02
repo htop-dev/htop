@@ -682,9 +682,14 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
-void Platform_getBattery(double* percent, ACPresence* isOnAC) {
-   *percent = NAN;
-   *isOnAC = AC_ERROR;
+void Platform_getBattery(BatteryInfo* info) {
+   *info = (BatteryInfo) {
+      .ac = AC_ERROR,
+      .percent = NAN,
+      .powerCurr = NAN,
+      .energyCurr = NAN,
+      .energyFull = NAN,
+   };
 
    CFArrayRef list = NULL;
 
@@ -715,8 +720,8 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
       /* Determine the AC state */
       CFStringRef power_state = CFDictionaryGetValue(power_source, CFSTR(kIOPSPowerSourceStateKey));
 
-      if (*isOnAC != AC_PRESENT)
-         *isOnAC = (kCFCompareEqualTo == CFStringCompare(power_state, CFSTR(kIOPSACPowerValue), 0)) ? AC_PRESENT : AC_ABSENT;
+      if (info->ac != AC_PRESENT)
+         info->ac = (kCFCompareEqualTo == CFStringCompare(power_state, CFSTR(kIOPSACPowerValue), 0)) ? AC_PRESENT : AC_ABSENT;
 
       /* Get the percentage remaining */
       double tmp;
@@ -726,8 +731,34 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
       cap_max += tmp;
    }
 
-   if (cap_max > 0.0)
-      *percent = 100.0 * cap_current / cap_max;
+   if (cap_max > 0.0) {
+      info->percent = 100.0 * cap_current / cap_max;
+      info->energyCurr = cap_current;
+      info->energyFull = cap_max;
+   }
+
+   io_service_t batt = IOServiceGetMatchingService(iokit_port, IOServiceMatching("AppleSmartBattery"));
+   if (batt) {
+      CFNumberRef ampRef = IORegistryEntryCreateCFProperty(batt, CFSTR("Amperage"), kCFAllocatorDefault, 0);
+      CFNumberRef voltRef = IORegistryEntryCreateCFProperty(batt, CFSTR("Voltage"), kCFAllocatorDefault, 0);
+
+      if (ampRef && voltRef) {
+         double ampMA = 0.0;
+         CFNumberGetValue(ampRef, kCFNumberDoubleType, &ampMA);
+
+         double voltMV = 0.0;
+         CFNumberGetValue(voltRef, kCFNumberDoubleType, &voltMV);
+
+         info->powerCurr = ampMA * voltMV / 1e6;
+      }
+
+      if (ampRef)
+         CFRelease(ampRef);
+      if (voltRef)
+         CFRelease(voltRef);
+
+      IOObjectRelease(batt);
+   }
 
 cleanup:
    if (list)

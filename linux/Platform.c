@@ -162,8 +162,13 @@ const unsigned int Platform_numberOfMemoryClasses = ARRAYSIZE(Platform_memoryCla
 
 static enum { BAT_PROC, BAT_SYS, BAT_ERR } Platform_Battery_method = BAT_PROC;
 static time_t Platform_Battery_cacheTime;
-static double Platform_Battery_cachePercent = NAN;
-static ACPresence Platform_Battery_cacheIsOnAC;
+static BatteryInfo Platform_Battery_cache = {
+   .ac = AC_ERROR,
+   .percent = NAN,
+   .powerCurr = NAN,
+   .energyCurr = NAN,
+   .energyFull = NAN,
+};
 
 #ifdef HAVE_LIBCAP
 static enum CapMode Platform_capabilitiesMode = CAP_MODE_BASIC;
@@ -833,18 +838,21 @@ static ACPresence procAcpiCheck(void) {
    return String_eq(buffer, "on-line") ? AC_PRESENT : AC_ABSENT;
 }
 
-static void Platform_Battery_getProcData(double* percent, ACPresence* isOnAC) {
-   *isOnAC = procAcpiCheck();
-   *percent = AC_ERROR != *isOnAC ? Platform_Battery_getProcBatInfo() : NAN;
+static void Platform_Battery_getProcData(BatteryInfo* info) {
+   info->ac = procAcpiCheck();
+   info->percent = AC_ERROR != info->ac ? Platform_Battery_getProcBatInfo() : NAN;
 }
 
 // ----------------------------------------
 // READ FROM /sys
 // ----------------------------------------
 
-static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
-   *percent = NAN;
-   *isOnAC = AC_ERROR;
+static void Platform_Battery_getSysData(BatteryInfo* info) {
+   info->percent = NAN;
+   info->ac = AC_ERROR;
+   info->powerCurr = NAN;
+   info->energyCurr = NAN;
+   info->energyFull = NAN;
 
    DIR* dir = opendir(SYS_POWERSUPPLY_DIR);
    if (!dir)
@@ -852,6 +860,9 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
 
    uint64_t totalFull = 0;
    uint64_t totalRemain = 0;
+   int64_t totalPower = 0;
+
+   bool havePower = false;
 
    const struct dirent* dirEntry;
    while ((dirEntry = readdir(dir))) {
@@ -895,61 +906,146 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
          if (r < 0)
             goto next;
 
-         bool full = false;
-         bool now = false;
+         bool haveBatteryEnergyFull = false;
+         bool haveBatteryEnergyCurr = false;
 
-         double fullCharge = 0;
-         double capacityLevel = NAN;
+         bool haveBatteryChargeFull = false;
+         bool haveBatteryChargeCurr = false;
+
+         uint8_t haveBatteryVoltage = 0; // 0 = no, 1 = min_voltage, 2 = curr_voltage
+         bool haveBatteryLevel = false;
+
+         bool haveBatteryCurrent = false;
+         bool haveBatteryPower = false;
+
+         uint64_t batteryEnergyFull = 0;
+         uint64_t batteryEnergyCurr = 0;
+
+         uint64_t batteryChargeFull = 0;
+         uint64_t batteryChargeCurr = 0;
+
+         uint64_t batteryVoltage = 0;
+         uint64_t batteryLevel = 0;
+
+         int64_t batteryCurrent = 0;
+         int64_t batteryPower = 0;
+
          const char* line;
 
          char* buf = buffer;
          while ((line = strsep(&buf, "\n")) != NULL) {
             char field[100] = {0};
-            int val = 0;
-            if (2 != sscanf(line, "POWER_SUPPLY_%99[^=]=%d", field, &val))
+            int64_t val = 0;
+            if (2 != sscanf(line, "POWER_SUPPLY_%99[^=]=%" SCNd64, field, &val))
                continue;
 
             if (String_eq(field, "CAPACITY")) {
-               capacityLevel = val / 100.0;
+               batteryLevel = val;
+               haveBatteryLevel = true;
                continue;
             }
 
-            if (String_eq(field, "ENERGY_FULL") || String_eq(field, "CHARGE_FULL")) {
-               fullCharge = val;
-               totalFull += fullCharge;
-               full = true;
-               if (now)
-                  break;
+            if (String_eq(field, "ENERGY_FULL")) {
+               batteryEnergyFull = val;
+               haveBatteryEnergyFull = true;
                continue;
             }
 
-            if (String_eq(field, "ENERGY_NOW") || String_eq(field, "CHARGE_NOW")) {
-               totalRemain += val;
-               now = true;
-               if (full)
-                  break;
+            if (String_eq(field, "CHARGE_FULL")) {
+               batteryChargeFull = val;
+               haveBatteryChargeFull = true;
+               continue;
+            }
+
+            if (String_eq(field, "ENERGY_NOW")) {
+               batteryEnergyCurr = val;
+               haveBatteryEnergyCurr = true;
+               continue;
+            }
+
+            if (String_eq(field, "CHARGE_NOW")) {
+               batteryChargeCurr = val;
+               haveBatteryChargeCurr = true;
+               continue;
+            }
+
+            if (haveBatteryVoltage < 1 && String_eq(field, "VOLTAGE_MIN_DESIGN")) {
+               batteryVoltage = val;
+               haveBatteryVoltage = 1;
+               continue;
+            }
+
+            if (haveBatteryVoltage < 2 && String_eq(field, "VOLTAGE_NOW")) {
+               batteryVoltage = val;
+               haveBatteryVoltage = 2;
+               continue;
+            }
+
+            if (String_eq(field, "CURRENT_NOW")) {
+               batteryCurrent = val;
+               haveBatteryCurrent = true;
+               continue;
+            }
+
+            if (String_eq(field, "POWER_NOW")) {
+               batteryPower += val;
+               haveBatteryPower = true;
                continue;
             }
          }
 
-         if (!now && full && isNonnegative(capacityLevel))
-            totalRemain += capacityLevel * fullCharge;
+         if (haveBatteryLevel) {
+            // If we have capacity level but not charge or energy, we infer approximate values
+            if (haveBatteryChargeFull && !haveBatteryChargeCurr) {
+               batteryChargeCurr = batteryChargeFull * batteryLevel / 100.0;
+               haveBatteryChargeCurr = true;
+            }
+            if (haveBatteryEnergyFull && !haveBatteryEnergyCurr) {
+               batteryEnergyCurr = batteryEnergyFull * batteryLevel / 100.0;
+               haveBatteryEnergyCurr = true;
+            }
+         }
 
+         if (haveBatteryEnergyFull && haveBatteryEnergyCurr) {
+            // No need for conversion needed
+         } else if (haveBatteryChargeFull && haveBatteryChargeCurr && haveBatteryVoltage) {
+            // Convert charge to energy using voltage
+            batteryEnergyFull = (batteryChargeFull * batteryVoltage) / 1000000;
+            haveBatteryEnergyFull = true;
+
+            batteryEnergyCurr = (batteryChargeCurr * batteryVoltage) / 1000000;
+            haveBatteryEnergyCurr = true;
+         }
+
+         if (haveBatteryEnergyFull && haveBatteryEnergyCurr && batteryEnergyFull > 0) {
+            totalFull += batteryEnergyFull;
+            totalRemain += batteryEnergyCurr > batteryEnergyFull ? batteryEnergyFull : batteryEnergyCurr;
+         }
+
+         if (!haveBatteryPower && haveBatteryCurrent && haveBatteryVoltage) {
+            batteryPower = (batteryCurrent * batteryVoltage) / 1000000;
+            haveBatteryPower = true;
+         }
+
+         if (haveBatteryPower) {
+            totalPower += batteryPower;
+            havePower = true;
+         }
       } else if (type == AC) {
-         if (*isOnAC != AC_ERROR)
+         if (info->ac != AC_ERROR)
             goto next;
 
          char buffer[2];
          ssize_t r = Compat_readfileat(entryFd, "online", buffer, sizeof(buffer));
          if (r < 1) {
-            *isOnAC = AC_ERROR;
+            info->ac = AC_ERROR;
             goto next;
          }
 
          if (buffer[0] == '0')
-            *isOnAC = AC_ABSENT;
+            info->ac = AC_ABSENT;
          else if (buffer[0] == '1')
-            *isOnAC = AC_PRESENT;
+            info->ac = AC_PRESENT;
       }
 
 next:
@@ -958,37 +1054,50 @@ next:
 
    closedir(dir);
 
-   *percent = totalFull > 0 ? ((double) totalRemain * 100.0) / (double) totalFull : NAN;
+   if (totalFull > 0) {
+      info->percent = ((double) totalRemain * 100.0) / (double) totalFull;
+      info->energyCurr = (double) totalRemain / 1000000.0;
+      info->energyFull = (double) totalFull / 1000000.0;
+   }
+
+   if (havePower) {
+      info->powerCurr = (double) totalPower / 1000000.0;
+   }
 }
 
-void Platform_getBattery(double* percent, ACPresence* isOnAC) {
+void Platform_getBattery(BatteryInfo* info) {
    time_t now = time(NULL);
    // update battery reading is slow. Update it each 10 seconds only.
    if (now < Platform_Battery_cacheTime + 10) {
-      *percent = Platform_Battery_cachePercent;
-      *isOnAC = Platform_Battery_cacheIsOnAC;
+      *info = Platform_Battery_cache;
       return;
    }
 
+   Platform_Battery_cache = (BatteryInfo) {
+      .ac = AC_ERROR,
+      .percent = NAN,
+      .powerCurr = NAN,
+      .energyCurr = NAN,
+      .energyFull = NAN,
+   };
+
    if (Platform_Battery_method == BAT_PROC) {
-      Platform_Battery_getProcData(percent, isOnAC);
-      if (!isNonnegative(*percent))
+      Platform_Battery_getProcData(&Platform_Battery_cache);
+      if (!isNonnegative(Platform_Battery_cache.percent))
          Platform_Battery_method = BAT_SYS;
    }
    if (Platform_Battery_method == BAT_SYS) {
-      Platform_Battery_getSysData(percent, isOnAC);
-      if (!isNonnegative(*percent))
+      Platform_Battery_getSysData(&Platform_Battery_cache);
+      if (!isNonnegative(Platform_Battery_cache.percent))
          Platform_Battery_method = BAT_ERR;
    }
-   if (Platform_Battery_method == BAT_ERR) {
-      *percent = NAN;
-      *isOnAC = AC_ERROR;
-   } else {
-      *percent = CLAMP(*percent, 0.0, 100.0);
+   if (Platform_Battery_method != BAT_ERR) {
+      Platform_Battery_cache.percent = CLAMP(Platform_Battery_cache.percent, 0.0, 100.0);
    }
-   Platform_Battery_cachePercent = *percent;
-   Platform_Battery_cacheIsOnAC = *isOnAC;
+
    Platform_Battery_cacheTime = now;
+
+   *info = Platform_Battery_cache;
 }
 
 void Platform_longOptionsUsage(const char* name)

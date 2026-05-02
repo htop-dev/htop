@@ -373,46 +373,97 @@ static bool findDevice(const char* name, int* mib, struct sensordev* snsrdev, si
    }
 }
 
-void Platform_getBattery(double* percent, ACPresence* isOnAC) {
+void Platform_getBattery(BatteryInfo* info) {
    int mib[] = {CTL_HW, HW_SENSORS, 0, 0, 0};
    struct sensor s;
    size_t slen = sizeof(struct sensor);
    struct sensordev snsrdev;
    size_t sdlen = sizeof(struct sensordev);
 
+   *info = (BatteryInfo) {
+      .ac = AC_ERROR,
+      .percent = NAN,
+      .powerCurr = NAN,
+      .energyCurr = NAN,
+      .energyFull = NAN,
+   };
+
    bool found = findDevice("acpibat0", mib, &snsrdev, &sdlen);
 
-   *percent = NAN;
    if (found) {
+      bool haveTotalFull = false;
+      bool haveTotalRemain = false;
+      bool haveTotalPower = false;
+
+      int64_t totalFull = 0;
+      int64_t totalRemain = 0;
+      int64_t totalPower = 0;
+
       /* See "sys/dev/acpi/acpibat.c" of OpenBSD source code for the indices
          of the last field. */
       mib[3] = SENSOR_WATTHOUR;
       mib[4] = 0; /* "last full capacity" */
-      double last_full_capacity = 0;
+      bool haveBatteryFull = false;
+      int64_t batteryFull = 0;
       if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1)
-         last_full_capacity = s.value;
-      if (last_full_capacity > 0) {
+         batteryFull = s.value;
+
+      if (batteryFull > 0)
+         haveBatteryFull = true;
+
+      if (haveBatteryFull) {
          mib[3] = SENSOR_WATTHOUR;
          mib[4] = 3; /* "remaining capacity" */
          if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1) {
-            double charge = s.value;
-            *percent = 100 * (charge / last_full_capacity);
-            if (charge >= last_full_capacity) {
-               *percent = 100;
+            int64_t batteryRemain = s.value;
+            if (batteryRemain >= 0) {
+               totalRemain += batteryRemain;
+               totalFull += batteryFull;
+               haveTotalRemain = true;
+               haveTotalFull = true;
             }
          }
+      }
+
+      if (haveTotalRemain && haveTotalFull && totalFull > 0) {
+         info->percent = ((double) totalRemain * 100.0) / (double) totalFull;
+         if (totalRemain >= totalFull)
+            info->percent = 100;
+
+         info->energyCurr = (double) totalRemain / 1000000.0;
+         info->energyFull = (double) totalFull / 1000000.0;
+      }
+
+      mib[3] = SENSOR_INTEGER;
+      mib[4] = 0; /* "battery state" */
+      int64_t batteryState = 0;
+      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1)
+         batteryState = s.value;
+
+      mib[3] = SENSOR_WATTS;
+      mib[4] = 0; /* "rate" */
+      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1) {
+         int64_t batteryPower = s.value;
+         if (batteryState & 0x02)
+            batteryPower = -batteryPower;
+
+         totalPower += batteryPower;
+         haveTotalPower = true;
+      }
+
+      if (haveTotalPower) {
+         info->powerCurr = (double) totalPower / 1000000.0;
       }
    }
 
    found = findDevice("acpiac0", mib, &snsrdev, &sdlen);
 
-   *isOnAC = AC_ERROR;
    if (found) {
       /* See "sys/dev/acpi/acpiac.c" of OpenBSD source code.
          There is only one "sensor" for this device. */
       mib[3] = SENSOR_INDICATOR;
       mib[4] = 0; /* "power supply" (status indicator) */
       if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1)
-         *isOnAC = s.value != 0 ? AC_PRESENT : AC_ABSENT;
+         info->ac = s.value != 0 ? AC_PRESENT : AC_ABSENT;
    }
 }

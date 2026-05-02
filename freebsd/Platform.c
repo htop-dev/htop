@@ -10,14 +10,18 @@ in the source distribution for its full text.
 #include "freebsd/Platform.h"
 
 #include <devstat.h>
+#include <fcntl.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
+#include <dev/acpica/acpiio.h>
 #include <net/if.h>
 #include <net/if_mib.h>
 #include <sys/_types.h>
 #include <sys/devicestat.h>
+#include <sys/ioctl.h>
 #include <sys/param.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
@@ -396,18 +400,118 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
-void Platform_getBattery(double* percent, ACPresence* isOnAC) {
+void Platform_getBattery(BatteryInfo* info) {
+   *info = (BatteryInfo) {
+      .ac = AC_ERROR,
+      .percent = NAN,
+      .powerCurr = NAN,
+      .energyCurr = NAN,
+      .energyFull = NAN,
+   };
+
    int life;
    size_t life_len = sizeof(life);
-   if (sysctlbyname("hw.acpi.battery.life", &life, &life_len, NULL, 0) == -1)
-      *percent = NAN;
-   else
-      *percent = life;
+   if (sysctlbyname("hw.acpi.battery.life", &life, &life_len, NULL, 0) != -1)
+      info->percent = life;
 
    int acline;
    size_t acline_len = sizeof(acline);
-   if (sysctlbyname("hw.acpi.acline", &acline, &acline_len, NULL, 0) == -1)
-      *isOnAC = AC_ERROR;
-   else
-      *isOnAC = acline == 0 ? AC_ABSENT : AC_PRESENT;
+   if (sysctlbyname("hw.acpi.acline", &acline, &acline_len, NULL, 0) != -1)
+      info->ac = (acline == 0) ? AC_ABSENT : AC_PRESENT;
+
+   int units = 0;
+   size_t units_len = sizeof(units);
+   if (sysctlbyname("hw.acpi.battery.units", &units, &units_len, NULL, 0) == -1 || units <= 0)
+      return;
+
+   int fd = open("/dev/acpi", O_RDONLY | O_CLOEXEC);
+   if (fd == -1)
+      return;
+
+   bool haveTotalRemain = false;
+   bool haveTotalFull = false;
+   bool haveTotalPower = false;
+
+   int64_t totalRemain = 0;
+   int64_t totalFull = 0;
+   int64_t totalPower = 0;
+
+   for (int u = 0; u < units; u++) {
+      union acpi_battery_ioctl_arg bixArg = { .unit = u };
+      if (ioctl(fd, ACPIIO_BATT_GET_BIX, &bixArg) == -1)
+         continue;
+
+      union acpi_battery_ioctl_arg bstArg = { .unit = u };
+      if (ioctl(fd, ACPIIO_BATT_GET_BST, &bstArg) == -1)
+         continue;
+
+      const struct acpi_bix* bix = &bixArg.bix;
+      const struct acpi_bst* bst = &bstArg.bst;
+
+      bool haveBatteryEnergyCurr = false;
+      bool haveBatteryEnergyFull = false;
+      bool haveBatteryPower = false;
+
+      int64_t batteryEnergyCurr = 0;
+      int64_t batteryEnergyFull = 0;
+      int64_t batteryPower = 0;
+
+      if (bix->lfcap != ACPI_BATT_UNKNOWN && bst->cap != ACPI_BATT_UNKNOWN) {
+         if (bix->units == ACPI_BIX_UNITS_MW) {
+            batteryEnergyCurr = (int64_t) bst->cap * 1000;
+            batteryEnergyFull = (int64_t) bix->lfcap * 1000;
+            haveBatteryEnergyCurr = true;
+            haveBatteryEnergyFull = true;
+         } else {
+            uint32_t batteryVoltage = (bst->volt != ACPI_BATT_UNKNOWN) ? bst->volt : bix->dvol;
+            if (batteryVoltage != ACPI_BATT_UNKNOWN && batteryVoltage != 0) {
+               batteryEnergyCurr = (int64_t) bst->cap * batteryVoltage;
+               batteryEnergyFull = (int64_t) bix->lfcap * batteryVoltage;
+               haveBatteryEnergyCurr = true;
+               haveBatteryEnergyFull = true;
+            }
+         }
+      }
+
+      if (haveBatteryEnergyCurr && haveBatteryEnergyFull && batteryEnergyFull > 0) {
+         totalRemain += batteryEnergyCurr;
+         totalFull += batteryEnergyFull;
+         haveTotalRemain = true;
+         haveTotalFull = true;
+      }
+
+      if (bst->rate != ACPI_BATT_UNKNOWN && bst->rate > 0) {
+         if (bix->units == ACPI_BIX_UNITS_MW) {
+            batteryPower = (int64_t) bst->rate * 1000;
+            haveBatteryPower = true;
+         } else {
+            uint32_t rateVoltage = (bst->volt != ACPI_BATT_UNKNOWN) ? bst->volt : bix->dvol;
+
+            if (rateVoltage != ACPI_BATT_UNKNOWN && rateVoltage != 0) {
+               batteryPower = (int64_t) bst->rate * rateVoltage;
+               haveBatteryPower = true;
+            }
+         }
+      }
+
+      if (haveBatteryPower) {
+         totalPower += batteryPower;
+         haveTotalPower = true;
+      }
+   }
+
+   close(fd);
+
+   if (haveTotalRemain && haveTotalFull && totalFull > 0) {
+      info->percent = ((double) totalRemain * 100.0) / (double) totalFull;
+      if (totalRemain >= totalFull)
+         info->percent = 100;
+
+      info->energyCurr = (double) totalRemain / 1000000.0;
+      info->energyFull = (double) totalFull / 1000000.0;
+   }
+
+   if (haveTotalPower) {
+      info->powerCurr = (double) totalPower / 1000000.0;
+   }
 }

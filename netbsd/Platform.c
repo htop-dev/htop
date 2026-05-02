@@ -446,15 +446,23 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
-void Platform_getBattery(double* percent, ACPresence* isOnAC) {
+void Platform_getBattery(BatteryInfo* info) {
    prop_dictionary_t dict, fields, props;
    prop_object_t device, class;
 
    intmax_t totalCharge = 0;
    intmax_t totalCapacity = 0;
 
-   *percent = NAN;
-   *isOnAC = AC_ERROR;
+   bool havePower = false;
+   intmax_t totalPower = 0;
+
+   *info = (BatteryInfo) {
+      .ac = AC_ERROR,
+      .percent = NAN,
+      .powerCurr = NAN,
+      .energyCurr = NAN,
+      .energyFull = NAN,
+   };
 
    int fd = open(_PATH_SYSMON, O_RDONLY);
    if (fd == -1)
@@ -484,6 +492,17 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
       intmax_t isConnected = 0;
       intmax_t curCharge = 0;
       intmax_t maxCharge = 0;
+      intmax_t chargeRate = 0;
+      intmax_t dischargeRate = 0;
+      intmax_t voltage = 0;
+      intmax_t designVoltage = 0;
+
+      bool haveCharge = false;
+      bool haveChargeRate = false;
+      bool haveDischargeRate = false;
+      bool chargeIsAmpHours = false;
+      bool chargeRateIsAmps = false;
+      bool dischargeRateIsAmps = false;
 
       while ((fields = prop_object_iterator_next(fieldsIter)) != NULL) {
          props = prop_dictionary_get(fields, "device-properties");
@@ -501,6 +520,7 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
          prop_object_t curValue = prop_dictionary_get(fields, "cur-value");
          prop_object_t maxValue = prop_dictionary_get(fields, "max-value");
          prop_object_t descField = prop_dictionary_get(fields, "description");
+         prop_object_t typeField = prop_dictionary_get(fields, "type");
 
          if (descField == NULL || curValue == NULL)
             continue;
@@ -509,24 +529,110 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
             isConnected = prop_number_signed_value(curValue);
          } else if (prop_string_equals_string(descField, "present")) {
             isPresent = prop_number_signed_value(curValue);
+         } else if (prop_string_equals_string(descField, "voltage")) {
+            voltage = prop_number_signed_value(curValue);
+         } else if (prop_string_equals_string(descField, "design voltage")) {
+            designVoltage = prop_number_signed_value(curValue);
          } else if (prop_string_equals_string(descField, "charge")) {
             if (maxValue == NULL)
                continue;
             curCharge = prop_number_signed_value(curValue);
             maxCharge = prop_number_signed_value(maxValue);
+            haveCharge = true;
+            chargeIsAmpHours = typeField != NULL &&
+               prop_string_equals_string(typeField, "Ampere hour");
+         } else if (prop_string_equals_string(descField, "charge rate")) {
+            chargeRate = prop_number_signed_value(curValue);
+            chargeRateIsAmps = typeField != NULL &&
+               prop_string_equals_string(typeField, "Ampere");
+            haveChargeRate = true;
+         } else if (prop_string_equals_string(descField, "discharge rate")) {
+            dischargeRate = prop_number_signed_value(curValue);
+            dischargeRateIsAmps = typeField != NULL &&
+               prop_string_equals_string(typeField, "Ampere");
+            haveDischargeRate = true;
          }
       }
 
       if (isBattery && isPresent) {
-         totalCharge += curCharge;
-         totalCapacity += maxCharge;
+         intmax_t batteryVoltage = (voltage != 0) ? voltage : designVoltage;
+
+         bool haveBatteryChargeRate = false;
+         bool haveBatteryDischargeRate = false;
+
+         bool haveBatteryCharge = false;
+
+         intmax_t batteryChargeRate = 0;
+         intmax_t batteryDischargeRate = 0;
+         intmax_t batteryCharge = 0;
+         intmax_t batteryCapacity = 0;
+
+         if (haveCharge) {
+            if (chargeIsAmpHours) {
+               if (batteryVoltage > 0) {
+                  batteryCharge = curCharge * batteryVoltage / 1000000;
+                  batteryCapacity = maxCharge * batteryVoltage / 1000000;
+                  haveBatteryCharge = true;
+               }
+            } else {
+               batteryCharge = curCharge;
+               batteryCapacity = maxCharge;
+               haveBatteryCharge = true;
+            }
+         }
+
+         if (haveChargeRate) {
+            if (chargeRateIsAmps) {
+               if (batteryVoltage > 0) {
+                  batteryChargeRate = chargeRate * batteryVoltage / 1000000;
+                  haveBatteryChargeRate = true;
+               }
+            } else {
+               batteryChargeRate = chargeRate;
+               haveBatteryChargeRate = true;
+            }
+         }
+
+         if (haveDischargeRate) {
+            if (dischargeRateIsAmps) {
+               if (batteryVoltage > 0) {
+                  batteryDischargeRate = dischargeRate * batteryVoltage / 1000000;
+                  haveBatteryDischargeRate = true;
+               }
+            } else {
+               batteryDischargeRate = dischargeRate;
+               haveBatteryDischargeRate = true;
+            }
+         }
+
+         if (haveBatteryCharge) {
+            totalCharge += batteryCharge;
+            totalCapacity += batteryCapacity;
+         }
+
+         if (haveBatteryChargeRate || haveBatteryDischargeRate) {
+            totalPower += batteryDischargeRate - batteryChargeRate;
+            havePower = true;
+         }
       }
 
-      if (isACAdapter && *isOnAC != AC_PRESENT) {
-         *isOnAC = isConnected ? AC_PRESENT : AC_ABSENT;
+      if (isACAdapter && info->ac != AC_PRESENT) {
+         info->ac = isConnected ? AC_PRESENT : AC_ABSENT;
       }
    }
-   *percent = totalCapacity > 0 ? ((double)totalCharge / (double)totalCapacity) * 100.0 : NAN;
+
+   if (totalCapacity > 0) {
+      info->percent = ((double) totalCharge * 100.0) / (double) totalCapacity;
+      if (totalCharge >= totalCapacity)
+         info->percent = 100.0;
+
+      info->energyCurr = (double) totalCharge / 1000000.0;
+      info->energyFull = (double) totalCapacity / 1000000.0;
+   }
+
+   if (havePower) {
+      info->powerCurr = (double) totalPower / 1000000.0;
+   }
 
 error:
    if (fd != -1)
