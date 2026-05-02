@@ -107,6 +107,7 @@ typedef struct Settings_ {
    bool enableMouse;
    #endif
    int hideFunctionBar;  // 0 - off, 1 - on ESC until next input, 2 - permanently
+   bool decimalUnits;    // false = IEC binary (KiB, MiB, ...), true = SI decimal (KB, MB, ...)
    #ifdef HAVE_LIBHWLOC
    bool topologyAffinity;
    #endif

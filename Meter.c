@@ -505,6 +505,25 @@ int Meter_humanUnit(char* buffer, double value, size_t size) {
    return xSnprintf(buffer, size, "%.*f%c", precision, value, unitPrefixes[i]);
 }
 
+const char* Meter_ioRateUnit(char* buffer, size_t size, double bytesPerSec, bool decimal) {
+   if (!decimal) {
+      Meter_humanUnit(buffer, bytesPerSec / ONE_K, size);
+      return "iB/s";
+   }
+
+   double val = bytesPerSec / ONE_DECIMAL_K;
+   size_t i = 0;
+   while (val >= ONE_DECIMAL_K && i < ARRAYSIZE(unitPrefixes) - 1) {
+      val /= ONE_DECIMAL_K;
+      ++i;
+   }
+   int precision = 0;
+   if (i > 0)
+      precision = val <= 99.9 ? (val <= 9.99 ? 2 : 1) : 0;
+   xSnprintf(buffer, size, "%.*f%c", precision, val, unitPrefixes[i]);
+   return "B/s";
+}
+
 void Meter_delete(Object* cast) {
    if (!cast)
       return;
