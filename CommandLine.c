@@ -68,7 +68,7 @@ static void printHelpFlag(const char* name) {
           "-p --pid=PID[,PID,PID...]       Show only the given PIDs\n"
           "   --readonly                   Disable all system and process changing features\n"
           "-s --sort-key=COLUMN            Sort by COLUMN in list view (try --sort-key=help for a list)\n"
-          "-t --tree                       Show the tree view (can be combined with -s)\n"
+          "-t --tree[=MODE]                Show the tree view (MODE: jumpy|soft|hard); can be combined with -s\n"
           "-u --user[=USERNAME]            Show only processes for a given user (or $USER)\n"
           "-U --no-unicode                 Do not use unicode but plain ASCII\n"
           "-V --version                    Print version info\n");
@@ -92,6 +92,7 @@ typedef struct CommandLineSettings_ {
    bool enableMouse;
 #endif
    bool treeView;
+   int stableTreeView;
    bool allowUnicode;
    bool highlightChanges;
    int highlightDelaySecs;
@@ -99,6 +100,25 @@ typedef struct CommandLineSettings_ {
    bool hideMeters;
    bool hideFunctionBar;
 } CommandLineSettings;
+
+static bool parseTreeStableMode(const char* arg, int* stableTreeView) {
+   if (String_eq(arg, "0") || String_eq(arg, "jumpy")) {
+      *stableTreeView = 0;
+      return true;
+   }
+
+   if (String_eq(arg, "1") || String_eq(arg, "soft") || String_eq(arg, "stable")) {
+      *stableTreeView = 1;
+      return true;
+   }
+
+   if (String_eq(arg, "2") || String_eq(arg, "hard") || String_eq(arg, "STABLE")) {
+      *stableTreeView = 2;
+      return true;
+   }
+
+   return false;
+}
 
 static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettings* flags) {
 
@@ -115,6 +135,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
 #endif
       .treeView = false,
       .allowUnicode = true,
+      .stableTreeView = -1,
       .highlightChanges = false,
       .highlightDelaySecs = -1,
       .readonly = false,
@@ -143,7 +164,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
       {"no-mouse",   no_argument,         0, 'M'},
       {"no-unicode", no_argument,         0, 'U'},
       {"no-meters",  no_argument,         0, 129},
-      {"tree",       no_argument,         0, 't'},
+      {"tree",       optional_argument,   0, 't'},
       {"pid",        required_argument,   0, 'p'},
       {"filter",     required_argument,   0, 'F'},
       {"no-functionbar", no_argument,     0, 130},
@@ -156,7 +177,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
 
    int opt, opti = 0;
    /* Parse arguments */
-   while ((opt = getopt_long(argc, argv, "hVMCs:td:n:u::Up:F:H::", long_opts, &opti))) {
+   while ((opt = getopt_long(argc, argv, "hVMCs:t::d:n:u::Up:F:H::", long_opts, &opti))) {
       if (opt == EOF)
          break;
 
@@ -250,6 +271,20 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
             flags->hideMeters = true;
             break;
          case 't':
+            if (!optarg && optind < argc &&
+                (argv[optind][0] != '\0' && argv[optind][0] != '-')) {
+               int stableTreeView = -1;
+               if (parseTreeStableMode(argv[optind], &stableTreeView)) {
+                  flags->stableTreeView = stableTreeView;
+                  optarg = argv[optind++];
+               }
+            }
+            if (optarg) {
+               if (!parseTreeStableMode(optarg, &flags->stableTreeView)) {
+                  fprintf(stderr, "Error: invalid tree mode \"%s\" (expected: jumpy, soft, hard (or 0, 1, 2)).\n", optarg);
+                  return STATUS_ERROR_EXIT;
+               }
+            }
             flags->treeView = true;
             break;
          case 'p': {
@@ -382,6 +417,8 @@ int CommandLine_run(int argc, char** argv) {
 #endif
    if (flags.treeView)
       settings->ss->treeView = true;
+   if (flags.stableTreeView != -1)
+      settings->ss->stableTreeView = flags.stableTreeView;
    if (flags.highlightChanges)
       settings->highlightChanges = true;
    if (flags.highlightDelaySecs != -1)

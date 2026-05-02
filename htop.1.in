@@ -85,9 +85,14 @@ Disable all system and process changing features
 \fB\-V \-\-version
 Output version information and exit
 .TP
-\fB\-t \-\-tree
-Show processes in tree view. This can be used to force a tree view when
-requesting a sort order with -s.
+\fB\-t \-\-tree[=MODE]
+Show processes in tree view.
+This can be used to force a tree view when requesting a sort order with -s.
+The optional MODE can used to set the stable tree mode (0/jumpy ;
+1/soft/stable ; 2/hard/STABLE).
+Soft mode will try to stabilize the current PID line visually on the screen.
+Hard mode will additionally allow to move the whole tree down, creating
+empty space above the root when necessary.
 .TP
 \fB\-H \-\-highlight-changes=DELAY\fR
 Highlight new and old processes

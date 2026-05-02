@@ -76,6 +76,7 @@ struct Panel_ {
    bool needsRedraw;
    bool cursorOn;
    bool wasFocus;
+   bool allowExcessScrollV; /* when true, scrollV > size-h is permitted (blank lines at bottom) */
    int lastMouseBarClickX; /* X position of last mouse click on function bar (LINES-1) */
    FunctionBar* currentBar;
    FunctionBar* defaultBar;
