@@ -168,27 +168,57 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
    *rescan = false;
 }
 
-static inline bool drawTab(const int* y, int* x, int l, const char* name, bool cur) {
-   assert(*x >= 0);
-   assert(*x < l);
+static inline int getBorderColor(bool cur) {
+   return CRT_colors[cur ? SCREENS_CUR_BORDER : SCREENS_OTH_BORDER];
+}
 
-   attrset(CRT_colors[cur ? SCREENS_CUR_BORDER : SCREENS_OTH_BORDER]);
-   mvaddch(*y, *x, '[');
+static inline int getTextColor(bool cur) {
+   return CRT_colors[cur ? SCREENS_CUR_TEXT : SCREENS_OTH_TEXT];
+}
+
+static inline bool drawTab(int y, int* x, int maxWidth, const char* name, bool cur) {
+
+   assert( x != NULL);
+   assert(name != NULL); 
+   assert(*x >= 0 && *x < maxWidth);
+
+   int remainingWidth = maxWidth - *x;
+
+   //drwa '['
+   attrset(getBorderColor(cur));
+   mvaddch(y, *x, '[');
    (*x)++;
-   if (*x >= l)
-      return false;
-   int nameWidth = (int)strnlen(name, l - *x);
-   attrset(CRT_colors[cur ? SCREENS_CUR_TEXT : SCREENS_OTH_TEXT]);
-   mvaddnstr(*y, *x, name, nameWidth);
+   remainingWidth--;
+   if (remainingWidth <= 0) {
+      return false; 
+   }
+
+   //draw text with safety
+   int nameWidth = (int)strnlen(name, remainingWidth);
+   attrset(getTextColor(cur));
+   mvaddnstr(y, *x, name, nameWidth);
    *x += nameWidth;
-   if (*x >= l)
+   remainingWidth -= nameWidth;
+   if (remainingWidth <= 0) {
       return false;
-   attrset(CRT_colors[cur ? SCREENS_CUR_BORDER : SCREENS_OTH_BORDER]);
-   mvaddch(*y, *x, ']');
-   *x += 1 + SCREEN_TAB_COLUMN_GAP;
-   if (*x >= l)
+   } 
+
+   //draw ']'
+   attrset(getBorderColor(cur));
+   mvaddch(y, *x, ']');
+   (*x)++;
+   remainingWidth--;
+   if (remainingWidth <= 0){ 
       return false;
-   return true;
+   }
+
+   //add gap, clamped so *x never exceeds maxWidth on exit
+   int gap =  SCREEN_TAB_COLUMN_GAP; 
+   int advance = (gap < remainingWidth) ? gap : remainingWidth;
+   *x += advance;
+   remainingWidth -= advance;
+
+   return (remainingWidth > 0);
 }
 
 static void ScreenManager_drawScreenTabs(ScreenManager* this) {
