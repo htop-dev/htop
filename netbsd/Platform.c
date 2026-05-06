@@ -452,6 +452,9 @@ void Platform_getBattery(BatteryInfo* info) {
 
    intmax_t totalCharge = 0;
    intmax_t totalCapacity = 0;
+   intmax_t totalChargeOnlyRemain = 0;
+   intmax_t totalChargeOnlyFull = 0;
+   bool haveChargeOnlyBattery = false;
 
    bool havePower = false;
    intmax_t totalPower = 0;
@@ -567,12 +570,19 @@ void Platform_getBattery(BatteryInfo* info) {
          intmax_t batteryCharge = 0;
          intmax_t batteryCapacity = 0;
 
+         bool chargeOnlyBattery = false;
+
          if (haveCharge) {
             if (chargeIsAmpHours) {
                if (batteryVoltage > 0) {
                   batteryCharge = curCharge * batteryVoltage / 1000000;
                   batteryCapacity = maxCharge * batteryVoltage / 1000000;
                   haveBatteryCharge = true;
+               } else if (maxCharge > 0) {
+                  /* No voltage available to convert Ah to Wh; accumulate raw
+                     charge so the percentage is still computable. The energy
+                     fields are not contributed to for this battery. */
+                  chargeOnlyBattery = true;
                }
             } else {
                batteryCharge = curCharge;
@@ -608,6 +618,11 @@ void Platform_getBattery(BatteryInfo* info) {
          if (haveBatteryCharge) {
             totalCharge += batteryCharge;
             totalCapacity += batteryCapacity;
+         } else if (chargeOnlyBattery) {
+            intmax_t clampedCharge = curCharge > maxCharge ? maxCharge : curCharge;
+            totalChargeOnlyRemain += clampedCharge;
+            totalChargeOnlyFull += maxCharge;
+            haveChargeOnlyBattery = true;
          }
 
          if (haveBatteryChargeRate || haveBatteryDischargeRate) {
@@ -621,13 +636,24 @@ void Platform_getBattery(BatteryInfo* info) {
       }
    }
 
-   if (totalCapacity > 0) {
-      info->percent = ((double) totalCharge * 100.0) / (double) totalCapacity;
-      if (totalCharge >= totalCapacity)
+   /* Combine energy-based and charge-only accumulators for the percentage so
+      that batteries lacking voltage still contribute. Mixing units across the
+      two pools is dimensionally inexact but matches pre-PR behaviour and
+      keeps the meter functional rather than reporting N/A. */
+   intmax_t combinedRemain = totalCharge + totalChargeOnlyRemain;
+   intmax_t combinedFull = totalCapacity + totalChargeOnlyFull;
+   if (combinedFull > 0) {
+      info->percent = ((double) combinedRemain * 100.0) / (double) combinedFull;
+      if (combinedRemain >= combinedFull)
          info->percent = 100.0;
 
-      info->energyCurr = (double) totalCharge / 1000000.0;
-      info->energyFull = (double) totalCapacity / 1000000.0;
+      /* Only publish Wh fields when every contributing battery had energy
+         data; otherwise the totals would be a mix of Wh and Ah and would
+         violate the BatteryInfo Wh contract. */
+      if (!haveChargeOnlyBattery && totalCapacity > 0) {
+         info->energyCurr = (double) totalCharge / 1000000.0;
+         info->energyFull = (double) totalCapacity / 1000000.0;
+      }
    }
 
    if (havePower) {
