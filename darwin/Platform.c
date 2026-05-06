@@ -752,7 +752,9 @@ void Platform_getBattery(BatteryInfo* info) {
          double voltMV = 0.0;
          CFNumberGetValue(voltRef, kCFNumberDoubleType, &voltMV);
 
-         info->powerCurr = ampMA * voltMV / 1e6;
+         /* IOKit's Amperage is positive while charging; htop's BatteryInfo
+          * convention is positive while discharging.  Negate to match. */
+         info->powerCurr = -(ampMA * voltMV) / 1e6;
       }
 
       if (ampRef)
