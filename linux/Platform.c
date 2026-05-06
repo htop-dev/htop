@@ -865,6 +865,11 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
    int64_t totalPower = 0;
 
    bool havePower = false;
+   /* Tracks whether every contributing battery had energy data (or charge+voltage
+    * convertible to energy). Cleared the first time we fall back to a charge-only
+    * accumulation, so the aggregate energy fields stay NaN rather than publishing
+    * a partial Wh total that silently omits part of the pack. */
+   bool energyComplete = true;
 
    const struct dirent* dirEntry;
    while ((dirEntry = readdir(dir))) {
@@ -1025,9 +1030,10 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
          } else if (haveBatteryChargeFull && haveBatteryChargeCurr && batteryChargeFull > 0) {
             // No voltage available to convert charge to energy; accumulate charge so
             // that the percentage can still be computed. The energy fields remain
-            // unset for this battery.
+            // unset for this battery, so the aggregate energy total is now partial.
             totalChargeFull += batteryChargeFull;
             totalChargeRemain += batteryChargeCurr > batteryChargeFull ? batteryChargeFull : batteryChargeCurr;
+            energyComplete = false;
          }
 
          if (!haveBatteryPower && haveBatteryCurrent && haveBatteryVoltage) {
@@ -1062,7 +1068,11 @@ next:
 
    closedir(dir);
 
-   if (totalEnergyFull > 0) {
+   /* Only publish aggregate Wh values when every contributing battery had energy
+    * data (or charge + voltage convertible to energy). On a mixed pack where one
+    * battery exposed only charge counters without voltage, totalEnergyFull omits
+    * that battery and would understate the pack — leave the fields NaN instead. */
+   if (energyComplete && totalEnergyFull > 0) {
       info->energyCurr = (double) totalEnergyRemain / 1000000.0;
       info->energyFull = (double) totalEnergyFull / 1000000.0;
    }
