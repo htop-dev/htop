@@ -26,6 +26,7 @@ in the source distribution for its full text.
 #include <sys/types.h>
 #include <uvm/uvmexp.h>
 
+#include "Battery.h"
 #include "CPUMeter.h"
 #include "DateTimeMeter.h"
 #include "FileDescriptorMeter.h"
@@ -373,10 +374,64 @@ static bool findDevice(const char* name, int* mib, struct sensordev* snsrdev, si
    }
 }
 
+/* Read one numeric sensor (typed and indexed by mib[3..4]) into out_ptr.
+ * Returns false when the sensor is missing or marked FUNKNOWN. */
+static bool readSensor(int* mib, int type, int idx, struct sensor* out) {
+   size_t len = sizeof(*out);
+   mib[3] = type;
+   mib[4] = idx;
+   if (sysctl(mib, 5, out, &len, NULL, 0) == -1)
+      return false;
+   if (out->flags & SENSOR_FUNKNOWN)
+      return false;
+   return true;
+}
+
+static bool parseAcpibatBattery(int* mib, BatteryRaw* out) {
+   *out = (BatteryRaw){
+      .level = NAN,
+      .energyFull = NAN, .energyNow = NAN,
+      .chargeFull = NAN, .chargeNow = NAN,
+      .voltageNow = NAN, .voltageDesign = NAN,
+      .current = NAN, .power = NAN,
+   };
+
+   /* See sys/dev/acpi/acpibat.c for the sensor layout. */
+   struct sensor s;
+
+   /* VOLTS_DC[0]=design, [1]=present. */
+   if (readSensor(mib, SENSOR_VOLTS_DC, 0, &s) && s.value > 0)
+      out->voltageDesign = (double) s.value / 1000000.0;
+   if (readSensor(mib, SENSOR_VOLTS_DC, 1, &s) && s.value > 0)
+      out->voltageNow = (double) s.value / 1000000.0;
+
+   if (readSensor(mib, SENSOR_WATTHOUR, 0, &s) && s.value > 0)
+      out->energyFull = (double) s.value / 1000000.0;
+   if (readSensor(mib, SENSOR_WATTHOUR, 3, &s) && s.value >= 0)
+      out->energyNow = (double) s.value / 1000000.0;
+
+   /* INTEGER[0]=battery state mask: 0x01 DISCHARG, 0x02 CHARGING. */
+   int64_t batteryState = 0;
+   if (readSensor(mib, SENSOR_INTEGER, 0, &s))
+      batteryState = s.value;
+
+   bool charging = (batteryState & 0x02) && !(batteryState & 0x01);
+   double sign = charging ? -1.0 : 1.0;
+
+   /* Watts first; fall back to amps × volts on mA-reporting firmware. */
+   if (readSensor(mib, SENSOR_WATTS, 0, &s)) {
+      out->power = sign * ((double) s.value / 1000000.0);
+   } else if (readSensor(mib, SENSOR_AMPS, 0, &s)) {
+      out->current = sign * ((double) s.value / 1000000.0);
+   }
+
+   /* Returning true even when only voltage was readable lets the
+    * aggregator's NaN-handling decide what (if anything) to publish. */
+   return true;
+}
+
 void Platform_getBattery(BatteryInfo* info) {
    int mib[] = {CTL_HW, HW_SENSORS, 0, 0, 0};
-   struct sensor s;
-   size_t slen = sizeof(struct sensor);
    struct sensordev snsrdev;
    size_t sdlen = sizeof(struct sensordev);
 
@@ -388,125 +443,16 @@ void Platform_getBattery(BatteryInfo* info) {
       .energyFull = NAN,
    };
 
-   bool found = findDevice("acpibat0", mib, &snsrdev, &sdlen);
-
-   if (found) {
-      bool haveTotalFull = false;
-      bool haveTotalRemain = false;
-      bool haveTotalPower = false;
-
-      int64_t totalFull = 0;     /* µWh */
-      int64_t totalRemain = 0;   /* µWh */
-      int64_t totalPower = 0;    /* µW */
-
-      /* See sys/dev/acpi/acpibat.c. FUNKNOWN means cur-value is meaningless. */
-      mib[3] = SENSOR_WATTHOUR;
-      mib[4] = 0; /* "last full capacity" */
-      bool haveBatteryFull = false;
-      int64_t batteryFull = 0;
-      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1 && (s.flags & SENSOR_FUNKNOWN) == 0)
-         batteryFull = s.value;
-
-      if (batteryFull > 0)
-         haveBatteryFull = true;
-
-      if (haveBatteryFull) {
-         mib[3] = SENSOR_WATTHOUR;
-         mib[4] = 3; /* "remaining capacity" */
-         if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1 && (s.flags & SENSOR_FUNKNOWN) == 0) {
-            int64_t batteryRemain = s.value;
-            if (batteryRemain >= 0) {
-               totalRemain += batteryRemain;
-               totalFull += batteryFull;
-               haveTotalRemain = true;
-               haveTotalFull = true;
-            }
-         }
-      }
-
-      if (haveTotalRemain && haveTotalFull && totalFull > 0) {
-         /* Clamp remain <= full (firmware may report remain > last-full). */
-         int64_t clampedRemain = MINIMUM(totalRemain, totalFull);
-         info->percent = ((double) clampedRemain * 100.0) / (double) totalFull;
-
-         info->energyCurr = (double) clampedRemain / 1000000.0;
-         info->energyFull = (double) totalFull / 1000000.0;
-      }
-
-      mib[3] = SENSOR_INTEGER;
-      mib[4] = 0; /* "battery state" */
-      int64_t batteryState = 0;
-      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1 && (s.flags & SENSOR_FUNKNOWN) == 0)
-         batteryState = s.value;
-
-      /* Watts first; fall back to amps × volts on mA firmware. */
-      bool haveRate = false;
-      int64_t batteryPower = 0;
-
-      mib[3] = SENSOR_WATTS;
-      mib[4] = 0; /* "rate" */
-      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1 && (s.flags & SENSOR_FUNKNOWN) == 0) {
-         batteryPower = s.value;
-         haveRate = true;
-      }
-
-      if (!haveRate) {
-         mib[3] = SENSOR_AMPS;
-         mib[4] = 0; /* "rate" (mA firmware) */
-         struct sensor amps;
-         size_t alen = sizeof(struct sensor);
-         if (sysctl(mib, 5, &amps, &alen, NULL, 0) != -1 && (amps.flags & SENSOR_FUNKNOWN) == 0) {
-            /* VOLTS_DC[1]=present, [0]=design; prefer present for I*V. */
-            struct sensor volts;
-            size_t vlen = sizeof(struct sensor);
-            bool haveVolts = false;
-
-            mib[3] = SENSOR_VOLTS_DC;
-            mib[4] = 1; /* present voltage */
-            if (sysctl(mib, 5, &volts, &vlen, NULL, 0) != -1
-                  && (volts.flags & SENSOR_FUNKNOWN) == 0
-                  && volts.value > 0) {
-               haveVolts = true;
-            }
-
-            if (!haveVolts) {
-               mib[4] = 0; /* design voltage fallback */
-               vlen = sizeof(struct sensor);
-               if (sysctl(mib, 5, &volts, &vlen, NULL, 0) != -1
-                     && (volts.flags & SENSOR_FUNKNOWN) == 0
-                     && volts.value > 0) {
-                  haveVolts = true;
-               }
-            }
-
-            if (haveVolts) {
-               batteryPower = ((int64_t) amps.value * (int64_t) volts.value) / 1000000;
-               haveRate = true;
-            }
-         }
-      }
-
-      if (haveRate) {
-         /* Negate only when CHARGING set and DISCHARG clear. */
-         if ((batteryState & 0x02) && !(batteryState & 0x01))
-            batteryPower = -batteryPower;
-
-         totalPower += batteryPower;
-         haveTotalPower = true;
-      }
-
-      if (haveTotalPower) {
-         info->powerCurr = (double) totalPower / 1000000.0;
-      }
+   if (findDevice("acpibat0", mib, &snsrdev, &sdlen)) {
+      BatteryRaw raw;
+      if (parseAcpibatBattery(mib, &raw))
+         Battery_aggregate(&raw, 1, info);
    }
 
-   found = findDevice("acpiac0", mib, &snsrdev, &sdlen);
-
-   if (found) {
+   if (findDevice("acpiac0", mib, &snsrdev, &sdlen)) {
       /* See sys/dev/acpi/acpiac.c; FUNKNOWN must not become AC_ABSENT. */
-      mib[3] = SENSOR_INDICATOR;
-      mib[4] = 0; /* "power supply" (status indicator) */
-      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1 && (s.flags & SENSOR_FUNKNOWN) == 0)
+      struct sensor s;
+      if (readSensor(mib, SENSOR_INDICATOR, 0, &s))
          info->ac = s.value != 0 ? AC_PRESENT : AC_ABSENT;
    }
 }
