@@ -928,10 +928,25 @@ void Platform_getBattery(BatteryInfo* info) {
    }
    bool haveCapacity = capacityCount > 0;
 
-   /* denki.bat.energy_now (sysfs ENERGY_NOW, Wh) is optional. The denki PMDA
-    * does not expose a corresponding ENERGY_FULL metric, so info->energyFull
-    * stays NaN; we read energy_now both to populate info->energyCurr and to
-    * infer per-instance full-charge energy for a capacity-weighted average. */
+   /* denki.bat.energy_now is optional and ambiguous: the denki PMDA can back
+    * this metric with sysfs ENERGY_NOW (Wh, true energy) OR sysfs CHARGE_NOW
+    * (uAh / mAh, charge -- NOT energy). The metric descriptor does not
+    * disclose which backing source was used, so we cannot distinguish the
+    * two from the metric alone. BatteryMeter.h contracts info->energyCurr
+    * to be in Wh, so we deliberately do NOT publish info->energyCurr from
+    * PCP -- it stays NaN (the default set above). The denki PMDA also does
+    * not expose a corresponding ENERGY_FULL metric, so info->energyFull
+    * likewise stays NaN.
+    *
+    * We still read these values for the energy-weighted percent calculation
+    * below: on a single host all denki instances share the same backing
+    * source (whichever the kernel exposes for that battery class), so the
+    * intra-host ratio energy_now / inferred_full is dimensionally consistent
+    * even when the unit is charge rather than energy. Percent is unitless,
+    * so the result is meaningful regardless of which sysfs field backs the
+    * metric. The variable retains the "Energy" name to match the metric id,
+    * but readers should treat its values as opaque samples whose unit may
+    * be Wh or charge. */
    pmAtomValue* batteryEnergyCurr = NULL;
    bool haveEnergy = false;
    if (Metric_desc(PCP_DENKI_ENERGY_NOW) != NULL && haveCapacity) {
@@ -941,7 +956,6 @@ void Platform_getBattery(BatteryInfo* info) {
        * so we fall back to the simple unweighted capacity average rather
        * than producing a result misaligned by instance id. */
       bool allMatched = true;
-      double total = 0.0;
       for (int i = 0; i < capacityCount; i++) {
          pmAtomValue atom;
          if (Metric_instance(PCP_DENKI_ENERGY_NOW, batteryInst[i], 0, &atom, PM_TYPE_DOUBLE) == NULL) {
@@ -949,12 +963,10 @@ void Platform_getBattery(BatteryInfo* info) {
             break;
          }
          batteryEnergyCurr[i] = atom;
-         if (isNonnegative(atom.d))
-            total += atom.d;
       }
       if (allMatched) {
          haveEnergy = true;
-         info->energyCurr = total;
+         /* info->energyCurr intentionally NOT set: see comment above. */
       }
    }
 
