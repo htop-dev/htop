@@ -529,7 +529,12 @@ void Platform_getBattery(BatteryInfo* info) {
          continue;
       }
 
-      if (bif->units == ACPI_BIF_UNITS_MW) {
+      if (bst->rate == 0) {
+         /* Zero rate is a known 0 W reading regardless of units or voltage:
+          * I * V = 0 when I is zero, so the mAh path's voltage lookup is
+          * unnecessary. batteryPower is already 0 from its declaration. */
+         haveBatteryPower = true;
+      } else if (bif->units == ACPI_BIF_UNITS_MW) {
          batteryPower = (int64_t) bst->rate * 1000;
          haveBatteryPower = true;
       } else {

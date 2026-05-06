@@ -619,7 +619,11 @@ void Platform_getBattery(BatteryInfo* info) {
 
          if (haveChargeRate) {
             if (chargeRateIsAmps) {
-               if (rateVoltage > 0) {
+               if (chargeRate == 0) {
+                  /* Zero current is a known 0 W reading regardless of
+                   * voltage availability: I * V = 0 when I is zero. */
+                  haveBatteryChargeRate = true;
+               } else if (rateVoltage > 0) {
                   batteryChargeRate = chargeRate * rateVoltage / 1000000;
                   haveBatteryChargeRate = true;
                }
@@ -631,7 +635,11 @@ void Platform_getBattery(BatteryInfo* info) {
 
          if (haveDischargeRate) {
             if (dischargeRateIsAmps) {
-               if (rateVoltage > 0) {
+               if (dischargeRate == 0) {
+                  /* Zero current is a known 0 W reading regardless of
+                   * voltage availability: I * V = 0 when I is zero. */
+                  haveBatteryDischargeRate = true;
+               } else if (rateVoltage > 0) {
                   batteryDischargeRate = dischargeRate * rateVoltage / 1000000;
                   haveBatteryDischargeRate = true;
                }
