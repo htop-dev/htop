@@ -22,13 +22,9 @@ typedef struct BatteryInfo_ {
    ACPresence ac;
 
    double percent;          /* [0..100], NAN if unknown */
-   double powerCurr;        /* instantaneous power in W, NAN if unknown.
-                             * Sign convention: positive while discharging
-                             * (drawing from the battery), negative while
-                             * charging.  Platforms that cannot determine the
-                             * direction (e.g. PCP/denki, which exposes only a
-                             * magnitude) publish a non-negative best-effort
-                             * reading. */
+   double powerCurr;        /* W, NAN if unknown. positive=discharging,
+                             * negative=charging. Platforms without
+                             * direction publish non-negative magnitude. */
    double energyCurr;       /* Wh, NAN if unknown */
    double energyFull;       /* Wh, NAN if unknown */
 } BatteryInfo;

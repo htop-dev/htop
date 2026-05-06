@@ -864,12 +864,7 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
    uint64_t totalChargeRemain = 0;
    int64_t totalPower = 0;           /* µW */
 
-   /* Per-unit contribution tracking. A battery that exposes only charge counters
-    * with voltage contributes to BOTH accumulators (raw µAh into totalCharge*,
-    * converted µWh into totalEnergy*); a charge-only battery without voltage
-    * contributes only to totalCharge*; a pure-energy battery contributes only
-    * to totalEnergy*. The percent calculation then prefers whichever accumulator
-    * received every battery, avoiding the dimensionally invalid sum of µWh+µAh. */
+   /* charge+voltage batteries contribute to BOTH accumulators. */
    int unitsTotal = 0;
    int unitsContributingEnergy = 0;
    int unitsContributingCharge = 0;
@@ -923,10 +918,7 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
          bool haveBatteryChargeFull = false;
          bool haveBatteryChargeCurr = false;
 
-         /* Track design and instantaneous voltages separately: design voltage is
-          * the stable reference for converting CHARGE_FULL/CHARGE_NOW into an
-          * energy value, while VOLTAGE_NOW is only meaningful for the
-          * instantaneous P=I*V power calculation. */
+         /* Design for energy reference; current for I*V power. */
          bool haveBatteryVoltageNominal = false;
          bool haveBatteryVoltageNow = false;
          bool haveBatteryLevel = false;
@@ -935,13 +927,7 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
          bool haveBatteryPower = false;
          bool haveBatteryStatus = false;
 
-         /* Skip filters: an empty bay reports POWER_SUPPLY_PRESENT=0, and
-          * peripheral batteries (e.g. wireless mouse, headset) report
-          * POWER_SUPPLY_SCOPE=Device rather than System. Counting them as
-          * required contributors would suppress the real laptop battery's
-          * percent because they cannot satisfy unitsContributingEnergy ==
-          * unitsTotal. PRESENT defaults to true: built-in laptop batteries
-          * frequently omit the field entirely. */
+         /* PRESENT defaults true: built-in batteries often omit the field. */
          bool isPresent = true;
          bool scopeIsDevice = false;
 
@@ -973,8 +959,7 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
                continue;
             }
 
-            /* SCOPE is a string ("System" or "Device"). Only system-scope
-             * batteries belong in the laptop pack aggregate. */
+            /* SCOPE=Device peripherals don't belong in the system pack. */
             char scope[32] = {0};
             if (sscanf(line, "POWER_SUPPLY_SCOPE=%31s", scope) == 1) {
                if (String_eq(scope, "Device"))
@@ -991,19 +976,8 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
                continue;
             }
 
-            /* Reject negative sysfs values for fields that are documented
-             * as unsigned. The kernel publishes -1 on some drivers to
-             * mean "unknown"; treating that as a magnitude would produce
-             * astronomical wrapped values for uint64_t destinations and
-             * a misleading near-zero power reading for POWER_NOW (which
-             * the kernel ABI documents as an unsigned magnitude — see
-             * Documentation/ABI/testing/sysfs-class-power).
-             *
-             * Only CURRENT_NOW is signed: its sign carries the kernel's
-             * charge/discharge direction (convention varies by driver,
-             * but the sign is meaningful). Exempt CURRENT_NOW from the
-             * negative-rejection so its native sign reaches the abs +
-             * STATUS-based sign normalization below. */
+            /* Drivers publish -1 for "unknown". Reject for unsigned fields;
+             * CURRENT_NOW is signed (sign = direction). */
             if (val < 0 && !String_eq(field, "CURRENT_NOW"))
                continue;
 
@@ -1062,13 +1036,7 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
             }
          }
 
-         /* Skip empty bays (PRESENT=0) and peripheral batteries
-          * (SCOPE=Device, e.g. wireless mouse) BEFORE any contribution to
-          * the aggregate totals. Counting them toward unitsTotal would
-          * prevent the real laptop battery from satisfying the
-          * completeness gates and the meter would regress to N/A; adding
-          * their fields to totalEnergyFull/Remain or totalChargeFull/Remain would pollute the
-          * pack value while still being skipped from unitsTotal. */
+         /* Skip empty bays and peripherals before any contribution. */
          if (!isPresent || scopeIsDevice)
             goto next;
 
@@ -1084,22 +1052,9 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
             }
          }
 
-         /* Convert charge+voltage to energy when energy is not directly reported,
-          * but keep the raw charge values: a charge+voltage battery contributes
-          * to both accumulators so the charge total stays complete on packs that
-          * mix charge+voltage units with charge-only units.
-          *
-          * Use design voltage (VOLTAGE_MIN_DESIGN) as the reference for
-          * FULL/REMAIN energy: VOLTAGE_NOW changes as the pack charges and
-          * discharges, which would make batteryEnergyFull drift over time and
-          * skew multi-battery percent weighting. Fall back to VOLTAGE_NOW only
-          * when no design voltage is exposed -- imperfect, but better than
-          * dropping the battery from the totals entirely.
-          *
-          * Require the chosen voltage to be > 0: the kernel marks
-          * VOLTAGE_MIN_DESIGN/VOLTAGE_NOW as present even when its driver can't
-          * read the value (publishing 0). Selecting on presence alone would
-          * pick a 0 over a valid sibling and zero out batteryEnergyFull. */
+         /* Charge+voltage batteries contribute to both accumulators.
+          * Design voltage preferred; reject 0 (sysfs reports present
+          * fields with 0 value when the driver can't read them). */
          uint64_t referenceVoltage = 0;
          if (haveBatteryVoltageNominal && batteryVoltageNominal > 0)
             referenceVoltage = batteryVoltageNominal;
@@ -1131,47 +1086,20 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
             batteryContributedCharge = true;
          }
 
-         /* Distinguish "peripheral / unused slot" from "system battery
-          * with stale data". A peripheral (e.g. wireless mouse) typically
-          * exposes only CAPACITY and reports no FULL counters and no
-          * instantaneous power — skipping it lets the laptop pack's
-          * completeness gates pass. A system battery whose CAPACITY=-1
-          * (kernel quirk) also leaves batteryContributedEnergy/Charge
-          * false, but it DOES expose ENERGY_FULL/CHARGE_FULL — that
-          * battery must count toward unitsTotal so its missing
-          * contribution blocks the pack-level percent gate.
-          *
-          * Skip iff none of FULL counters, instantaneous power, or
-          * instantaneous current are present: a true peripheral. */
+         /* Skip true peripherals (no FULL counter, no instantaneous signal).
+          * A system battery with FULL but stale NOW must still count, so
+          * its missing contribution blocks the pack percent gate. */
          if (!haveBatteryEnergyFull && !haveBatteryChargeFull
                && !haveBatteryPower && !haveBatteryCurrent)
             goto next;
 
-         /* Count every present system battery slot, even one whose data
-          * lets us derive only instantaneous power (POWER_NOW or
-          * CURRENT_NOW) and not energy/charge percent. Skipping such a
-          * battery from unitsTotal would let the surviving packs satisfy
-          * unitsContributingEnergy == unitsTotal and silently publish
-          * partial percent/power as if it represented the whole pack. */
          unitsTotal++;
          if (batteryContributedEnergy)
             unitsContributingEnergy++;
          if (batteryContributedCharge)
             unitsContributingCharge++;
 
-         /* Instantaneous power P = I * V wants the present terminal voltage,
-          * so prefer VOLTAGE_NOW here; fall back to design voltage only when
-          * VOLTAGE_NOW is unavailable or zero.
-          *
-          * Selection enforces > 0 directly: the kernel marks
-          * VOLTAGE_NOW/MIN_DESIGN as present even when it can't read the
-          * value (publishing 0). Picking on presence alone would publish 0 W
-          * as a known-good power reading instead of leaving power unknown.
-          *
-          * Special case batteryCurrent == 0: I * V = 0 regardless of V, so
-          * idle-on-AC is a known 0 W reading even when no usable voltage is
-          * exposed. Without this short-circuit the powerVoltage > 0 guard
-          * would leave power unknown for a value we can compute exactly. */
+         /* P=I*V: prefer VOLTAGE_NOW; reject 0. I=0 ⇒ 0 W known. */
          if (!haveBatteryPower && haveBatteryCurrent) {
             if (batteryCurrent == 0) {
                batteryPower = 0;
@@ -1191,11 +1119,8 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
          }
 
          if (haveBatteryPower) {
-            /* Normalize sign per htop convention: positive = discharging,
-             * negative = charging. POWER_NOW is an unsigned magnitude;
-             * CURRENT_NOW is signed but its sign convention varies by
-             * kernel/driver, so taking the absolute value and re-applying
-             * the sign from STATUS is the only portable approach. */
+            /* abs(value) then re-sign from STATUS: portable across drivers
+             * with mixed CURRENT_NOW sign conventions. */
             if (batteryPower < 0)
                batteryPower = -batteryPower;
             if (haveBatteryStatus && String_eq(batteryStatus, "Charging"))
@@ -1227,10 +1152,7 @@ next:
 
    closedir(dir);
 
-   /* Publish aggregate Wh only when every contributing battery had energy data
-    * (or charge + voltage convertible to energy). On a mixed pack where one
-    * battery exposes only charge counters without voltage, totalEnergyFull
-    * omits that battery and would understate the pack — leave the fields NaN. */
+   /* Every present battery must contribute or the aggregate stays NaN. */
    bool energyComplete = (unitsTotal > 0) && (unitsContributingEnergy == unitsTotal);
    bool chargeComplete = (unitsTotal > 0) && (unitsContributingCharge == unitsTotal);
 
@@ -1239,19 +1161,13 @@ next:
       info->energyFull = (double) totalEnergyFull / 1000000.0;
    }
 
-   /* Compute percent from a single, dimensionally consistent accumulator: prefer
-    * the energy total when every battery contributed to it, otherwise the charge
-    * total when every battery contributed to it. Summing µWh + µAh would be
-    * dimensionally invalid and voltage-weighted in arbitrary ways on mixed packs. */
+   /* Single-unit accumulator. Mixing µWh+µAh is dimensionally invalid. */
    if (energyComplete && totalEnergyFull > 0) {
       info->percent = ((double) totalEnergyRemain * 100.0) / (double) totalEnergyFull;
    } else if (chargeComplete && totalChargeFull > 0) {
       info->percent = ((double) totalChargeRemain * 100.0) / (double) totalChargeFull;
    }
 
-   /* Publish aggregate power only when every contributing battery reported
-    * usable power (either POWER_NOW directly, or CURRENT_NOW with voltage).
-    * Otherwise totalPower omits part of the pack and would understate draw. */
    if (unitsTotal > 0 && unitsContributingPower == unitsTotal) {
       info->powerCurr = (double) totalPower / 1000000.0;
    }

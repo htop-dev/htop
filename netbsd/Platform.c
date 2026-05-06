@@ -450,12 +450,7 @@ void Platform_getBattery(BatteryInfo* info) {
    prop_dictionary_t dict, fields, props;
    prop_object_t device, class;
 
-   /* Parallel accumulators with per-unit contribution tracking so the percent
-      calculation can pick a dimensionally-consistent ratio. A battery exposing
-      Ampere-hour charge with voltage contributes to BOTH energy totals (raw
-      charge converted to µWh) AND charge totals (raw µAh); a charge-only
-      battery without voltage contributes only to charge totals; an energy
-      battery (Watt-hour units) contributes only to energy totals. */
+   /* charge+voltage batteries contribute to BOTH accumulators. */
    intmax_t totalEnergyRemain = 0;     /* µWh */
    intmax_t totalEnergyFull = 0;
    intmax_t totalChargeRemain = 0;     /* µAh */
@@ -539,13 +534,7 @@ void Platform_getBattery(BatteryInfo* info) {
          if (descField == NULL || curValue == NULL)
             continue;
 
-         /* Reject sensors the kernel has flagged invalid: when an ACPI
-            battery's _BST returns an unknown rate, sysmon still publishes
-            the "charge rate" / "discharge rate" sensors with a sentinel
-            cur-value and state="invalid". Trusting that cur-value would
-            surface bogus signed power readings. The same rule applies to
-            every other sensor we read (charge, voltage, present, ...) —
-            an invalid state means cur-value is meaningless. */
+         /* Reject sensors the kernel marks invalid. */
          if (stateField != NULL && prop_string_equals_string(stateField, "invalid"))
             continue;
 
@@ -580,19 +569,11 @@ void Platform_getBattery(BatteryInfo* info) {
       }
 
       if (isBattery && isPresent) {
-         /* Count every present battery slot before any sensor-dependent
-            contribution check. A battery whose sensors were entirely
-            flagged invalid still counts as present, so the aggregate
-            stays incomplete and percent/energy/power publication is
-            suppressed rather than silently dropping that pack. */
+         /* Counts before any sensor-dependent check; an all-invalid pack
+          * still blocks publication. */
          unitsPresent++;
 
-         /* Use design voltage to convert charge into energy: the present
-          * voltage drifts as the pack charges and discharges, which would
-          * skew batteryEnergyFull over time. Fall back to the present
-          * voltage only if design voltage isn't exposed. Conversely, use
-          * the present voltage for instantaneous charge/discharge rate
-          * conversions (P = I * V), falling back to design if needed. */
+         /* Design for energy reference; present for I*V. */
          intmax_t referenceVoltage = (designVoltage != 0) ? designVoltage : voltage;
          intmax_t rateVoltage = (voltage != 0) ? voltage : designVoltage;
 
@@ -611,45 +592,31 @@ void Platform_getBattery(BatteryInfo* info) {
 
          if (haveCharge) {
             if (chargeIsAmpHours) {
-               /* Always contribute to the raw charge accumulator so a
-                  voltage-less sibling pack does not make the charge total
-                  incomplete; the charge ratio is the dimensionally-correct
-                  fallback when not every battery has voltage. */
+               /* Charge fallback when voltage is unknown. */
                if (maxCharge > 0) {
                   intmax_t clampedCharge = curCharge > maxCharge ? maxCharge : curCharge;
                   batteryChargeRemain = clampedCharge;
                   batteryChargeFull = maxCharge;
                   batteryContributedCharge = true;
                }
-               /* Contribute to the energy accumulator only when voltage is
-                  available to convert µAh to µWh. */
                if (referenceVoltage > 0 && maxCharge > 0) {
                   batteryEnergyRemain = curCharge * referenceVoltage / 1000000;
                   batteryEnergyFull = maxCharge * referenceVoltage / 1000000;
                   batteryContributedEnergy = true;
                }
             } else if (maxCharge > 0) {
-               /* Watt-hour battery: contributes only to the energy
-                  accumulator. Charge counters are not exposed. */
+               /* Watt-hour battery: energy only. */
                batteryEnergyRemain = curCharge;
                batteryEnergyFull = maxCharge;
                batteryContributedEnergy = true;
             }
          }
 
-         /* envsys "charge rate" / "discharge rate" are unsigned magnitudes
-          * (the sign is encoded by which sensor name is used, not by the
-          * cur-value). Some drivers publish a negative cur-value as a
-          * sentinel for "unknown" while leaving the sensor state at
-          * "valid", so the state="invalid" filter does not catch it.
-          * Reject negative rates so an unknown reading leaves the rate
-          * unpublished rather than producing a wrong-sign or near-zero
-          * power total. */
+         /* envsys rates are magnitudes; reject negative sentinels. */
          if (haveChargeRate && chargeRate >= 0) {
             if (chargeRateIsAmps) {
                if (chargeRate == 0) {
-                  /* Zero current is a known 0 W reading regardless of
-                   * voltage availability: I * V = 0 when I is zero. */
+                  /* I=0 ⇒ 0 W known. */
                   haveBatteryChargeRate = true;
                } else if (rateVoltage > 0) {
                   batteryChargeRate = chargeRate * rateVoltage / 1000000;
@@ -664,8 +631,7 @@ void Platform_getBattery(BatteryInfo* info) {
          if (haveDischargeRate && dischargeRate >= 0) {
             if (dischargeRateIsAmps) {
                if (dischargeRate == 0) {
-                  /* Zero current is a known 0 W reading regardless of
-                   * voltage availability: I * V = 0 when I is zero. */
+                  /* I=0 ⇒ 0 W known. */
                   haveBatteryDischargeRate = true;
                } else if (rateVoltage > 0) {
                   batteryDischargeRate = dischargeRate * rateVoltage / 1000000;
@@ -691,38 +657,20 @@ void Platform_getBattery(BatteryInfo* info) {
          if (batteryContributedCharge)
             unitsContributingCharge++;
 
-         /* Rate contribution is independent of energy/charge contribution.
-          * A battery that exposes only a charge/discharge rate sensor
-          * (no charge counter, or charge data marked invalid) still
-          * contributes a usable power reading; gating unitsContributingPower
-          * on energy/charge would suppress info->powerCurr precisely for
-          * those rate-only batteries even though totalPower already
-          * includes the contribution. Mirror the Linux Class L pattern:
-          * count toward unitsContributingPower whenever a valid rate was
-          * read. */
+         /* Rate contribution independent of capacity contribution. */
          if (haveBatteryChargeRate || haveBatteryDischargeRate) {
             totalPower += batteryDischargeRate - batteryChargeRate;
             unitsContributingPower++;
          }
       }
 
-      /* Only publish AC_PRESENT/AC_ABSENT when we actually read a valid
-         "connected" sample. If the connected sensor exists but was rejected
-         by the state="invalid" filter above, leave info->ac as AC_ERROR
-         rather than misreporting an unknown state as "running on battery". */
+      /* Invalid connected sensor leaves AC at AC_ERROR. */
       if (isACAdapter && haveConnected && info->ac != AC_PRESENT) {
          info->ac = isConnected ? AC_PRESENT : AC_ABSENT;
       }
    }
 
-   /* Require every PRESENT battery to have contributed; a battery whose
-      sensors were entirely flagged invalid still counts as present, so the
-      aggregate stays incomplete and the percent/energy/power publication
-      is suppressed. Prefer the energy accumulator when every present
-      battery reached it (best precision because individual cell capacities
-      scale with voltage); fall back to the raw charge accumulator when
-      every battery hit that path; otherwise leave percent NaN rather than
-      mix µWh and µAh totals. */
+   /* Energy ratio preferred; mixing µWh and µAh would be invalid. */
    if (unitsPresent > 0 && unitsContributingEnergy == unitsPresent && totalEnergyFull > 0) {
       info->percent = ((double) totalEnergyRemain * 100.0) / (double) totalEnergyFull;
       if (totalEnergyRemain >= totalEnergyFull)
@@ -733,21 +681,11 @@ void Platform_getBattery(BatteryInfo* info) {
          info->percent = 100.0;
    }
 
-   /* Require every PRESENT battery to have contributed; a battery whose
-      sensors were entirely flagged invalid still counts as present, so the
-      aggregate stays incomplete and the energy publication is suppressed
-      rather than silently omitting a pack and violating the BatteryInfo
-      Wh contract. */
    if (unitsPresent > 0 && unitsContributingEnergy == unitsPresent && totalEnergyFull > 0) {
       info->energyCurr = (double) totalEnergyRemain / 1000000.0;
       info->energyFull = (double) totalEnergyFull / 1000000.0;
    }
 
-   /* Require every PRESENT battery to have contributed; a battery whose
-      sensors were entirely flagged invalid still counts as present, so the
-      aggregate stays incomplete and the power publication is suppressed
-      rather than omitting a sibling pack's draw and understating the true
-      whole-pack power. */
    if (unitsPresent > 0 && unitsContributingPower == unitsPresent) {
       info->powerCurr = (double) totalPower / 1000000.0;
    }

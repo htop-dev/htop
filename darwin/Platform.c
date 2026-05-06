@@ -732,15 +732,10 @@ void Platform_getBattery(BatteryInfo* info) {
    }
 
    if (cap_max > 0.0) {
-      /* Clamp to the documented [0..100] BatteryInfo contract: IOPS can
-       * (rarely) report cap_current > cap_max on quirky firmware. */
+      /* Clamp to [0..100]; IOPS may report cap_current > cap_max. */
       double pct = 100.0 * cap_current / cap_max;
       info->percent = pct > 100.0 ? 100.0 : (pct < 0.0 ? 0.0 : pct);
-      /* IOPS capacity keys (kIOPSCurrentCapacityKey/kIOPSMaxCapacityKey) are
-       * unitless (typically a 0-100 percentage) and cannot be assigned to
-       * energyCurr/energyFull, which the BatteryInfo contract specifies as
-       * Watt-hours.  Leave the energy fields as NaN; we have no reliable way
-       * to derive Wh from AppleSmartBattery without a nominal voltage. */
+      /* IOPS capacity is unitless; energyCurr/energyFull stay NaN. */
    }
 
    io_service_t batt = IOServiceGetMatchingService(iokit_port, IOServiceMatching("AppleSmartBattery"));
@@ -755,13 +750,7 @@ void Platform_getBattery(BatteryInfo* info) {
          double voltMV = 0.0;
          CFNumberGetValue(voltRef, kCFNumberDoubleType, &voltMV);
 
-         /* IOKit's Amperage is positive while charging; htop's BatteryInfo
-          * convention is positive while discharging.  Negate to match.
-          *
-          * Guard voltMV > 0: AppleSmartBattery exposes the Voltage key even
-          * when it has no current reading (returning 0). Without the guard we
-          * would publish 0 W as a known-good power reading instead of leaving
-          * powerCurr NaN. */
+         /* IOKit Amperage sign is reversed; htop wants positive=discharging. */
          if (voltMV > 0.0)
             info->powerCurr = -(ampMA * voltMV) / 1e6;
       }

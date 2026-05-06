@@ -399,13 +399,7 @@ void Platform_getBattery(BatteryInfo* info) {
       int64_t totalRemain = 0;
       int64_t totalPower = 0;
 
-      /* See "sys/dev/acpi/acpibat.c" of OpenBSD source code for the indices
-         of the last field.
-
-         OpenBSD acpibat can return a successful sysctl with the
-         SENSOR_FUNKNOWN flag set and a meaningless zero value when the
-         kernel cannot determine the underlying _BST/_BIF field.  Treat
-         such readings as missing rather than as a known zero. */
+      /* See sys/dev/acpi/acpibat.c. FUNKNOWN means cur-value is meaningless. */
       mib[3] = SENSOR_WATTHOUR;
       mib[4] = 0; /* "last full capacity" */
       bool haveBatteryFull = false;
@@ -431,9 +425,7 @@ void Platform_getBattery(BatteryInfo* info) {
       }
 
       if (haveTotalRemain && haveTotalFull && totalFull > 0) {
-         /* Clamp curr to full before publishing: a quirky firmware can
-          * report remaining > last-full, which would let info->energyCurr
-          * exceed info->energyFull and percent exceed 100. */
+         /* Clamp remain <= full (firmware may report remain > last-full). */
          int64_t clampedRemain = totalRemain > totalFull ? totalFull : totalRemain;
          info->percent = ((double) clampedRemain * 100.0) / (double) totalFull;
 
@@ -447,13 +439,7 @@ void Platform_getBattery(BatteryInfo* info) {
       if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1 && (s.flags & SENSOR_FUNKNOWN) == 0)
          batteryState = s.value;
 
-      /* OpenBSD acpibat publishes the rate sensor as either SENSOR_WATTS
-       * (mW firmware) or SENSOR_AMPS (mA firmware). Try Watts first; if
-       * that's absent or unknown, fall back to Amps × Volts. The voltage
-       * sensor is exposed as SENSOR_VOLTS_DC[1] (present voltage). All
-       * sensor values are in 10^-6 SI units, so amps×volts produces
-       * 10^-12 W; dividing by 10^6 gives µW that the publication block
-       * below converts to W. */
+      /* Watts first; fall back to amps × volts on mA firmware. */
       bool haveRate = false;
       int64_t batteryPower = 0;
 
@@ -470,12 +456,7 @@ void Platform_getBattery(BatteryInfo* info) {
          struct sensor amps;
          size_t alen = sizeof(struct sensor);
          if (sysctl(mib, 5, &amps, &alen, NULL, 0) != -1 && (amps.flags & SENSOR_FUNKNOWN) == 0) {
-            /* Per BatteryMeter.h's voltage convention: instantaneous I*V
-             * power wants the present terminal voltage. acpibat exposes
-             * SENSOR_VOLTS_DC[0] = design voltage, SENSOR_VOLTS_DC[1] =
-             * present voltage. Try the present voltage first; fall back
-             * to design only if the present sensor is missing or
-             * FUNKNOWN-flagged. */
+            /* VOLTS_DC[1]=present, [0]=design; prefer present for I*V. */
             struct sensor volts;
             size_t vlen = sizeof(struct sensor);
             bool haveVolts = false;
@@ -506,10 +487,7 @@ void Platform_getBattery(BatteryInfo* info) {
       }
 
       if (haveRate) {
-         /* htop convention: positive=discharging, negative=charging. ACPI
-          * state bit 0x01 = discharging, 0x02 = charging. Some firmware
-          * sets both bits; the kernel resolves to discharging in that
-          * case, so only negate when 0x02 is set and 0x01 is clear. */
+         /* Negate only when CHARGING set and DISCHARG clear. */
          if ((batteryState & 0x02) && !(batteryState & 0x01))
             batteryPower = -batteryPower;
 
@@ -525,9 +503,7 @@ void Platform_getBattery(BatteryInfo* info) {
    found = findDevice("acpiac0", mib, &snsrdev, &sdlen);
 
    if (found) {
-      /* See "sys/dev/acpi/acpiac.c" of OpenBSD source code.
-         There is only one "sensor" for this device.  As with acpibat, an
-         FUNKNOWN reading must not be promoted to AC_ABSENT. */
+      /* See sys/dev/acpi/acpiac.c; FUNKNOWN must not become AC_ABSENT. */
       mib[3] = SENSOR_INDICATOR;
       mib[4] = 0; /* "power supply" (status indicator) */
       if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1 && (s.flags & SENSOR_FUNKNOWN) == 0)

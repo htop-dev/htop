@@ -27,8 +27,7 @@ in the source distribution for its full text.
 #include <sys/sysctl.h>
 #include <sys/time.h>
 #include <sys/types.h>
-/* <dev/acpica/acpiio.h> uses _IOWR macros from <sys/ioccom.h> (pulled in via
- * <sys/ioctl.h>) but does not include them itself; keep this after <sys/ioctl.h>. */
+/* <acpiio.h> needs _IOWR from <sys/ioctl.h>; keep order. */
 #include <dev/acpica/acpiio.h>
 #include <vm/vm_param.h>
 
@@ -458,11 +457,7 @@ void Platform_getBattery(BatteryInfo* info) {
       const struct acpi_bix* bix = &bixArg.bix;
       const struct acpi_bst* bst = &bstArg.bst;
 
-      /* Empty battery bay: BST can succeed with zeroed cap/rate fields and
-       * state reported as the NOT_PRESENT sentinel. NOT_PRESENT is a
-       * synthetic value (the OR of all _BST state bits), not a standalone
-       * flag, so test it with == rather than masking. Skip absent slots —
-       * the kernel's hw.acpi.battery.life sysctl already accounts for them. */
+      /* NOT_PRESENT is a synthetic _BST mask value, not a single bit. */
       if (bst->state == ACPI_BATT_STAT_NOT_PRESENT)
          continue;
 
@@ -481,11 +476,7 @@ void Platform_getBattery(BatteryInfo* info) {
             haveBatteryEnergyCurr = true;
             haveBatteryEnergyFull = true;
          } else {
-            /* Use design voltage to convert charge into energy: bst->volt
-             * (instantaneous terminal voltage) drifts as the pack charges and
-             * discharges, which would skew batteryEnergyFull over time. Fall
-             * back to the present voltage only if the design value is
-             * missing. */
+            /* Design voltage for energy reference (bst->volt drifts). */
             uint32_t referenceVoltage = (bix->dvol != ACPI_BATT_UNKNOWN && bix->dvol != 0)
                                          ? bix->dvol
                                          : bst->volt;
@@ -499,10 +490,7 @@ void Platform_getBattery(BatteryInfo* info) {
       }
 
       if (haveBatteryEnergyCurr && haveBatteryEnergyFull && batteryEnergyFull > 0) {
-         /* Clamp curr to full per battery before summing: a quirky firmware
-          * can report bst->cap > bix->lfcap, which would otherwise let
-          * info->energyCurr exceed info->energyFull on the published value
-          * even though the percent gate already caps at 100. */
+         /* Clamp curr <= full per battery (firmware can report cap > lfcap). */
          int64_t clampedCurr = batteryEnergyCurr > batteryEnergyFull ? batteryEnergyFull : batteryEnergyCurr;
          totalRemain += clampedCurr;
          totalFull += batteryEnergyFull;
@@ -519,9 +507,7 @@ void Platform_getBattery(BatteryInfo* info) {
             batteryPower = (int64_t) bst->rate * 1000;
             haveBatteryPower = true;
          } else {
-            /* Instantaneous power P = I * V wants the present terminal
-             * voltage; fall back to design voltage only when it isn't
-             * exposed. */
+            /* Present voltage for I*V power. */
             uint32_t rateVoltage = (bst->volt != ACPI_BATT_UNKNOWN && bst->volt != 0)
                                     ? bst->volt
                                     : bix->dvol;
@@ -533,11 +519,8 @@ void Platform_getBattery(BatteryInfo* info) {
          }
       }
 
-      /* htop convention: positive = discharging, negative = charging.
-       * ACPI _BST reports rate as a magnitude; charging direction is in
-       * bst->state. Some firmware sets both DISCHARG and CHARGING bits;
-       * the kernel treats that as discharging, so only negate when
-       * CHARGING is set and DISCHARG is clear (mirroring DragonFly). */
+      /* Negate when charging bit set and discharging bit clear; some
+       * firmware sets both, kernel resolves to discharging. */
       if (bst->state != ACPI_BATT_STAT_NOT_PRESENT &&
           (bst->state & ACPI_BATT_STAT_DISCHARG) == 0 &&
           (bst->state & ACPI_BATT_STAT_CHARGING) != 0) {
@@ -554,9 +537,7 @@ void Platform_getBattery(BatteryInfo* info) {
 
    close(fd);
 
-   /* Only publish aggregate energy/percent when every battery contributed.
-      Otherwise the totals are partial and would contradict the sysctl
-      `hw.acpi.battery.life` value (which already covers all units). */
+   /* Partial aggregates would contradict hw.acpi.battery.life. */
    if (energyComplete && haveTotalRemain && haveTotalFull && totalFull > 0) {
       info->percent = ((double) totalRemain * 100.0) / (double) totalFull;
       if (totalRemain >= totalFull)
@@ -566,8 +547,6 @@ void Platform_getBattery(BatteryInfo* info) {
       info->energyFull = (double) totalFull / 1000000.0;
    }
 
-   /* Power total is meaningful only when every battery's rate was readable
-      (a known rate of zero counts as a contribution). */
    if (powerComplete && haveTotalPower) {
       info->powerCurr = (double) totalPower / 1000000.0;
    }

@@ -386,11 +386,7 @@ void Platform_getBattery(BatteryInfo* info) {
    if (sysctlbyname("hw.acpi.acline", &acline, &acline_len, NULL, 0) != -1)
       info->ac = (acline == 0) ? AC_ABSENT : AC_PRESENT;
 
-   /* DragonFly does not define ACPIIO_BATT_GET_UNITS in
-    * <dev/acpica/acpiio.h> (only the BIF/BST ioctls are exposed), so
-    * obtain the unit count via the same hw.acpi.battery.units sysctl
-    * that FreeBSD uses. The /dev/acpi BIF/BST ioctls below remain the
-    * read source for per-unit data. */
+   /* DragonFly lacks ACPIIO_BATT_GET_UNITS; use sysctl like FreeBSD. */
    int units = 0;
    size_t units_len = sizeof(units);
    if (sysctlbyname("hw.acpi.battery.units", &units, &units_len, NULL, 0) == -1 || units <= 0)
@@ -400,44 +396,30 @@ void Platform_getBattery(BatteryInfo* info) {
    if (fd == -1)
       return;
 
-   /* Energy totals (require voltage on mAh systems) — used for energyCurr/Full
-    * and as the preferred basis for info->percent. */
+   /* µWh (energy preferred for percent). */
    int64_t totalEnergyRemain = 0;
    int64_t totalEnergyFull = 0;
    int unitsWithEnergy = 0;
 
-   /* Parallel raw-charge totals — used solely as a fallback basis for
-    * info->percent when voltage is unknown on mAh systems and the energy
-    * totals are therefore incomplete. */
+   /* µAh (charge fallback when voltage unknown). */
    int64_t totalChargeRemain = 0;
    int64_t totalChargeFull = 0;
    int unitsWithCharge = 0;
 
-   /* Power total. A unit is considered "covered" once its BIF/BST data is
-    * in hand; powerComplete additionally requires every unit's rate to be
-    * known and convertible to watts. Only publish powerCurr when both
-    * conditions hold for every unit. */
    int64_t totalPower = 0;
    int unitsCovered = 0;
    bool powerComplete = true;
 
-   /* Energy/charge completeness flags. Cleared when a per-unit ioctl fails
-    * so we don't override the kernel's hw.acpi.battery.life sysctl with a
-    * partial aggregate that omits units we couldn't read. */
+   /* Cleared on ioctl failure to keep partial aggregates out. */
    bool energyComplete = true;
    bool chargeComplete = true;
 
-   /* Count slots that are physically present. ACPI may report N units while
-    * one bay is empty; an empty bay's BST succeeds with NOT_PRESENT and zero
-    * fields, which would otherwise drag down aggregate percent/energy. */
    int unitsPresent = 0;
 
    for (int u = 0; u < units; u++) {
       union acpi_battery_ioctl_arg bifArg = { .unit = u };
       if (ioctl(fd, ACPIIO_BATT_GET_BIF, &bifArg) == -1) {
-         /* Failed read: we don't know whether this slot is present or not,
-          * so conservatively mark every aggregate incomplete. Otherwise a
-          * partial sum would override the kernel's authoritative sysctl. */
+         /* Read failed; aggregate stays incomplete. */
          energyComplete = false;
          chargeComplete = false;
          powerComplete = false;
@@ -446,7 +428,6 @@ void Platform_getBattery(BatteryInfo* info) {
 
       union acpi_battery_ioctl_arg bstArg = { .unit = u };
       if (ioctl(fd, ACPIIO_BATT_GET_BST, &bstArg) == -1) {
-         /* Same reasoning as the BIF failure above. */
          energyComplete = false;
          chargeComplete = false;
          powerComplete = false;
@@ -455,12 +436,7 @@ void Platform_getBattery(BatteryInfo* info) {
 
       const struct acpi_bst* bst = &bstArg.bst;
 
-      /* Empty battery bay: BST can succeed with zeroed cap/rate fields and
-       * state reported as the NOT_PRESENT sentinel. NOT_PRESENT is a
-       * synthetic value (the OR of all _BST state bits), not a standalone
-       * flag, so test it with == rather than masking. Skip absent slots —
-       * the completeness checks below use unitsPresent (not units) so absent
-       * slots are treated as nonexistent rather than units with missing data. */
+      /* NOT_PRESENT is a synthetic _BST mask value, not a single bit. */
       if (bst->state == ACPI_BATT_STAT_NOT_PRESENT)
          continue;
 
@@ -488,18 +464,13 @@ void Platform_getBattery(BatteryInfo* info) {
             haveBatteryEnergyCurr = true;
             haveBatteryEnergyFull = true;
          } else {
-            /* Always populate the charge fallback so we can still compute
-             * percent when voltage is unknown. */
+            /* Charge fallback for percent when voltage is unknown. */
             batteryChargeCurr = (int64_t) bst->cap;
             batteryChargeFull = (int64_t) bif->lfcap;
             haveBatteryChargeCurr = true;
             haveBatteryChargeFull = true;
 
-            /* Use design voltage to convert charge into energy: bst->volt
-             * (instantaneous terminal voltage) drifts as the pack charges and
-             * discharges, which would skew batteryEnergyFull over time. Fall
-             * back to the present voltage only if the design value is
-             * missing. */
+            /* Design voltage for energy reference. */
             uint32_t referenceVoltage = (bif->dvol != ACPI_BATT_UNKNOWN && bif->dvol != 0)
                                          ? bif->dvol
                                          : bst->volt;
@@ -512,10 +483,7 @@ void Platform_getBattery(BatteryInfo* info) {
          }
       }
 
-      /* Clamp per-battery curr to full before summing: a quirky firmware
-       * can report bst->cap > bif->lfcap, which would otherwise let the
-       * published info->energyCurr / info->energyFull values exceed each
-       * other's bounds even though the percent gate caps at 100. */
+      /* Clamp curr <= full per battery (firmware may report cap > lfcap). */
       if (haveBatteryEnergyCurr && haveBatteryEnergyFull && batteryEnergyFull > 0) {
          int64_t clampedEnergy = batteryEnergyCurr > batteryEnergyFull ? batteryEnergyFull : batteryEnergyCurr;
          totalEnergyRemain += clampedEnergy;
@@ -531,25 +499,18 @@ void Platform_getBattery(BatteryInfo* info) {
       }
 
       if (bst->rate == ACPI_BATT_UNKNOWN) {
-         /* A genuinely unknown rate means the totalPower sum can't represent
-          * this unit. Treat as incomplete so we don't publish a misleading
-          * 0 W aggregate; the 0.0 fallback is reserved for known-zero rates
-          * (e.g., idle on AC). */
          powerComplete = false;
          continue;
       }
 
       if (bst->rate == 0) {
-         /* Zero rate is a known 0 W reading regardless of units or voltage:
-          * I * V = 0 when I is zero, so the mAh path's voltage lookup is
-          * unnecessary. batteryPower is already 0 from its declaration. */
+         /* I=0 ⇒ 0 W known regardless of voltage. */
          haveBatteryPower = true;
       } else if (bif->units == ACPI_BIF_UNITS_MW) {
          batteryPower = (int64_t) bst->rate * 1000;
          haveBatteryPower = true;
       } else {
-         /* Instantaneous power P = I * V wants the present terminal voltage;
-          * fall back to design voltage only when it isn't exposed. */
+         /* Present voltage for I*V. */
          uint32_t rateVoltage = (bst->volt != ACPI_BATT_UNKNOWN && bst->volt != 0)
                                  ? bst->volt
                                  : bif->dvol;
@@ -561,8 +522,6 @@ void Platform_getBattery(BatteryInfo* info) {
       }
 
       if (!haveBatteryPower) {
-         /* A non-zero rate that we couldn't convert (mAh with unknown voltage)
-          * means the totalPower sum is missing real charge/discharge activity. */
          powerComplete = false;
          continue;
       }
@@ -576,16 +535,7 @@ void Platform_getBattery(BatteryInfo* info) {
 
    close(fd);
 
-   /* Only override the sysctl-derived percent when every present battery
-    * unit contributed to the totals — partial aggregates would misrepresent
-    * the pack against the kernel's hw.acpi.battery.life summary. Compare
-    * against unitsPresent so empty bays don't fail the check, and require
-    * the matching completeness flag (energyComplete / chargeComplete) so a
-    * BIF/BST ioctl failure on any unit forces us back to the kernel's
-    * authoritative summary instead of publishing a partial aggregate.
-    * Prefer the energy (Wh) ratio over the raw-charge (mAh) ratio: on
-    * multi-pack systems with differing voltages the energy ratio is the
-    * physically correct aggregate, while an mAh-weighted ratio is not. */
+   /* Energy ratio preferred (mAh-weighted is wrong on mixed-voltage packs). */
    if (energyComplete && unitsPresent > 0 && unitsWithEnergy == unitsPresent && totalEnergyFull > 0) {
       info->percent = ((double) totalEnergyRemain * 100.0) / (double) totalEnergyFull;
       if (totalEnergyRemain >= totalEnergyFull)
@@ -596,16 +546,11 @@ void Platform_getBattery(BatteryInfo* info) {
          info->percent = 100;
    }
 
-   /* Only publish energy totals when complete in watt-hours for every present unit. */
    if (energyComplete && unitsPresent > 0 && unitsWithEnergy == unitsPresent && totalEnergyFull > 0) {
       info->energyCurr = (double) totalEnergyRemain / 1000000.0;
       info->energyFull = (double) totalEnergyFull / 1000000.0;
    }
 
-   /* Only publish power when every present unit was covered and every rate
-    * was known and convertible to W. An unknown rate on any unit leaves the
-    * sysctl-derived powerCurr (NaN) in place rather than reporting a
-    * misleading 0 W aggregate. */
    if (powerComplete && unitsPresent > 0 && unitsCovered == unitsPresent) {
       info->powerCurr = (double) totalPower / 1000000.0;
    }

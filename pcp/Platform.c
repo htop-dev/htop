@@ -234,10 +234,7 @@ static const char* Platform_metricNames[] = {
    [PCP_MEM_ZSWAPPED] = "mem.util.zswapped",
    [PCP_VFS_FILES_COUNT] = "vfs.files.count",
    [PCP_VFS_FILES_MAX] = "vfs.files.max",
-   /* The denki.bat.* metrics are optional - they require the denki PMDA.
-    * pmLookupName tolerates missing individual metrics; Metric_desc()
-    * returns NULL at runtime if a metric was not resolved, which the
-    * battery code uses to short-circuit the path. */
+   /* denki PMDA optional; Metric_desc()==NULL short-circuits in battery code. */
    [PCP_DENKI_POWER_NOW] = "denki.bat.power_now",
    [PCP_DENKI_ENERGY_NOW] = "denki.bat.energy_now",
    [PCP_DENKI_CAPACITY] = "denki.bat.capacity",
@@ -453,13 +450,7 @@ bool Platform_init(void) {
    Metric_enable(PCP_UNAME_MACHINE, true);
    Metric_enable(PCP_UNAME_DISTRO, true);
 
-   /* Battery (denki PMDA, optional). Machine_scan only re-enables metrics
-    * with index >= PCP_PROC_PID; everything below that index is enabled
-    * once here in Platform_init and stays enabled for every subsequent
-    * Metric_fetch. The bulk loop further down (`metric < PCP_PROC_PID`)
-    * already covers these, but enable them explicitly so the dependency
-    * is visible at the call site of Platform_getBattery and survives any
-    * future refactor of the bulk-enable loop. */
+   /* Battery (denki PMDA, optional). Explicit enables for visibility. */
    Metric_enable(PCP_DENKI_CAPACITY, true);
    Metric_enable(PCP_DENKI_POWER_NOW, true);
 
@@ -892,34 +883,12 @@ void Platform_getBattery(BatteryInfo* info) {
 
    int count = Metric_instanceCount(PCP_DENKI_CAPACITY);
    if (count < 1) {
-      /* No battery instances. The denki PMDA does not expose AC adapter
-       * state, so absence of batteries does not imply AC presence (e.g. a
-       * desktop with denki loaded but no batteries). Leave info->ac at its
-       * initial AC_ERROR ("AC unknown") rather than claiming AC_PRESENT. */
+      /* denki has no AC sensor; absence of batteries ≠ AC_PRESENT. */
       return;
    }
 
-   /* PCP value sets are keyed by instance id, not array offset. The denki
-    * PMDA can return different instance counts (or different instance sets)
-    * for capacity vs. energy_now vs. power_now -- e.g. a battery present in
-    * sysfs CAPACITY but not yet in ENERGY_NOW. Joining the per-metric arrays
-    * by array offset would silently mismatch the instances. We therefore
-    * walk the capacity metric with Metric_iterate to get authoritative
-    * (instid, offset) pairs, then look up the matching instances in the
-    * other denki metrics with Metric_instance.
-    *
-    * Metric_iterate signals that PCP knows about an instance, but the
-    * subsequent Metric_instance lookup can still fail (transient state, an
-    * instance disappearing between metric refreshes). Silently skipping
-    * such an instance shrinks capacityCount and lets the publication path
-    * report a partial aggregate as if it were whole-pack -- e.g. on a
-    * 2-battery host where one Metric_instance fails, the remaining
-    * battery's percent would be published as the system value. The
-    * aggregateComplete flag tracks whether every iterated instance was
-    * successfully read; if any read failed we conservatively mark the
-    * aggregate incomplete (we don't know which instance dropped out) and
-    * the publication block leaves info->percent and info->powerCurr at
-    * NaN rather than overriding with a partial sum. */
+   /* Join metrics by instance id (not array offset). aggregateComplete
+    * clears on any Metric_instance failure to avoid partial aggregates. */
 
    /* denki.bat.capacity is the sysfs CAPACITY field (percent, 0-100). */
    pmAtomValue* batteryCapacity = xCalloc(count, sizeof(pmAtomValue));
@@ -933,8 +902,7 @@ void Platform_getBattery(BatteryInfo* info) {
             break;
          pmAtomValue atom;
          if (Metric_instance(PCP_DENKI_CAPACITY, instid, offset, &atom, PM_TYPE_DOUBLE) == NULL) {
-            /* We can't tell which instance failed, so mark the aggregate
-             * incomplete and let the publication block fall back to NaN. */
+            /* Unknown which instance dropped; aggregate is incomplete. */
             aggregateComplete = false;
             continue;
          }
@@ -945,50 +913,16 @@ void Platform_getBattery(BatteryInfo* info) {
    }
    bool haveCapacity = capacityCount > 0;
 
-   /* denki.bat.energy_now is intentionally unused.
-    *
-    * BatteryMeter.h contracts info->energyCurr to be in Wh, but the denki
-    * PMDA can back denki.bat.energy_now with sysfs ENERGY_NOW (Wh, true
-    * energy) OR sysfs CHARGE_NOW (uAh / mAh, charge -- NOT energy), and
-    * the metric descriptor does not disclose which backing source was
-    * used. info->energyCurr therefore stays NaN (the default set above);
-    * the denki PMDA also does not expose a corresponding ENERGY_FULL
-    * metric, so info->energyFull likewise stays NaN.
-    *
-    * We previously also used these samples for an energy-weighted percent
-    * across multiple batteries, on the assumption that all denki instances
-    * on one host share a single backing source. That assumption is wrong:
-    * the kernel can back ENERGY_NOW for one battery and CHARGE_NOW for
-    * another on the same host (different battery class drivers), so
-    * summing eNow / (cap/100) across instances mixes Wh and mAh and
-    * yields a meaningless ratio. We cannot detect homogeneity from PCP,
-    * so the only safe behaviour for multi-battery hosts is the unweighted
-    * capacity average. The energy_now metric is therefore not enabled or
-    * read here. */
+   /* energy_now unused: denki may back it with µAh or µWh per instance,
+    * indistinguishably. info->energyCurr/Full stay NaN. */
 
    if (haveCapacity && aggregateComplete) {
       if (capacityCount == 1) {
-         /* Single battery: use its capacity directly; no aggregation needed.
-          * aggregateComplete still matters here -- a 2-battery host where
-          * one Metric_instance failed would otherwise reach this branch
-          * with capacityCount == 1 and publish that battery's percent as
-          * the whole-pack value. */
          if (isNonnegative(batteryCapacity[0].d))
             info->percent = CLAMP(batteryCapacity[0].d, 0.0, 100.0);
       } else {
-         /* Multi-battery: unweighted capacity average. An energy-weighted
-          * average would be more accurate for unequal-sized batteries
-          * (e.g. 90Wh@50% + 10Wh@100% should report 55%, not 75%), but it
-          * requires that every instance's energy_now sample share a unit.
-          * The denki PMDA does not guarantee that across a host (see the
-          * comment above), so we always use the unweighted average here. */
-         /* Require every capacity instance to report a usable value
-          * before averaging. Skipping an unknown/negative sample (sysfs
-          * CAPACITY=-1, NaN propagation through PCP, etc.) and averaging
-          * only the remaining instances would publish a partial pack
-          * percentage as if it covered the whole pack — the same silent-
-          * drop pattern that aggregateComplete already guards against
-          * elsewhere in this function. */
+         /* Unweighted average; mixed Wh/mAh backing prevents weighting.
+          * Any invalid sample blocks publication. */
          double total = 0.0;
          bool allValid = true;
          for (int i = 0; i < capacityCount; i++) {
@@ -1022,11 +956,7 @@ void Platform_getBattery(BatteryInfo* info) {
          totalPower += atom.d;
       }
       if (allMatched && aggregateComplete) {
-         /* denki.bat.power_now is published by the denki PMDA in
-          * watts (the PMDA divides the raw sysfs power_now microwatt
-          * value by 1e6 and labels the metric with units "watt"; see
-          * pcp/src/pmdas/denki/denki.c). Assign the summed double
-          * directly, matching BatteryInfo.powerCurr's contract. */
+         /* denki PMDA already exposes power_now in watts. */
          info->powerCurr = totalPower;
       }
    }
@@ -1034,10 +964,7 @@ void Platform_getBattery(BatteryInfo* info) {
    free(batteryInst);
    free(batteryCapacity);
 
-   /* The denki PMDA does not expose AC adapter state, and denki.bat.power_now
-    * is a magnitude (sysfs POWER_NOW is non-negative) rather than a signed
-    * power flow, so we cannot infer charging vs. discharging from its sign.
-    * Leave info->ac as AC_ERROR ("AC unknown") rather than guessing wrong. */
+   /* denki has no AC sensor; info->ac stays AC_ERROR. */
 }
 
 const char* Platform_getFailedState(void) {
