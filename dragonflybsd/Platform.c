@@ -407,7 +407,6 @@ void Platform_getBattery(BatteryInfo* info) {
    int unitsWithCharge = 0;
 
    int64_t totalPower = 0;            /* µW */
-   int unitsCovered = 0;
    bool powerComplete = true;
 
    /* Cleared on ioctl failure to keep partial aggregates out. */
@@ -441,7 +440,6 @@ void Platform_getBattery(BatteryInfo* info) {
          continue;
 
       unitsPresent++;
-      unitsCovered++;
 
       const struct acpi_bif* bif = &bifArg.bif;
 
@@ -549,7 +547,7 @@ void Platform_getBattery(BatteryInfo* info) {
       info->energyFull = (double) totalEnergyFull / 1000000.0;
    }
 
-   if (powerComplete && unitsPresent > 0 && unitsCovered == unitsPresent) {
+   if (powerComplete && unitsPresent > 0) {
       info->powerCurr = (double) totalPower / 1000000.0;
    }
 }
