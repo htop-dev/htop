@@ -431,6 +431,8 @@ void Platform_getBattery(BatteryInfo* info) {
    bool haveTotalRemain = false;
    bool haveTotalFull = false;
    bool haveTotalPower = false;
+   bool energyComplete = true;
+   bool powerComplete = true;
 
    int64_t totalRemain = 0;
    int64_t totalFull = 0;
@@ -438,12 +440,18 @@ void Platform_getBattery(BatteryInfo* info) {
 
    for (int u = 0; u < units; u++) {
       union acpi_battery_ioctl_arg bixArg = { .unit = u };
-      if (ioctl(fd, ACPIIO_BATT_GET_BIX, &bixArg) == -1)
+      if (ioctl(fd, ACPIIO_BATT_GET_BIX, &bixArg) == -1) {
+         energyComplete = false;
+         powerComplete = false;
          continue;
+      }
 
       union acpi_battery_ioctl_arg bstArg = { .unit = u };
-      if (ioctl(fd, ACPIIO_BATT_GET_BST, &bstArg) == -1)
+      if (ioctl(fd, ACPIIO_BATT_GET_BST, &bstArg) == -1) {
+         energyComplete = false;
+         powerComplete = false;
          continue;
+      }
 
       const struct acpi_bix* bix = &bixArg.bix;
       const struct acpi_bst* bst = &bstArg.bst;
@@ -478,10 +486,14 @@ void Platform_getBattery(BatteryInfo* info) {
          totalFull += batteryEnergyFull;
          haveTotalRemain = true;
          haveTotalFull = true;
+      } else {
+         energyComplete = false;
       }
 
-      if (bst->rate != ACPI_BATT_UNKNOWN && bst->rate > 0) {
-         if (bix->units == ACPI_BIX_UNITS_MW) {
+      if (bst->rate != ACPI_BATT_UNKNOWN) {
+         if (bst->rate == 0) {
+            haveBatteryPower = true;
+         } else if (bix->units == ACPI_BIX_UNITS_MW) {
             batteryPower = (int64_t) bst->rate * 1000;
             haveBatteryPower = true;
          } else {
@@ -497,12 +509,17 @@ void Platform_getBattery(BatteryInfo* info) {
       if (haveBatteryPower) {
          totalPower += batteryPower;
          haveTotalPower = true;
+      } else {
+         powerComplete = false;
       }
    }
 
    close(fd);
 
-   if (haveTotalRemain && haveTotalFull && totalFull > 0) {
+   /* Only publish aggregate energy/percent when every battery contributed.
+      Otherwise the totals are partial and would contradict the sysctl
+      `hw.acpi.battery.life` value (which already covers all units). */
+   if (energyComplete && haveTotalRemain && haveTotalFull && totalFull > 0) {
       info->percent = ((double) totalRemain * 100.0) / (double) totalFull;
       if (totalRemain >= totalFull)
          info->percent = 100;
@@ -511,7 +528,9 @@ void Platform_getBattery(BatteryInfo* info) {
       info->energyFull = (double) totalFull / 1000000.0;
    }
 
-   if (haveTotalPower) {
+   /* Power total is meaningful only when every battery's rate was readable
+      (a known rate of zero counts as a contribution). */
+   if (powerComplete && haveTotalPower) {
       info->powerCurr = (double) totalPower / 1000000.0;
    }
 }
