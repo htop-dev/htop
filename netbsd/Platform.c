@@ -691,10 +691,18 @@ void Platform_getBattery(BatteryInfo* info) {
          if (batteryContributedCharge)
             unitsContributingCharge++;
 
+         /* Rate contribution is independent of energy/charge contribution.
+          * A battery that exposes only a charge/discharge rate sensor
+          * (no charge counter, or charge data marked invalid) still
+          * contributes a usable power reading; gating unitsContributingPower
+          * on energy/charge would suppress info->powerCurr precisely for
+          * those rate-only batteries even though totalPower already
+          * includes the contribution. Mirror the Linux Class L pattern:
+          * count toward unitsContributingPower whenever a valid rate was
+          * read. */
          if (haveBatteryChargeRate || haveBatteryDischargeRate) {
             totalPower += batteryDischargeRate - batteryChargeRate;
-            if (batteryContributedEnergy || batteryContributedCharge)
-               unitsContributingPower++;
+            unitsContributingPower++;
          }
       }
 
