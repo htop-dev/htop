@@ -533,8 +533,19 @@ void Platform_getBattery(BatteryInfo* info) {
          prop_object_t maxValue = prop_dictionary_get(fields, "max-value");
          prop_object_t descField = prop_dictionary_get(fields, "description");
          prop_object_t typeField = prop_dictionary_get(fields, "type");
+         prop_object_t stateField = prop_dictionary_get(fields, "state");
 
          if (descField == NULL || curValue == NULL)
+            continue;
+
+         /* Reject sensors the kernel has flagged invalid: when an ACPI
+            battery's _BST returns an unknown rate, sysmon still publishes
+            the "charge rate" / "discharge rate" sensors with a sentinel
+            cur-value and state="invalid". Trusting that cur-value would
+            surface bogus signed power readings. The same rule applies to
+            every other sensor we read (charge, voltage, present, ...) —
+            an invalid state means cur-value is meaningless. */
+         if (stateField != NULL && prop_string_equals_string(stateField, "invalid"))
             continue;
 
          if (prop_string_equals_string(descField, "connected")) {
