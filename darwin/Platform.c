@@ -732,7 +732,10 @@ void Platform_getBattery(BatteryInfo* info) {
    }
 
    if (cap_max > 0.0) {
-      info->percent = 100.0 * cap_current / cap_max;
+      /* Clamp to the documented [0..100] BatteryInfo contract: IOPS can
+       * (rarely) report cap_current > cap_max on quirky firmware. */
+      double pct = 100.0 * cap_current / cap_max;
+      info->percent = pct > 100.0 ? 100.0 : (pct < 0.0 ? 0.0 : pct);
       /* IOPS capacity keys (kIOPSCurrentCapacityKey/kIOPSMaxCapacityKey) are
        * unitless (typically a 0-100 percentage) and cannot be assigned to
        * energyCurr/energyFull, which the BatteryInfo contract specifies as

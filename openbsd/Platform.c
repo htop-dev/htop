@@ -431,11 +431,13 @@ void Platform_getBattery(BatteryInfo* info) {
       }
 
       if (haveTotalRemain && haveTotalFull && totalFull > 0) {
-         info->percent = ((double) totalRemain * 100.0) / (double) totalFull;
-         if (totalRemain >= totalFull)
-            info->percent = 100;
+         /* Clamp curr to full before publishing: a quirky firmware can
+          * report remaining > last-full, which would let info->energyCurr
+          * exceed info->energyFull and percent exceed 100. */
+         int64_t clampedRemain = totalRemain > totalFull ? totalFull : totalRemain;
+         info->percent = ((double) clampedRemain * 100.0) / (double) totalFull;
 
-         info->energyCurr = (double) totalRemain / 1000000.0;
+         info->energyCurr = (double) clampedRemain / 1000000.0;
          info->energyFull = (double) totalFull / 1000000.0;
       }
 
