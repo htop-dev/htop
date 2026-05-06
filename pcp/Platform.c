@@ -886,30 +886,20 @@ void Platform_getBattery(BatteryInfo* info) {
       return;
    }
 
-   /* denki.bat.capacity is the sysfs CAPACITY field (percent, 0-100).
-    * Average across battery instances to produce an overall percent. */
+   /* denki.bat.capacity is the sysfs CAPACITY field (percent, 0-100). */
    pmAtomValue* batteryCapacity = xCalloc(count, sizeof(pmAtomValue));
-   if (Metric_values(PCP_DENKI_CAPACITY, batteryCapacity, count, PM_TYPE_DOUBLE)) {
-      double total = 0.0;
-      int valid = 0;
-      for (i = 0; i < count; i++) {
-         if (isNonnegative(batteryCapacity[i].d)) {
-            total += batteryCapacity[i].d;
-            valid++;
-         }
-      }
-      if (valid > 0) {
-         info->percent = CLAMP(total / valid, 0.0, 100.0);
-      }
-   }
-   free(batteryCapacity);
+   bool haveCapacity = Metric_values(PCP_DENKI_CAPACITY, batteryCapacity, count, PM_TYPE_DOUBLE) != NULL;
 
-   /* denki.bat.energy_now (sysfs ENERGY_NOW, Wh) is optional and only
-    * populates info->energyCurr; the denki PMDA does not expose a
-    * corresponding ENERGY_FULL metric, so info->energyFull stays NaN. */
+   /* denki.bat.energy_now (sysfs ENERGY_NOW, Wh) is optional. The denki PMDA
+    * does not expose a corresponding ENERGY_FULL metric, so info->energyFull
+    * stays NaN; we read energy_now both to populate info->energyCurr and to
+    * infer per-instance full-charge energy for a capacity-weighted average. */
+   pmAtomValue* batteryEnergyCurr = NULL;
+   bool haveEnergy = false;
    if (Metric_desc(PCP_DENKI_ENERGY_NOW) != NULL) {
-      pmAtomValue* batteryEnergyCurr = xCalloc(count, sizeof(pmAtomValue));
+      batteryEnergyCurr = xCalloc(count, sizeof(pmAtomValue));
       if (Metric_values(PCP_DENKI_ENERGY_NOW, batteryEnergyCurr, count, PM_TYPE_DOUBLE)) {
+         haveEnergy = true;
          double total = 0.0;
          for (i = 0; i < count; i++) {
             if (isNonnegative(batteryEnergyCurr[i].d))
@@ -917,8 +907,52 @@ void Platform_getBattery(BatteryInfo* info) {
          }
          info->energyCurr = total;
       }
-      free(batteryEnergyCurr);
    }
+
+   if (haveCapacity) {
+      if (count == 1) {
+         /* Single battery: use its capacity directly; no aggregation needed. */
+         if (isNonnegative(batteryCapacity[0].d))
+            info->percent = CLAMP(batteryCapacity[0].d, 0.0, 100.0);
+      } else if (haveEnergy) {
+         /* Multi-battery: weight by inferred per-instance full energy
+          * (energy_now / (capacity/100)). This yields the correct overall
+          * percent for unequal-sized batteries, e.g. 90Wh@50% + 10Wh@100%
+          * reports 55%, not the 75% a simple average would give. */
+         double totalEnergyNow = 0.0;
+         double totalEnergyFull = 0.0;
+         for (i = 0; i < count; i++) {
+            double cap = batteryCapacity[i].d;
+            double eNow = batteryEnergyCurr[i].d;
+            if (isNonnegative(cap) && cap > 0.0 && isNonnegative(eNow)) {
+               double eFull = eNow / (cap / 100.0);
+               totalEnergyNow += eNow;
+               totalEnergyFull += eFull;
+            }
+         }
+         if (totalEnergyFull > 0.0) {
+            info->percent = CLAMP((totalEnergyNow / totalEnergyFull) * 100.0, 0.0, 100.0);
+         }
+      } else {
+         /* Multi-battery with no energy_now: fall back to a simple average.
+          * This is inaccurate when batteries have unequal capacities, but
+          * without per-instance energy data we cannot infer their sizes. */
+         double total = 0.0;
+         int valid = 0;
+         for (i = 0; i < count; i++) {
+            if (isNonnegative(batteryCapacity[i].d)) {
+               total += batteryCapacity[i].d;
+               valid++;
+            }
+         }
+         if (valid > 0) {
+            info->percent = CLAMP(total / valid, 0.0, 100.0);
+         }
+      }
+   }
+
+   free(batteryCapacity);
+   free(batteryEnergyCurr);
 
    if (Metric_desc(PCP_DENKI_POWER_NOW) != NULL) {
       pmAtomValue* batteryPowerCurr = xCalloc(count, sizeof(pmAtomValue));
@@ -931,9 +965,10 @@ void Platform_getBattery(BatteryInfo* info) {
       free(batteryPowerCurr);
    }
 
-   if (info->powerCurr < 0) {
-      info->ac = AC_ABSENT;
-   }
+   /* The denki PMDA does not expose AC adapter state, and denki.bat.power_now
+    * is a magnitude (sysfs POWER_NOW is non-negative) rather than a signed
+    * power flow, so we cannot infer charging vs. discharging from its sign.
+    * Leave info->ac as AC_ERROR ("AC unknown") rather than guessing wrong. */
 }
 
 const char* Platform_getFailedState(void) {
