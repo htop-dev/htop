@@ -1129,16 +1129,19 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
             batteryContributedCharge = true;
          }
 
-         /* A battery slot that exposes no usable counter at all (only
-          * CAPACITY level, or a SCOPE-less peripheral) cannot contribute
-          * to any aggregate. Counting it toward unitsTotal would block
-          * the laptop pack's percent/energy/power gates and the meter
-          * would regress to N/A on hosts where such a device sits next
-          * to the real battery. Skip if neither energy/charge nor
-          * instantaneous power is available; power-only batteries
-          * (POWER_NOW or CURRENT_NOW without FULL counters) still
-          * count via the haveBatteryPower / haveBatteryCurrent paths. */
-         if (!batteryContributedEnergy && !batteryContributedCharge
+         /* Distinguish "peripheral / unused slot" from "system battery
+          * with stale data". A peripheral (e.g. wireless mouse) typically
+          * exposes only CAPACITY and reports no FULL counters and no
+          * instantaneous power — skipping it lets the laptop pack's
+          * completeness gates pass. A system battery whose CAPACITY=-1
+          * (kernel quirk) also leaves batteryContributedEnergy/Charge
+          * false, but it DOES expose ENERGY_FULL/CHARGE_FULL — that
+          * battery must count toward unitsTotal so its missing
+          * contribution blocks the pack-level percent gate.
+          *
+          * Skip iff none of FULL counters, instantaneous power, or
+          * instantaneous current are present: a true peripheral. */
+         if (!haveBatteryEnergyFull && !haveBatteryChargeFull
                && !haveBatteryPower && !haveBatteryCurrent)
             goto next;
 
