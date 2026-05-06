@@ -445,10 +445,43 @@ void Platform_getBattery(BatteryInfo* info) {
       if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1 && (s.flags & SENSOR_FUNKNOWN) == 0)
          batteryState = s.value;
 
+      /* OpenBSD acpibat publishes the rate sensor as either SENSOR_WATTS
+       * (mW firmware) or SENSOR_AMPS (mA firmware). Try Watts first; if
+       * that's absent or unknown, fall back to Amps × Volts. The voltage
+       * sensor is exposed as SENSOR_VOLTS_DC[1] (present voltage). All
+       * sensor values are in 10^-6 SI units, so amps×volts produces
+       * 10^-12 W; dividing by 10^6 gives µW that the publication block
+       * below converts to W. */
+      bool haveRate = false;
+      int64_t batteryPower = 0;
+
       mib[3] = SENSOR_WATTS;
       mib[4] = 0; /* "rate" */
       if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1 && (s.flags & SENSOR_FUNKNOWN) == 0) {
-         int64_t batteryPower = s.value;
+         batteryPower = s.value;
+         haveRate = true;
+      }
+
+      if (!haveRate) {
+         mib[3] = SENSOR_AMPS;
+         mib[4] = 0; /* "rate" (mA firmware) */
+         struct sensor amps;
+         size_t alen = sizeof(struct sensor);
+         if (sysctl(mib, 5, &amps, &alen, NULL, 0) != -1 && (amps.flags & SENSOR_FUNKNOWN) == 0) {
+            mib[3] = SENSOR_VOLTS_DC;
+            mib[4] = 1; /* present voltage */
+            struct sensor volts;
+            size_t vlen = sizeof(struct sensor);
+            if (sysctl(mib, 5, &volts, &vlen, NULL, 0) != -1
+                  && (volts.flags & SENSOR_FUNKNOWN) == 0
+                  && volts.value > 0) {
+               batteryPower = ((int64_t) amps.value * (int64_t) volts.value) / 1000000;
+               haveRate = true;
+            }
+         }
+      }
+
+      if (haveRate) {
          if (batteryState & 0x02)
             batteryPower = -batteryPower;
 
