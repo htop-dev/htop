@@ -766,11 +766,15 @@ static void LinuxMachine_computeThreadIndices(LinuxMachine* this) {
       But there are some systems where this is not true, either
       because CoreIDs are not contiguous or because cpus are
       enumerated in an alternative order, or both. */
+   int maxCoreIndex = 0;
    for (size_t i = 1; i <= super->existingCPUs; i++) {
-      cpus[i].coreIndex = 0;
+      cpus[i].coreIndex = maxCoreIndex++;
       for (size_t j = i - 1; j >= 1; j--) {
-         if (cpus[i].threadIndex == cpus[j].threadIndex) {
-            cpus[i].coreIndex = cpus[j].coreIndex + 1;
+         if (cpus[i].physicalID == cpus[j].physicalID &&
+             cpus[i].coreID == cpus[j].coreID) {
+            assert(cpus[i].threadIndex != cpus[j].threadIndex);
+            cpus[i].coreIndex = cpus[j].coreIndex;
+            maxCoreIndex--;
             break;
          }
       }
