@@ -62,12 +62,16 @@ void Battery_aggregate(const BatteryRaw* raws, size_t n, BatteryInfo* out) {
       BatteryRaw bat = raws[i];
 
       /* Derive missing now-counter from FULL * level / 100 when the kernel
-       * exposes only a percent reading. */
-      if (bat.level >= 0 && bat.level <= 100) {
+       * exposes only a percent reading. Firmware sometimes overshoots 100%
+       * by a fraction during calibration; clamp before using as a fraction
+       * so the per-battery MINIMIUM(now, full) below still produces a
+       * sensible reading rather than dropping the contribution. */
+      if (bat.level >= 0) {
+         double levelClamped = CLAMP(bat.level, 0.0, 100.0);
          if (bat.energyFull > 0 && !(bat.energyNow >= 0))
-            bat.energyNow = bat.energyFull * (bat.level / 100.0);
+            bat.energyNow = bat.energyFull * (levelClamped / 100.0);
          if (bat.chargeFull > 0 && !(bat.chargeNow >= 0))
-            bat.chargeNow = bat.chargeFull * (bat.level / 100.0);
+            bat.chargeNow = bat.chargeFull * (levelClamped / 100.0);
       }
 
       /* Derive energy from charge * voltage when energy is missing on this
@@ -94,8 +98,8 @@ void Battery_aggregate(const BatteryRaw* raws, size_t n, BatteryInfo* out) {
          chargeContrib++;
       }
 
-      if (bat.level >= 0 && bat.level <= 100) {
-         sumLevel += bat.level;
+      if (bat.level >= 0) {
+         sumLevel += CLAMP(bat.level, 0.0, 100.0);
          levelContrib++;
       }
 
