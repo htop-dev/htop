@@ -982,16 +982,24 @@ void Platform_getBattery(BatteryInfo* info) {
           * requires that every instance's energy_now sample share a unit.
           * The denki PMDA does not guarantee that across a host (see the
           * comment above), so we always use the unweighted average here. */
+         /* Require every capacity instance to report a usable value
+          * before averaging. Skipping an unknown/negative sample (sysfs
+          * CAPACITY=-1, NaN propagation through PCP, etc.) and averaging
+          * only the remaining instances would publish a partial pack
+          * percentage as if it covered the whole pack — the same silent-
+          * drop pattern that aggregateComplete already guards against
+          * elsewhere in this function. */
          double total = 0.0;
-         int valid = 0;
+         bool allValid = true;
          for (int i = 0; i < capacityCount; i++) {
-            if (isNonnegative(batteryCapacity[i].d)) {
-               total += CLAMP(batteryCapacity[i].d, 0.0, 100.0);
-               valid++;
+            if (!isNonnegative(batteryCapacity[i].d)) {
+               allValid = false;
+               break;
             }
+            total += CLAMP(batteryCapacity[i].d, 0.0, 100.0);
          }
-         if (valid > 0) {
-            info->percent = total / valid;
+         if (allValid) {
+            info->percent = total / capacityCount;
          }
       }
    }
