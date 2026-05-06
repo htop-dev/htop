@@ -928,6 +928,7 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
 
          bool haveBatteryCurrent = false;
          bool haveBatteryPower = false;
+         bool haveBatteryStatus = false;
 
          uint64_t batteryEnergyFull = 0;
          uint64_t batteryEnergyCurr = 0;
@@ -941,11 +942,21 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
          int64_t batteryCurrent = 0;
          int64_t batteryPower = 0;
 
+         char batteryStatus[32] = {0};
+
          const char* line;
 
          char* buf = buffer;
          while ((line = strsep(&buf, "\n")) != NULL) {
             char field[100] = {0};
+
+            /* STATUS is a string ("Discharging", "Charging", "Full", ...), so
+             * scan it separately from the numeric fields below. */
+            if (sscanf(line, "POWER_SUPPLY_STATUS=%31s", batteryStatus) == 1) {
+               haveBatteryStatus = true;
+               continue;
+            }
+
             int64_t val = 0;
             if (2 != sscanf(line, "POWER_SUPPLY_%99[^=]=%" SCNd64, field, &val))
                continue;
@@ -1060,6 +1071,16 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
          }
 
          if (haveBatteryPower) {
+            /* Normalize sign per htop convention: positive = discharging,
+             * negative = charging. POWER_NOW is an unsigned magnitude;
+             * CURRENT_NOW is signed but its sign convention varies by
+             * kernel/driver, so taking the absolute value and re-applying
+             * the sign from STATUS is the only portable approach. */
+            if (batteryPower < 0)
+               batteryPower = -batteryPower;
+            if (haveBatteryStatus && String_eq(batteryStatus, "Charging"))
+               batteryPower = -batteryPower;
+
             totalPower += batteryPower;
             unitsContributingPower++;
          }
