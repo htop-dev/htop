@@ -923,7 +923,12 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
          bool haveBatteryChargeFull = false;
          bool haveBatteryChargeCurr = false;
 
-         uint8_t haveBatteryVoltage = 0; // 0 = no, 1 = min_voltage, 2 = curr_voltage
+         /* Track design and instantaneous voltages separately: design voltage is
+          * the stable reference for converting CHARGE_FULL/CHARGE_NOW into an
+          * energy value, while VOLTAGE_NOW is only meaningful for the
+          * instantaneous P=I*V power calculation. */
+         bool haveBatteryVoltageNominal = false;
+         bool haveBatteryVoltageNow = false;
          bool haveBatteryLevel = false;
 
          bool haveBatteryCurrent = false;
@@ -936,7 +941,8 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
          uint64_t batteryChargeFull = 0;
          uint64_t batteryChargeCurr = 0;
 
-         uint64_t batteryVoltage = 0;
+         uint64_t batteryVoltageNominal = 0;
+         uint64_t batteryVoltageNow = 0;
          uint64_t batteryLevel = 0;
 
          int64_t batteryCurrent = 0;
@@ -991,15 +997,15 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
                continue;
             }
 
-            if (haveBatteryVoltage < 1 && String_eq(field, "VOLTAGE_MIN_DESIGN")) {
-               batteryVoltage = val;
-               haveBatteryVoltage = 1;
+            if (!haveBatteryVoltageNominal && String_eq(field, "VOLTAGE_MIN_DESIGN")) {
+               batteryVoltageNominal = val;
+               haveBatteryVoltageNominal = true;
                continue;
             }
 
-            if (haveBatteryVoltage < 2 && String_eq(field, "VOLTAGE_NOW")) {
-               batteryVoltage = val;
-               haveBatteryVoltage = 2;
+            if (!haveBatteryVoltageNow && String_eq(field, "VOLTAGE_NOW")) {
+               batteryVoltageNow = val;
+               haveBatteryVoltageNow = true;
                continue;
             }
 
@@ -1031,13 +1037,22 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
          /* Convert charge+voltage to energy when energy is not directly reported,
           * but keep the raw charge values: a charge+voltage battery contributes
           * to both accumulators so the charge total stays complete on packs that
-          * mix charge+voltage units with charge-only units. */
+          * mix charge+voltage units with charge-only units.
+          *
+          * Use design voltage (VOLTAGE_MIN_DESIGN) as the reference for
+          * FULL/REMAIN energy: VOLTAGE_NOW changes as the pack charges and
+          * discharges, which would make batteryEnergyFull drift over time and
+          * skew multi-battery percent weighting. Fall back to VOLTAGE_NOW only
+          * when no design voltage is exposed -- imperfect, but better than
+          * dropping the battery from the totals entirely. */
          if (!(haveBatteryEnergyFull && haveBatteryEnergyCurr)
-               && haveBatteryChargeFull && haveBatteryChargeCurr && haveBatteryVoltage) {
-            batteryEnergyFull = (batteryChargeFull * batteryVoltage) / 1000000;
+               && haveBatteryChargeFull && haveBatteryChargeCurr
+               && (haveBatteryVoltageNominal || haveBatteryVoltageNow)) {
+            uint64_t referenceVoltage = haveBatteryVoltageNominal ? batteryVoltageNominal : batteryVoltageNow;
+            batteryEnergyFull = (batteryChargeFull * referenceVoltage) / 1000000;
             haveBatteryEnergyFull = true;
 
-            batteryEnergyCurr = (batteryChargeCurr * batteryVoltage) / 1000000;
+            batteryEnergyCurr = (batteryChargeCurr * referenceVoltage) / 1000000;
             haveBatteryEnergyCurr = true;
          }
 
@@ -1065,9 +1080,20 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
          if (batteryContributedCharge)
             unitsContributingCharge++;
 
-         if (!haveBatteryPower && haveBatteryCurrent && haveBatteryVoltage) {
-            batteryPower = (batteryCurrent * (int64_t)batteryVoltage) / 1000000;
-            haveBatteryPower = true;
+         /* Instantaneous power P = I * V wants the present terminal voltage,
+          * so prefer VOLTAGE_NOW here; fall back to design voltage only when
+          * VOLTAGE_NOW is unavailable.
+          *
+          * Guard powerVoltage > 0: the kernel marks VOLTAGE_NOW/MIN_DESIGN as
+          * present even when it can't read the value (publishing 0). Without
+          * the guard we would publish 0 W as a known-good power reading
+          * instead of leaving power unknown. */
+         if (!haveBatteryPower && haveBatteryCurrent && (haveBatteryVoltageNow || haveBatteryVoltageNominal)) {
+            uint64_t powerVoltage = haveBatteryVoltageNow ? batteryVoltageNow : batteryVoltageNominal;
+            if (powerVoltage > 0) {
+               batteryPower = (batteryCurrent * (int64_t)powerVoltage) / 1000000;
+               haveBatteryPower = true;
+            }
          }
 
          if (haveBatteryPower) {

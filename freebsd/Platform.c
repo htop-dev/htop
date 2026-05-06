@@ -481,10 +481,17 @@ void Platform_getBattery(BatteryInfo* info) {
             haveBatteryEnergyCurr = true;
             haveBatteryEnergyFull = true;
          } else {
-            uint32_t batteryVoltage = (bst->volt != ACPI_BATT_UNKNOWN) ? bst->volt : bix->dvol;
-            if (batteryVoltage != ACPI_BATT_UNKNOWN && batteryVoltage != 0) {
-               batteryEnergyCurr = (int64_t) bst->cap * batteryVoltage;
-               batteryEnergyFull = (int64_t) bix->lfcap * batteryVoltage;
+            /* Use design voltage to convert charge into energy: bst->volt
+             * (instantaneous terminal voltage) drifts as the pack charges and
+             * discharges, which would skew batteryEnergyFull over time. Fall
+             * back to the present voltage only if the design value is
+             * missing. */
+            uint32_t referenceVoltage = (bix->dvol != ACPI_BATT_UNKNOWN && bix->dvol != 0)
+                                         ? bix->dvol
+                                         : bst->volt;
+            if (referenceVoltage != ACPI_BATT_UNKNOWN && referenceVoltage != 0) {
+               batteryEnergyCurr = (int64_t) bst->cap * referenceVoltage;
+               batteryEnergyFull = (int64_t) bix->lfcap * referenceVoltage;
                haveBatteryEnergyCurr = true;
                haveBatteryEnergyFull = true;
             }
@@ -507,7 +514,12 @@ void Platform_getBattery(BatteryInfo* info) {
             batteryPower = (int64_t) bst->rate * 1000;
             haveBatteryPower = true;
          } else {
-            uint32_t rateVoltage = (bst->volt != ACPI_BATT_UNKNOWN) ? bst->volt : bix->dvol;
+            /* Instantaneous power P = I * V wants the present terminal
+             * voltage; fall back to design voltage only when it isn't
+             * exposed. */
+            uint32_t rateVoltage = (bst->volt != ACPI_BATT_UNKNOWN && bst->volt != 0)
+                                    ? bst->volt
+                                    : bix->dvol;
 
             if (rateVoltage != ACPI_BATT_UNKNOWN && rateVoltage != 0) {
                batteryPower = (int64_t) bst->rate * rateVoltage;

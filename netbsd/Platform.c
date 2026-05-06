@@ -567,7 +567,14 @@ void Platform_getBattery(BatteryInfo* info) {
       }
 
       if (isBattery && isPresent) {
-         intmax_t batteryVoltage = (voltage != 0) ? voltage : designVoltage;
+         /* Use design voltage to convert charge into energy: the present
+          * voltage drifts as the pack charges and discharges, which would
+          * skew batteryEnergyFull over time. Fall back to the present
+          * voltage only if design voltage isn't exposed. Conversely, use
+          * the present voltage for instantaneous charge/discharge rate
+          * conversions (P = I * V), falling back to design if needed. */
+         intmax_t referenceVoltage = (designVoltage != 0) ? designVoltage : voltage;
+         intmax_t rateVoltage = (voltage != 0) ? voltage : designVoltage;
 
          bool haveBatteryChargeRate = false;
          bool haveBatteryDischargeRate = false;
@@ -596,9 +603,9 @@ void Platform_getBattery(BatteryInfo* info) {
                }
                /* Contribute to the energy accumulator only when voltage is
                   available to convert µAh to µWh. */
-               if (batteryVoltage > 0 && maxCharge > 0) {
-                  batteryEnergyRemain = curCharge * batteryVoltage / 1000000;
-                  batteryEnergyFull = maxCharge * batteryVoltage / 1000000;
+               if (referenceVoltage > 0 && maxCharge > 0) {
+                  batteryEnergyRemain = curCharge * referenceVoltage / 1000000;
+                  batteryEnergyFull = maxCharge * referenceVoltage / 1000000;
                   batteryContributedEnergy = true;
                }
             } else if (maxCharge > 0) {
@@ -612,8 +619,8 @@ void Platform_getBattery(BatteryInfo* info) {
 
          if (haveChargeRate) {
             if (chargeRateIsAmps) {
-               if (batteryVoltage > 0) {
-                  batteryChargeRate = chargeRate * batteryVoltage / 1000000;
+               if (rateVoltage > 0) {
+                  batteryChargeRate = chargeRate * rateVoltage / 1000000;
                   haveBatteryChargeRate = true;
                }
             } else {
@@ -624,8 +631,8 @@ void Platform_getBattery(BatteryInfo* info) {
 
          if (haveDischargeRate) {
             if (dischargeRateIsAmps) {
-               if (batteryVoltage > 0) {
-                  batteryDischargeRate = dischargeRate * batteryVoltage / 1000000;
+               if (rateVoltage > 0) {
+                  batteryDischargeRate = dischargeRate * rateVoltage / 1000000;
                   haveBatteryDischargeRate = true;
                }
             } else {
