@@ -450,11 +450,20 @@ void Platform_getBattery(BatteryInfo* info) {
    prop_dictionary_t dict, fields, props;
    prop_object_t device, class;
 
-   intmax_t totalCharge = 0;
-   intmax_t totalCapacity = 0;
-   intmax_t totalChargeOnlyRemain = 0;
-   intmax_t totalChargeOnlyFull = 0;
-   bool haveChargeOnlyBattery = false;
+   /* Parallel accumulators with per-unit contribution tracking so the percent
+      calculation can pick a dimensionally-consistent ratio. A battery exposing
+      Ampere-hour charge with voltage contributes to BOTH energy totals (raw
+      charge converted to µWh) AND charge totals (raw µAh); a charge-only
+      battery without voltage contributes only to charge totals; an energy
+      battery (Watt-hour units) contributes only to energy totals. */
+   intmax_t totalEnergyRemain = 0;     /* µWh */
+   intmax_t totalEnergyFull = 0;
+   intmax_t totalChargeRemain = 0;     /* µAh */
+   intmax_t totalChargeFull = 0;
+
+   int unitsTotal = 0;
+   int unitsContributingEnergy = 0;
+   int unitsContributingCharge = 0;
 
    bool havePower = false;
    intmax_t totalPower = 0;
@@ -563,31 +572,41 @@ void Platform_getBattery(BatteryInfo* info) {
          bool haveBatteryChargeRate = false;
          bool haveBatteryDischargeRate = false;
 
-         bool haveBatteryCharge = false;
+         bool batteryContributedEnergy = false;
+         bool batteryContributedCharge = false;
 
          intmax_t batteryChargeRate = 0;
          intmax_t batteryDischargeRate = 0;
-         intmax_t batteryCharge = 0;
-         intmax_t batteryCapacity = 0;
-
-         bool chargeOnlyBattery = false;
+         intmax_t batteryEnergyRemain = 0;
+         intmax_t batteryEnergyFull = 0;
+         intmax_t batteryChargeRemain = 0;
+         intmax_t batteryChargeFull = 0;
 
          if (haveCharge) {
             if (chargeIsAmpHours) {
-               if (batteryVoltage > 0) {
-                  batteryCharge = curCharge * batteryVoltage / 1000000;
-                  batteryCapacity = maxCharge * batteryVoltage / 1000000;
-                  haveBatteryCharge = true;
-               } else if (maxCharge > 0) {
-                  /* No voltage available to convert Ah to Wh; accumulate raw
-                     charge so the percentage is still computable. The energy
-                     fields are not contributed to for this battery. */
-                  chargeOnlyBattery = true;
+               /* Always contribute to the raw charge accumulator so a
+                  voltage-less sibling pack does not make the charge total
+                  incomplete; the charge ratio is the dimensionally-correct
+                  fallback when not every battery has voltage. */
+               if (maxCharge > 0) {
+                  intmax_t clampedCharge = curCharge > maxCharge ? maxCharge : curCharge;
+                  batteryChargeRemain = clampedCharge;
+                  batteryChargeFull = maxCharge;
+                  batteryContributedCharge = true;
                }
-            } else {
-               batteryCharge = curCharge;
-               batteryCapacity = maxCharge;
-               haveBatteryCharge = true;
+               /* Contribute to the energy accumulator only when voltage is
+                  available to convert µAh to µWh. */
+               if (batteryVoltage > 0 && maxCharge > 0) {
+                  batteryEnergyRemain = curCharge * batteryVoltage / 1000000;
+                  batteryEnergyFull = maxCharge * batteryVoltage / 1000000;
+                  batteryContributedEnergy = true;
+               }
+            } else if (maxCharge > 0) {
+               /* Watt-hour battery: contributes only to the energy
+                  accumulator. Charge counters are not exposed. */
+               batteryEnergyRemain = curCharge;
+               batteryEnergyFull = maxCharge;
+               batteryContributedEnergy = true;
             }
          }
 
@@ -615,14 +634,21 @@ void Platform_getBattery(BatteryInfo* info) {
             }
          }
 
-         if (haveBatteryCharge) {
-            totalCharge += batteryCharge;
-            totalCapacity += batteryCapacity;
-         } else if (chargeOnlyBattery) {
-            intmax_t clampedCharge = curCharge > maxCharge ? maxCharge : curCharge;
-            totalChargeOnlyRemain += clampedCharge;
-            totalChargeOnlyFull += maxCharge;
-            haveChargeOnlyBattery = true;
+         if (batteryContributedEnergy) {
+            intmax_t clampedEnergy = batteryEnergyRemain > batteryEnergyFull ? batteryEnergyFull : batteryEnergyRemain;
+            totalEnergyRemain += clampedEnergy;
+            totalEnergyFull += batteryEnergyFull;
+         }
+         if (batteryContributedCharge) {
+            totalChargeRemain += batteryChargeRemain;
+            totalChargeFull += batteryChargeFull;
+         }
+         if (batteryContributedEnergy || batteryContributedCharge) {
+            unitsTotal++;
+            if (batteryContributedEnergy)
+               unitsContributingEnergy++;
+            if (batteryContributedCharge)
+               unitsContributingCharge++;
          }
 
          if (haveBatteryChargeRate || haveBatteryDischargeRate) {
@@ -636,24 +662,27 @@ void Platform_getBattery(BatteryInfo* info) {
       }
    }
 
-   /* Combine energy-based and charge-only accumulators for the percentage so
-      that batteries lacking voltage still contribute. Mixing units across the
-      two pools is dimensionally inexact but matches pre-PR behaviour and
-      keeps the meter functional rather than reporting N/A. */
-   intmax_t combinedRemain = totalCharge + totalChargeOnlyRemain;
-   intmax_t combinedFull = totalCapacity + totalChargeOnlyFull;
-   if (combinedFull > 0) {
-      info->percent = ((double) combinedRemain * 100.0) / (double) combinedFull;
-      if (combinedRemain >= combinedFull)
+   /* Pick a dimensionally-consistent ratio: prefer the energy accumulator
+      when every contributing battery reached it (best precision because
+      individual cell capacities scale with voltage); fall back to the raw
+      charge accumulator when every battery hit that path; otherwise leave
+      percent NaN rather than mix µWh and µAh totals. */
+   if (unitsTotal > 0 && unitsContributingEnergy == unitsTotal && totalEnergyFull > 0) {
+      info->percent = ((double) totalEnergyRemain * 100.0) / (double) totalEnergyFull;
+      if (totalEnergyRemain >= totalEnergyFull)
          info->percent = 100.0;
+   } else if (unitsTotal > 0 && unitsContributingCharge == unitsTotal && totalChargeFull > 0) {
+      info->percent = ((double) totalChargeRemain * 100.0) / (double) totalChargeFull;
+      if (totalChargeRemain >= totalChargeFull)
+         info->percent = 100.0;
+   }
 
-      /* Only publish Wh fields when every contributing battery had energy
-         data; otherwise the totals would be a mix of Wh and Ah and would
-         violate the BatteryInfo Wh contract. */
-      if (!haveChargeOnlyBattery && totalCapacity > 0) {
-         info->energyCurr = (double) totalCharge / 1000000.0;
-         info->energyFull = (double) totalCapacity / 1000000.0;
-      }
+   /* Only publish Wh fields when every contributing battery reached the
+      energy accumulator; otherwise the total would silently omit a pack
+      and violate the BatteryInfo Wh contract. */
+   if (unitsTotal > 0 && unitsContributingEnergy == unitsTotal && totalEnergyFull > 0) {
+      info->energyCurr = (double) totalEnergyRemain / 1000000.0;
+      info->energyFull = (double) totalEnergyFull / 1000000.0;
    }
 
    if (havePower) {
