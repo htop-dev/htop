@@ -461,7 +461,7 @@ void Platform_getBattery(BatteryInfo* info) {
    intmax_t totalChargeRemain = 0;     /* µAh */
    intmax_t totalChargeFull = 0;
 
-   int unitsTotal = 0;
+   int unitsPresent = 0;
    int unitsContributingEnergy = 0;
    int unitsContributingCharge = 0;
    int unitsContributingPower = 0;
@@ -580,6 +580,13 @@ void Platform_getBattery(BatteryInfo* info) {
       }
 
       if (isBattery && isPresent) {
+         /* Count every present battery slot before any sensor-dependent
+            contribution check. A battery whose sensors were entirely
+            flagged invalid still counts as present, so the aggregate
+            stays incomplete and percent/energy/power publication is
+            suppressed rather than silently dropping that pack. */
+         unitsPresent++;
+
          /* Use design voltage to convert charge into energy: the present
           * voltage drifts as the pack charges and discharges, which would
           * skew batteryEnergyFull over time. Fall back to the present
@@ -671,13 +678,10 @@ void Platform_getBattery(BatteryInfo* info) {
             totalChargeRemain += batteryChargeRemain;
             totalChargeFull += batteryChargeFull;
          }
-         if (batteryContributedEnergy || batteryContributedCharge) {
-            unitsTotal++;
-            if (batteryContributedEnergy)
-               unitsContributingEnergy++;
-            if (batteryContributedCharge)
-               unitsContributingCharge++;
-         }
+         if (batteryContributedEnergy)
+            unitsContributingEnergy++;
+         if (batteryContributedCharge)
+            unitsContributingCharge++;
 
          if (haveBatteryChargeRate || haveBatteryDischargeRate) {
             totalPower += batteryDischargeRate - batteryChargeRate;
@@ -695,33 +699,40 @@ void Platform_getBattery(BatteryInfo* info) {
       }
    }
 
-   /* Pick a dimensionally-consistent ratio: prefer the energy accumulator
-      when every contributing battery reached it (best precision because
-      individual cell capacities scale with voltage); fall back to the raw
-      charge accumulator when every battery hit that path; otherwise leave
-      percent NaN rather than mix µWh and µAh totals. */
-   if (unitsTotal > 0 && unitsContributingEnergy == unitsTotal && totalEnergyFull > 0) {
+   /* Require every PRESENT battery to have contributed; a battery whose
+      sensors were entirely flagged invalid still counts as present, so the
+      aggregate stays incomplete and the percent/energy/power publication
+      is suppressed. Prefer the energy accumulator when every present
+      battery reached it (best precision because individual cell capacities
+      scale with voltage); fall back to the raw charge accumulator when
+      every battery hit that path; otherwise leave percent NaN rather than
+      mix µWh and µAh totals. */
+   if (unitsPresent > 0 && unitsContributingEnergy == unitsPresent && totalEnergyFull > 0) {
       info->percent = ((double) totalEnergyRemain * 100.0) / (double) totalEnergyFull;
       if (totalEnergyRemain >= totalEnergyFull)
          info->percent = 100.0;
-   } else if (unitsTotal > 0 && unitsContributingCharge == unitsTotal && totalChargeFull > 0) {
+   } else if (unitsPresent > 0 && unitsContributingCharge == unitsPresent && totalChargeFull > 0) {
       info->percent = ((double) totalChargeRemain * 100.0) / (double) totalChargeFull;
       if (totalChargeRemain >= totalChargeFull)
          info->percent = 100.0;
    }
 
-   /* Only publish Wh fields when every contributing battery reached the
-      energy accumulator; otherwise the total would silently omit a pack
-      and violate the BatteryInfo Wh contract. */
-   if (unitsTotal > 0 && unitsContributingEnergy == unitsTotal && totalEnergyFull > 0) {
+   /* Require every PRESENT battery to have contributed; a battery whose
+      sensors were entirely flagged invalid still counts as present, so the
+      aggregate stays incomplete and the energy publication is suppressed
+      rather than silently omitting a pack and violating the BatteryInfo
+      Wh contract. */
+   if (unitsPresent > 0 && unitsContributingEnergy == unitsPresent && totalEnergyFull > 0) {
       info->energyCurr = (double) totalEnergyRemain / 1000000.0;
       info->energyFull = (double) totalEnergyFull / 1000000.0;
    }
 
-   /* Publish aggregate power only when every counted battery contributed
-      power. Otherwise totalPower would omit a sibling pack's draw and be
-      published as the whole-pack rate, understating the true power. */
-   if (unitsTotal > 0 && unitsContributingPower == unitsTotal) {
+   /* Require every PRESENT battery to have contributed; a battery whose
+      sensors were entirely flagged invalid still counts as present, so the
+      aggregate stays incomplete and the power publication is suppressed
+      rather than omitting a sibling pack's draw and understating the true
+      whole-pack power. */
+   if (unitsPresent > 0 && unitsContributingPower == unitsPresent) {
       info->powerCurr = (double) totalPower / 1000000.0;
    }
 
