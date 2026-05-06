@@ -854,6 +854,205 @@ static uint64_t selectVoltage(bool havePref, uint64_t pref, bool haveAlt, uint64
    return 0;
 }
 
+/* Per-battery state parsed from a sysfs power_supply BAT entry's uevent. */
+typedef struct {
+   bool isPresent;             /* PRESENT, defaults true */
+   bool scopeIsDevice;         /* SCOPE=Device peripheral */
+   bool haveStatus;
+   char status[32];            /* STATUS string */
+   bool haveLevel;
+   uint64_t level;             /* CAPACITY 0-100 */
+   bool haveEnergyFull;
+   uint64_t energyFull;        /* µWh */
+   bool haveEnergyCurr;
+   uint64_t energyCurr;        /* µWh */
+   bool haveChargeFull;
+   uint64_t chargeFull;        /* µAh */
+   bool haveChargeCurr;
+   uint64_t chargeCurr;        /* µAh */
+   bool haveVoltageNominal;
+   uint64_t voltageNominal;    /* µV */
+   bool haveVoltageNow;
+   uint64_t voltageNow;        /* µV */
+   bool haveCurrent;
+   int64_t current;            /* µA, signed (kernel convention) */
+   bool havePower;
+   int64_t power;              /* µW; sign normalized via STATUS */
+} SysfsBattery;
+
+typedef struct {
+   uint64_t energyFull;            /* µWh */
+   uint64_t energyRemain;          /* µWh */
+   uint64_t chargeFull;            /* µAh */
+   uint64_t chargeRemain;          /* µAh */
+   int64_t power;                  /* µW, htop sign convention */
+   int unitsTotal;
+   int unitsContributingEnergy;
+   int unitsContributingCharge;
+   int unitsContributingPower;
+} SysfsAggregate;
+
+static void parseSysfsBattery(int entryFd, SysfsBattery* bat) {
+   *bat = (SysfsBattery){ .isPresent = true };
+
+   char buffer[1024];
+   ssize_t r = Compat_readfileat(entryFd, "uevent", buffer, sizeof(buffer));
+   if (r < 0)
+      return;
+
+   const char* line;
+   char* buf = buffer;
+   while ((line = strsep(&buf, "\n")) != NULL) {
+      if (sscanf(line, "POWER_SUPPLY_STATUS=%31s", bat->status) == 1) {
+         bat->haveStatus = true;
+         continue;
+      }
+
+      char scope[32] = {0};
+      if (sscanf(line, "POWER_SUPPLY_SCOPE=%31s", scope) == 1) {
+         if (String_eq(scope, "Device"))
+            bat->scopeIsDevice = true;
+         continue;
+      }
+
+      char field[100] = {0};
+      int64_t val = 0;
+      if (2 != sscanf(line, "POWER_SUPPLY_%99[^=]=%" SCNd64, field, &val))
+         continue;
+
+      if (String_eq(field, "PRESENT")) {
+         bat->isPresent = (val != 0);
+         continue;
+      }
+
+      /* Drivers publish -1 for "unknown". Reject for unsigned fields;
+       * CURRENT_NOW is signed (sign = direction). */
+      if (val < 0 && !String_eq(field, "CURRENT_NOW"))
+         continue;
+
+      if      (String_eq(field, "CAPACITY"))    { bat->level = val;       bat->haveLevel = true; }
+      else if (String_eq(field, "ENERGY_FULL")) { bat->energyFull = val;  bat->haveEnergyFull = true; }
+      else if (String_eq(field, "CHARGE_FULL")) { bat->chargeFull = val;  bat->haveChargeFull = true; }
+      else if (String_eq(field, "ENERGY_NOW"))  { bat->energyCurr = val;  bat->haveEnergyCurr = true; }
+      else if (String_eq(field, "CHARGE_NOW"))  { bat->chargeCurr = val;  bat->haveChargeCurr = true; }
+      else if (!bat->haveVoltageNominal && String_eq(field, "VOLTAGE_MIN_DESIGN"))
+                                                { bat->voltageNominal = val; bat->haveVoltageNominal = true; }
+      else if (!bat->haveVoltageNow && String_eq(field, "VOLTAGE_NOW"))
+                                                { bat->voltageNow = val;  bat->haveVoltageNow = true; }
+      else if (String_eq(field, "CURRENT_NOW")) { bat->current = val;     bat->haveCurrent = true; }
+      else if (String_eq(field, "POWER_NOW"))   { bat->power = val;       bat->havePower = true; }
+   }
+}
+
+static void aggregateSysfsBattery(SysfsBattery* bat, SysfsAggregate* agg) {
+   /* Skip empty bays and SCOPE=Device peripherals before any contribution. */
+   if (!bat->isPresent || bat->scopeIsDevice)
+      return;
+
+   /* Derive missing curr from FULL × level / 100 when only CAPACITY exists. */
+   if (bat->haveLevel) {
+      if (bat->haveChargeFull && !bat->haveChargeCurr) {
+         bat->chargeCurr = bat->chargeFull * bat->level / 100;
+         bat->haveChargeCurr = true;
+      }
+      if (bat->haveEnergyFull && !bat->haveEnergyCurr) {
+         bat->energyCurr = bat->energyFull * bat->level / 100;
+         bat->haveEnergyCurr = true;
+      }
+   }
+
+   /* Charge+voltage batteries contribute to both accumulators.
+    * Design preferred for energy reference. */
+   uint64_t referenceVoltage = selectVoltage(
+      bat->haveVoltageNominal, bat->voltageNominal,
+      bat->haveVoltageNow, bat->voltageNow);
+
+   if (!(bat->haveEnergyFull && bat->haveEnergyCurr)
+         && bat->haveChargeFull && bat->haveChargeCurr
+         && referenceVoltage > 0) {
+      bat->energyFull = (bat->chargeFull * referenceVoltage) / 1000000;
+      bat->haveEnergyFull = true;
+      bat->energyCurr = (bat->chargeCurr * referenceVoltage) / 1000000;
+      bat->haveEnergyCurr = true;
+   }
+
+   bool contribEnergy = false;
+   bool contribCharge = false;
+
+   if (bat->haveEnergyFull && bat->haveEnergyCurr && bat->energyFull > 0) {
+      agg->energyFull += bat->energyFull;
+      agg->energyRemain += MINIMUM(bat->energyCurr, bat->energyFull);
+      contribEnergy = true;
+   }
+
+   if (bat->haveChargeFull && bat->haveChargeCurr && bat->chargeFull > 0) {
+      agg->chargeFull += bat->chargeFull;
+      agg->chargeRemain += MINIMUM(bat->chargeCurr, bat->chargeFull);
+      contribCharge = true;
+   }
+
+   /* Skip true peripherals (no FULL counter, no instantaneous signal).
+    * A system battery with FULL but stale NOW must still count, so
+    * its missing contribution blocks the pack percent gate. */
+   if (!bat->haveEnergyFull && !bat->haveChargeFull
+         && !bat->havePower && !bat->haveCurrent)
+      return;
+
+   agg->unitsTotal++;
+   if (contribEnergy) agg->unitsContributingEnergy++;
+   if (contribCharge) agg->unitsContributingCharge++;
+
+   /* P=I*V: prefer VOLTAGE_NOW; reject 0. I=0 ⇒ 0 W known. */
+   if (!bat->havePower && bat->haveCurrent) {
+      if (bat->current == 0) {
+         bat->power = 0;
+         bat->havePower = true;
+      } else {
+         uint64_t powerVoltage = selectVoltage(
+            bat->haveVoltageNow, bat->voltageNow,
+            bat->haveVoltageNominal, bat->voltageNominal);
+         if (powerVoltage > 0) {
+            bat->power = (bat->current * (int64_t)powerVoltage) / 1000000;
+            bat->havePower = true;
+         }
+      }
+   }
+
+   if (bat->havePower) {
+      /* abs(value) then re-sign from STATUS: portable across drivers
+       * with mixed CURRENT_NOW sign conventions. */
+      if (bat->power < 0)
+         bat->power = -bat->power;
+      if (bat->haveStatus && String_eq(bat->status, "Charging"))
+         bat->power = -bat->power;
+
+      agg->power += bat->power;
+      agg->unitsContributingPower++;
+   }
+}
+
+static void publishSysfsAggregate(const SysfsAggregate* agg, BatteryInfo* info) {
+   /* Every present battery must contribute or the aggregate stays NaN. */
+   bool energyComplete = (agg->unitsTotal > 0) && (agg->unitsContributingEnergy == agg->unitsTotal);
+   bool chargeComplete = (agg->unitsTotal > 0) && (agg->unitsContributingCharge == agg->unitsTotal);
+
+   if (energyComplete && agg->energyFull > 0) {
+      info->energyCurr = (double) agg->energyRemain / 1000000.0;
+      info->energyFull = (double) agg->energyFull / 1000000.0;
+   }
+
+   /* Single-unit accumulator. Mixing µWh+µAh is dimensionally invalid. */
+   if (energyComplete && agg->energyFull > 0) {
+      info->percent = ((double) agg->energyRemain * 100.0) / (double) agg->energyFull;
+   } else if (chargeComplete && agg->chargeFull > 0) {
+      info->percent = ((double) agg->chargeRemain * 100.0) / (double) agg->chargeFull;
+   }
+
+   if (agg->unitsTotal > 0 && agg->unitsContributingPower == agg->unitsTotal) {
+      info->powerCurr = (double) agg->power / 1000000.0;
+   }
+}
+
 static void Platform_Battery_getSysData(BatteryInfo* info) {
    info->percent = NAN;
    info->ac = AC_ERROR;
@@ -865,17 +1064,7 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
    if (!dir)
       return;
 
-   uint64_t totalEnergyFull = 0;     /* µWh, energy-based or charge*voltage */
-   uint64_t totalEnergyRemain = 0;
-   uint64_t totalChargeFull = 0;     /* µAh, raw charge counters */
-   uint64_t totalChargeRemain = 0;
-   int64_t totalPower = 0;           /* µW */
-
-   /* charge+voltage batteries contribute to BOTH accumulators. */
-   int unitsTotal = 0;
-   int unitsContributingEnergy = 0;
-   int unitsContributingCharge = 0;
-   int unitsContributingPower = 0;
+   SysfsAggregate agg = {0};
 
    const struct dirent* dirEntry;
    while ((dirEntry = readdir(dir))) {
@@ -890,7 +1079,7 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
       xSnprintf(entryFd, sizeof(entryFd), SYS_POWERSUPPLY_DIR "/%s", entryName);
 #endif
 
-      enum { AC, BAT } type;
+      enum { AC, BAT, OTHER } type = OTHER;
       if (String_startsWith(entryName, "BAT")) {
          type = BAT;
       } else if (String_startsWith(entryName, "AC")) {
@@ -898,281 +1087,34 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
       } else {
          char buffer[32];
          ssize_t ret = Compat_readfileat(entryFd, "type", buffer, sizeof(buffer));
-         if (ret <= 0)
-            goto next;
-
-         /* drop optional trailing newlines */
-         for (char* buf = &buffer[(size_t)ret - 1]; *buf == '\n'; buf--)
-            *buf = '\0';
-
-         if (String_eq(buffer, "Battery"))
-            type = BAT;
-         else if (String_eq(buffer, "Mains"))
-            type = AC;
-         else
-            goto next;
+         if (ret > 0) {
+            for (char* buf = &buffer[(size_t)ret - 1]; *buf == '\n'; buf--)
+               *buf = '\0';
+            if (String_eq(buffer, "Battery"))
+               type = BAT;
+            else if (String_eq(buffer, "Mains"))
+               type = AC;
+         }
       }
 
       if (type == BAT) {
-         char buffer[1024];
-         ssize_t r = Compat_readfileat(entryFd, "uevent", buffer, sizeof(buffer));
-         if (r < 0)
-            goto next;
-
-         bool haveBatteryEnergyFull = false;
-         bool haveBatteryEnergyCurr = false;
-
-         bool haveBatteryChargeFull = false;
-         bool haveBatteryChargeCurr = false;
-
-         /* Design for energy reference; current for I*V power. */
-         bool haveBatteryVoltageNominal = false;
-         bool haveBatteryVoltageNow = false;
-         bool haveBatteryLevel = false;
-
-         bool haveBatteryCurrent = false;
-         bool haveBatteryPower = false;
-         bool haveBatteryStatus = false;
-
-         /* PRESENT defaults true: built-in batteries often omit the field. */
-         bool isPresent = true;
-         bool scopeIsDevice = false;
-
-         uint64_t batteryEnergyFull = 0;
-         uint64_t batteryEnergyCurr = 0;
-
-         uint64_t batteryChargeFull = 0;
-         uint64_t batteryChargeCurr = 0;
-
-         uint64_t batteryVoltageNominal = 0;
-         uint64_t batteryVoltageNow = 0;
-         uint64_t batteryLevel = 0;
-
-         int64_t batteryCurrent = 0;
-         int64_t batteryPower = 0;
-
-         char batteryStatus[32] = {0};
-
-         const char* line;
-
-         char* buf = buffer;
-         while ((line = strsep(&buf, "\n")) != NULL) {
-            char field[100] = {0};
-
-            /* STATUS is a string ("Discharging", "Charging", "Full", ...), so
-             * scan it separately from the numeric fields below. */
-            if (sscanf(line, "POWER_SUPPLY_STATUS=%31s", batteryStatus) == 1) {
-               haveBatteryStatus = true;
-               continue;
-            }
-
-            /* SCOPE=Device peripherals don't belong in the system pack. */
-            char scope[32] = {0};
-            if (sscanf(line, "POWER_SUPPLY_SCOPE=%31s", scope) == 1) {
-               if (String_eq(scope, "Device"))
-                  scopeIsDevice = true;
-               continue;
-            }
-
-            int64_t val = 0;
-            if (2 != sscanf(line, "POWER_SUPPLY_%99[^=]=%" SCNd64, field, &val))
-               continue;
-
-            if (String_eq(field, "PRESENT")) {
-               isPresent = (val != 0);
-               continue;
-            }
-
-            /* Drivers publish -1 for "unknown". Reject for unsigned fields;
-             * CURRENT_NOW is signed (sign = direction). */
-            if (val < 0 && !String_eq(field, "CURRENT_NOW"))
-               continue;
-
-            if (String_eq(field, "CAPACITY")) {
-               batteryLevel = val;
-               haveBatteryLevel = true;
-               continue;
-            }
-
-            if (String_eq(field, "ENERGY_FULL")) {
-               batteryEnergyFull = val;
-               haveBatteryEnergyFull = true;
-               continue;
-            }
-
-            if (String_eq(field, "CHARGE_FULL")) {
-               batteryChargeFull = val;
-               haveBatteryChargeFull = true;
-               continue;
-            }
-
-            if (String_eq(field, "ENERGY_NOW")) {
-               batteryEnergyCurr = val;
-               haveBatteryEnergyCurr = true;
-               continue;
-            }
-
-            if (String_eq(field, "CHARGE_NOW")) {
-               batteryChargeCurr = val;
-               haveBatteryChargeCurr = true;
-               continue;
-            }
-
-            if (!haveBatteryVoltageNominal && String_eq(field, "VOLTAGE_MIN_DESIGN")) {
-               batteryVoltageNominal = val;
-               haveBatteryVoltageNominal = true;
-               continue;
-            }
-
-            if (!haveBatteryVoltageNow && String_eq(field, "VOLTAGE_NOW")) {
-               batteryVoltageNow = val;
-               haveBatteryVoltageNow = true;
-               continue;
-            }
-
-            if (String_eq(field, "CURRENT_NOW")) {
-               batteryCurrent = val;
-               haveBatteryCurrent = true;
-               continue;
-            }
-
-            if (String_eq(field, "POWER_NOW")) {
-               batteryPower += val;
-               haveBatteryPower = true;
-               continue;
-            }
-         }
-
-         /* Skip empty bays and peripherals before any contribution. */
-         if (!isPresent || scopeIsDevice)
-            goto next;
-
-         if (haveBatteryLevel) {
-            // If we have capacity level but not charge or energy, we infer approximate values
-            if (haveBatteryChargeFull && !haveBatteryChargeCurr) {
-               batteryChargeCurr = batteryChargeFull * batteryLevel / 100.0;
-               haveBatteryChargeCurr = true;
-            }
-            if (haveBatteryEnergyFull && !haveBatteryEnergyCurr) {
-               batteryEnergyCurr = batteryEnergyFull * batteryLevel / 100.0;
-               haveBatteryEnergyCurr = true;
-            }
-         }
-
-         /* Charge+voltage batteries contribute to both accumulators.
-          * Design preferred for energy reference. */
-         uint64_t referenceVoltage = selectVoltage(
-            haveBatteryVoltageNominal, batteryVoltageNominal,
-            haveBatteryVoltageNow, batteryVoltageNow);
-
-         if (!(haveBatteryEnergyFull && haveBatteryEnergyCurr)
-               && haveBatteryChargeFull && haveBatteryChargeCurr
-               && referenceVoltage > 0) {
-            batteryEnergyFull = (batteryChargeFull * referenceVoltage) / 1000000;
-            haveBatteryEnergyFull = true;
-
-            batteryEnergyCurr = (batteryChargeCurr * referenceVoltage) / 1000000;
-            haveBatteryEnergyCurr = true;
-         }
-
-         bool batteryContributedEnergy = false;
-         bool batteryContributedCharge = false;
-
-         if (haveBatteryEnergyFull && haveBatteryEnergyCurr && batteryEnergyFull > 0) {
-            totalEnergyFull += batteryEnergyFull;
-            totalEnergyRemain += MINIMUM(batteryEnergyCurr, batteryEnergyFull);
-            batteryContributedEnergy = true;
-         }
-
-         if (haveBatteryChargeFull && haveBatteryChargeCurr && batteryChargeFull > 0) {
-            totalChargeFull += batteryChargeFull;
-            totalChargeRemain += MINIMUM(batteryChargeCurr, batteryChargeFull);
-            batteryContributedCharge = true;
-         }
-
-         /* Skip true peripherals (no FULL counter, no instantaneous signal).
-          * A system battery with FULL but stale NOW must still count, so
-          * its missing contribution blocks the pack percent gate. */
-         if (!haveBatteryEnergyFull && !haveBatteryChargeFull
-               && !haveBatteryPower && !haveBatteryCurrent)
-            goto next;
-
-         unitsTotal++;
-         if (batteryContributedEnergy)
-            unitsContributingEnergy++;
-         if (batteryContributedCharge)
-            unitsContributingCharge++;
-
-         /* P=I*V: prefer VOLTAGE_NOW; reject 0. I=0 ⇒ 0 W known. */
-         if (!haveBatteryPower && haveBatteryCurrent) {
-            if (batteryCurrent == 0) {
-               batteryPower = 0;
-               haveBatteryPower = true;
-            } else {
-               /* Present voltage preferred for instantaneous I*V. */
-               uint64_t powerVoltage = selectVoltage(
-                  haveBatteryVoltageNow, batteryVoltageNow,
-                  haveBatteryVoltageNominal, batteryVoltageNominal);
-               if (powerVoltage > 0) {
-                  batteryPower = (batteryCurrent * (int64_t)powerVoltage) / 1000000;
-                  haveBatteryPower = true;
-               }
-            }
-         }
-
-         if (haveBatteryPower) {
-            /* abs(value) then re-sign from STATUS: portable across drivers
-             * with mixed CURRENT_NOW sign conventions. */
-            if (batteryPower < 0)
-               batteryPower = -batteryPower;
-            if (haveBatteryStatus && String_eq(batteryStatus, "Charging"))
-               batteryPower = -batteryPower;
-
-            totalPower += batteryPower;
-            unitsContributingPower++;
-         }
-      } else if (type == AC) {
-         if (info->ac != AC_ERROR)
-            goto next;
-
+         SysfsBattery bat;
+         parseSysfsBattery(entryFd, &bat);
+         aggregateSysfsBattery(&bat, &agg);
+      } else if (type == AC && info->ac == AC_ERROR) {
          char buffer[2];
          ssize_t r = Compat_readfileat(entryFd, "online", buffer, sizeof(buffer));
-         if (r < 1) {
-            info->ac = AC_ERROR;
-            goto next;
+         if (r >= 1) {
+            if (buffer[0] == '0') info->ac = AC_ABSENT;
+            else if (buffer[0] == '1') info->ac = AC_PRESENT;
          }
-
-         if (buffer[0] == '0')
-            info->ac = AC_ABSENT;
-         else if (buffer[0] == '1')
-            info->ac = AC_PRESENT;
       }
 
-next:
       Compat_openatArgClose(entryFd);
    }
 
    closedir(dir);
-
-   /* Every present battery must contribute or the aggregate stays NaN. */
-   bool energyComplete = (unitsTotal > 0) && (unitsContributingEnergy == unitsTotal);
-   bool chargeComplete = (unitsTotal > 0) && (unitsContributingCharge == unitsTotal);
-
-   if (energyComplete && totalEnergyFull > 0) {
-      info->energyCurr = (double) totalEnergyRemain / 1000000.0;
-      info->energyFull = (double) totalEnergyFull / 1000000.0;
-   }
-
-   /* Single-unit accumulator. Mixing µWh+µAh is dimensionally invalid. */
-   if (energyComplete && totalEnergyFull > 0) {
-      info->percent = ((double) totalEnergyRemain * 100.0) / (double) totalEnergyFull;
-   } else if (chargeComplete && totalChargeFull > 0) {
-      info->percent = ((double) totalChargeRemain * 100.0) / (double) totalChargeFull;
-   }
-
-   if (unitsTotal > 0 && unitsContributingPower == unitsTotal) {
-      info->powerCurr = (double) totalPower / 1000000.0;
-   }
+   publishSysfsAggregate(&agg, info);
 }
 
 void Platform_getBattery(BatteryInfo* info) {
