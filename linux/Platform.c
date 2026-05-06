@@ -952,11 +952,11 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
    if (!dir)
       return;
 
-   /* Sized dynamically so the buffer never caps the readdir walk; htop's
-    * xRealloc never returns NULL. */
+   /* Sized dynamically so the buffer never caps the readdir walk; the
+    * xMallocArray / xReallocArray helpers refuse on size_t overflow. */
    size_t cap = 4;
    size_t nbat = 0;
-   BatteryRaw* raws = xMalloc(cap * sizeof(BatteryRaw));
+   BatteryRaw* raws = xMallocArray(cap, sizeof(BatteryRaw));
 
    const struct dirent* dirEntry;
    while ((dirEntry = readdir(dir))) {
@@ -992,7 +992,7 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
       if (type == BAT) {
          if (nbat == cap) {
             cap *= 2;
-            raws = xRealloc(raws, cap * sizeof(BatteryRaw));
+            raws = xReallocArray(raws, cap, sizeof(BatteryRaw));
          }
          if (parseSysfsBattery(entryFd, &raws[nbat]))
             nbat++;

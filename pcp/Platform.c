@@ -887,9 +887,10 @@ void Platform_getBattery(BatteryInfo* info) {
    if (count < 1)
       return;
 
-   /* Sized to the PMDA-reported instance count; xMalloc never returns NULL. */
-   BatteryRaw* raws = xMalloc((size_t) count * sizeof(BatteryRaw));
-   int* instIds = xMalloc((size_t) count * sizeof(int));
+   /* Sized to the PMDA-reported instance count; xMallocArray traps on
+    * size_t overflow if a bogus PMDA reports an absurd count. */
+   BatteryRaw* raws = xMallocArray((size_t) count, sizeof(BatteryRaw));
+   int* instIds = xMallocArray((size_t) count, sizeof(int));
    size_t nbat = 0;
 
    /* Join metrics by instance id (not array offset). A failed

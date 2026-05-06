@@ -702,8 +702,9 @@ static size_t parseIOPS(BatteryInfo* info, BatteryRaw** rawsOut) {
    }
 
    size_t len = CFArrayGetCount(list);
-   /* Sized to the IOPS list count; only internal-type sources will be kept. */
-   BatteryRaw* raws = (len > 0) ? xMalloc(len * sizeof(BatteryRaw)) : NULL;
+   /* Sized to the IOPS list count; only internal-type sources will be kept.
+    * xMallocArray traps on size_t overflow if IOPS reports a bogus count. */
+   BatteryRaw* raws = (len > 0) ? xMallocArray(len, sizeof(BatteryRaw)) : NULL;
    size_t nbat = 0;
    for (size_t i = 0; i < len; ++i) {
       CFDictionaryRef power_source = IOPSGetPowerSourceDescription(power_sources, CFArrayGetValueAtIndex(list, i)); /* GET rule */

@@ -615,10 +615,10 @@ void Platform_getBattery(BatteryInfo* info) {
       return;
    }
 
-   /* Sized dynamically; xRealloc never returns NULL. */
+   /* Sized dynamically; xMallocArray / xReallocArray refuse on overflow. */
    size_t cap = 4;
    size_t nbat = 0;
-   BatteryRaw* raws = xMalloc(cap * sizeof(BatteryRaw));
+   BatteryRaw* raws = xMallocArray(cap, sizeof(BatteryRaw));
 
    prop_object_iterator_t devIter = prop_dictionary_iterator(dict);
    prop_object_t device;
@@ -641,7 +641,7 @@ void Platform_getBattery(BatteryInfo* info) {
       if (isBattery) {
          if (nbat == cap) {
             cap *= 2;
-            raws = xRealloc(raws, cap * sizeof(BatteryRaw));
+            raws = xReallocArray(raws, cap, sizeof(BatteryRaw));
          }
          raws[nbat++] = raw;
       }

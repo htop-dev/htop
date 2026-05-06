@@ -472,8 +472,9 @@ static void getAcpiBatteries(BatteryInfo* info) {
    if (fd == -1)
       return;
 
-   /* Sized to the firmware-reported unit count; xMalloc never returns NULL. */
-   BatteryRaw* raws = xMalloc((size_t) units * sizeof(BatteryRaw));
+   /* Sized to the firmware-reported unit count; xMallocArray traps on
+    * size_t overflow if the firmware reports a bogus large value. */
+   BatteryRaw* raws = xMallocArray((size_t) units, sizeof(BatteryRaw));
    size_t nbat = 0;
    for (int u = 0; u < units; u++) {
       if (parseAcpiBattery(fd, u, &raws[nbat]))
