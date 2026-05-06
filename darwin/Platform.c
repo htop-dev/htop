@@ -753,8 +753,14 @@ void Platform_getBattery(BatteryInfo* info) {
          CFNumberGetValue(voltRef, kCFNumberDoubleType, &voltMV);
 
          /* IOKit's Amperage is positive while charging; htop's BatteryInfo
-          * convention is positive while discharging.  Negate to match. */
-         info->powerCurr = -(ampMA * voltMV) / 1e6;
+          * convention is positive while discharging.  Negate to match.
+          *
+          * Guard voltMV > 0: AppleSmartBattery exposes the Voltage key even
+          * when it has no current reading (returning 0). Without the guard we
+          * would publish 0 W as a known-good power reading instead of leaving
+          * powerCurr NaN. */
+         if (voltMV > 0.0)
+            info->powerCurr = -(ampMA * voltMV) / 1e6;
       }
 
       if (ampRef)
