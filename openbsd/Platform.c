@@ -470,13 +470,35 @@ void Platform_getBattery(BatteryInfo* info) {
          struct sensor amps;
          size_t alen = sizeof(struct sensor);
          if (sysctl(mib, 5, &amps, &alen, NULL, 0) != -1 && (amps.flags & SENSOR_FUNKNOWN) == 0) {
-            mib[3] = SENSOR_VOLTS_DC;
-            mib[4] = 0; /* the single voltage sensor acpibat exposes */
+            /* Per BatteryMeter.h's voltage convention: instantaneous I*V
+             * power wants the present terminal voltage. acpibat exposes
+             * SENSOR_VOLTS_DC[0] = design voltage, SENSOR_VOLTS_DC[1] =
+             * present voltage. Try the present voltage first; fall back
+             * to design only if the present sensor is missing or
+             * FUNKNOWN-flagged. */
             struct sensor volts;
             size_t vlen = sizeof(struct sensor);
+            bool haveVolts = false;
+
+            mib[3] = SENSOR_VOLTS_DC;
+            mib[4] = 1; /* present voltage */
             if (sysctl(mib, 5, &volts, &vlen, NULL, 0) != -1
                   && (volts.flags & SENSOR_FUNKNOWN) == 0
                   && volts.value > 0) {
+               haveVolts = true;
+            }
+
+            if (!haveVolts) {
+               mib[4] = 0; /* design voltage fallback */
+               vlen = sizeof(struct sensor);
+               if (sysctl(mib, 5, &volts, &vlen, NULL, 0) != -1
+                     && (volts.flags & SENSOR_FUNKNOWN) == 0
+                     && volts.value > 0) {
+                  haveVolts = true;
+               }
+            }
+
+            if (haveVolts) {
                batteryPower = ((int64_t) amps.value * (int64_t) volts.value) / 1000000;
                haveRate = true;
             }
