@@ -447,8 +447,6 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
-#define ENVSYS_MAX_BATTERIES 32
-
 /* envsys reports magnitudes in 10^-6 SI units. Convert when known and
  * non-negative; the kernel uses negative values as an "invalid" sentinel
  * separate from the explicit state="invalid" tag. */
@@ -617,9 +615,10 @@ void Platform_getBattery(BatteryInfo* info) {
       return;
    }
 
-   BatteryRaw raws[ENVSYS_MAX_BATTERIES];
+   /* Sized dynamically; xRealloc never returns NULL. */
+   size_t cap = 4;
    size_t nbat = 0;
-   bool batteryOverflow = false;
+   BatteryRaw* raws = xMalloc(cap * sizeof(BatteryRaw));
 
    prop_object_iterator_t devIter = prop_dictionary_iterator(dict);
    prop_object_t device;
@@ -640,10 +639,11 @@ void Platform_getBattery(BatteryInfo* info) {
       prop_object_iterator_release(fieldsIter);
 
       if (isBattery) {
-         if (nbat >= ENVSYS_MAX_BATTERIES)
-            batteryOverflow = true;
-         else
-            raws[nbat++] = raw;
+         if (nbat == cap) {
+            cap *= 2;
+            raws = xRealloc(raws, cap * sizeof(BatteryRaw));
+         }
+         raws[nbat++] = raw;
       }
 
       /* Invalid connected sensor leaves AC at AC_ERROR. */
@@ -655,9 +655,6 @@ void Platform_getBattery(BatteryInfo* info) {
 
    close(fd);
 
-   /* Refuse partial aggregation on overflow; percent stays NaN. */
-   if (batteryOverflow)
-      return;
-
    Battery_aggregate(raws, nbat, info);
+   free(raws);
 }

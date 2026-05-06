@@ -872,8 +872,6 @@ void Platform_getFileDescriptors(double* used, double* max) {
       *max = value.l;
 }
 
-#define DENKI_MAX_BATTERIES 32
-
 void Platform_getBattery(BatteryInfo* info) {
    info->ac = AC_ERROR;
    info->percent = NAN;
@@ -888,14 +886,10 @@ void Platform_getBattery(BatteryInfo* info) {
    int count = Metric_instanceCount(PCP_DENKI_CAPACITY);
    if (count < 1)
       return;
-   /* Refuse partial aggregation when more battery instances are reported
-    * than the fixed buffer holds; percent stays NaN rather than under-
-    * counted. */
-   if (count > DENKI_MAX_BATTERIES)
-      return;
 
-   BatteryRaw raws[DENKI_MAX_BATTERIES];
-   int instIds[DENKI_MAX_BATTERIES];
+   /* Sized to the PMDA-reported instance count; xMalloc never returns NULL. */
+   BatteryRaw* raws = xMalloc((size_t) count * sizeof(BatteryRaw));
+   int* instIds = xMalloc((size_t) count * sizeof(int));
    size_t nbat = 0;
 
    /* Join metrics by instance id (not array offset). A failed
@@ -937,6 +931,8 @@ void Platform_getBattery(BatteryInfo* info) {
     * instance, indistinguishably. Leave energy axis NaN. */
 
    Battery_aggregate(raws, nbat, info);
+   free(instIds);
+   free(raws);
 }
 
 const char* Platform_getFailedState(void) {

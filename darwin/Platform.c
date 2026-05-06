@@ -683,14 +683,14 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
-#define IOPS_MAX_BATTERIES 32
-
 /* Walk IOPS power sources, populate per-source BatteryRaw entries with
  * the IOPS unitless capacity (treated as energy: percent = sum/sum*100
  * stays correct under the aggregator's energy axis). Sets info->ac as a
- * side effect. Returns the number of internal-type sources captured, or
- * SIZE_MAX if more sources were present than the buffer holds. */
-static size_t parseIOPS(BatteryInfo* info, BatteryRaw* raws, size_t cap) {
+ * side effect. Caller frees raws via free(). Returns the number of
+ * internal-type sources captured. */
+static size_t parseIOPS(BatteryInfo* info, BatteryRaw** rawsOut) {
+   *rawsOut = NULL;
+
    CFTypeRef power_sources = IOPSCopyPowerSourcesInfo();
    if (!power_sources)
       return 0;
@@ -701,9 +701,10 @@ static size_t parseIOPS(BatteryInfo* info, BatteryRaw* raws, size_t cap) {
       return 0;
    }
 
-   size_t nbat = 0;
    size_t len = CFArrayGetCount(list);
-   bool overflow = false;
+   /* Sized to the IOPS list count; only internal-type sources will be kept. */
+   BatteryRaw* raws = (len > 0) ? xMalloc(len * sizeof(BatteryRaw)) : NULL;
+   size_t nbat = 0;
    for (size_t i = 0; i < len; ++i) {
       CFDictionaryRef power_source = IOPSGetPowerSourceDescription(power_sources, CFArrayGetValueAtIndex(list, i)); /* GET rule */
       if (!power_source)
@@ -716,11 +717,6 @@ static size_t parseIOPS(BatteryInfo* info, BatteryRaw* raws, size_t cap) {
       CFStringRef power_state = CFDictionaryGetValue(power_source, CFSTR(kIOPSPowerSourceStateKey));
       if (info->ac != AC_PRESENT)
          info->ac = (kCFCompareEqualTo == CFStringCompare(power_state, CFSTR(kIOPSACPowerValue), 0)) ? AC_PRESENT : AC_ABSENT;
-
-      if (nbat >= cap) {
-         overflow = true;
-         continue;
-      }
 
       raws[nbat] = (BatteryRaw){
          .level = NAN,
@@ -747,7 +743,13 @@ static size_t parseIOPS(BatteryInfo* info, BatteryRaw* raws, size_t cap) {
 
    CFRelease(list);
    CFRelease(power_sources);
-   return overflow ? SIZE_MAX : nbat;
+
+   if (nbat == 0 && raws != NULL) {
+      free(raws);
+      raws = NULL;
+   }
+   *rawsOut = raws;
+   return nbat;
 }
 
 /* AppleSmartBattery exposes a single system-wide rate (not per-source);
@@ -787,14 +789,10 @@ void Platform_getBattery(BatteryInfo* info) {
       .energyFull = NAN,
    };
 
-   BatteryRaw raws[IOPS_MAX_BATTERIES];
-   size_t nbat = parseIOPS(info, raws, IOPS_MAX_BATTERIES);
-
-   /* SIZE_MAX from parseIOPS signals overflow: more internal sources
-    * than the buffer holds. Refuse partial aggregation; ac was already
-    * recorded as a side effect. */
-   if (nbat != SIZE_MAX)
-      Battery_aggregate(raws, nbat, info);
+   BatteryRaw* raws = NULL;
+   size_t nbat = parseIOPS(info, &raws);
+   Battery_aggregate(raws, nbat, info);
+   free(raws);
 
    /* IOPS capacity is unitless; energyCurr/energyFull are not real Wh. */
    info->energyCurr = NAN;

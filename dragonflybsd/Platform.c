@@ -368,8 +368,6 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
-#define ACPI_MAX_BATTERIES 32
-
 /* Read one ACPI battery into canonical SI units. Returns false to skip:
  * NOT_PRESENT bays drop entirely so they don't block the aggregation gate.
  * ioctl failures return true with an empty BatteryRaw so the unit still
@@ -445,15 +443,8 @@ static void getAcpiBatteries(BatteryInfo* info) {
    if (fd == -1)
       return;
 
-   /* Refuse to publish a partial aggregate when the firmware reports
-    * more batteries than the fixed buffer holds; the fallback path
-    * (hw.acpi.battery.life) still runs after this returns. */
-   if (units > ACPI_MAX_BATTERIES) {
-      close(fd);
-      return;
-   }
-
-   BatteryRaw raws[ACPI_MAX_BATTERIES];
+   /* Sized to the firmware-reported unit count; xMalloc never returns NULL. */
+   BatteryRaw* raws = xMalloc((size_t) units * sizeof(BatteryRaw));
    size_t nbat = 0;
    for (int u = 0; u < units; u++) {
       if (parseAcpiBattery(fd, u, &raws[nbat]))
@@ -462,6 +453,7 @@ static void getAcpiBatteries(BatteryInfo* info) {
    close(fd);
 
    Battery_aggregate(raws, nbat, info);
+   free(raws);
 }
 
 void Platform_getBattery(BatteryInfo* info) {
