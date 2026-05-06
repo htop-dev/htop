@@ -1024,18 +1024,21 @@ void Platform_getBattery(BatteryInfo* info) {
    if (Metric_desc(PCP_DENKI_POWER_NOW) != NULL && haveCapacity) {
       /* Sum power_now across the same battery instances we saw for
        * capacity, again joining by instance id rather than array offset.
-       * Skip instances missing from power_now rather than counting them
-       * as 0 (a missing sample is not the same as a zero sample). */
+       * Require every capacity instance to have a matching power_now
+       * sample: a partial sum across only the reporting instances would
+       * misrepresent whole-pack power on multi-battery systems (e.g.
+       * publishing one battery's draw as if it were the total). */
       double totalPower = 0.0;
-      bool anyPower = false;
+      bool allMatched = true;
       for (int i = 0; i < capacityCount; i++) {
          pmAtomValue atom;
-         if (Metric_instance(PCP_DENKI_POWER_NOW, batteryInst[i], 0, &atom, PM_TYPE_DOUBLE) == NULL)
-            continue;
+         if (Metric_instance(PCP_DENKI_POWER_NOW, batteryInst[i], 0, &atom, PM_TYPE_DOUBLE) == NULL) {
+            allMatched = false;
+            break;
+         }
          totalPower += atom.d;
-         anyPower = true;
       }
-      if (anyPower)
+      if (allMatched)
          info->powerCurr = totalPower;
    }
 
