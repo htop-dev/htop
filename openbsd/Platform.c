@@ -471,7 +471,7 @@ void Platform_getBattery(BatteryInfo* info) {
          size_t alen = sizeof(struct sensor);
          if (sysctl(mib, 5, &amps, &alen, NULL, 0) != -1 && (amps.flags & SENSOR_FUNKNOWN) == 0) {
             mib[3] = SENSOR_VOLTS_DC;
-            mib[4] = 1; /* present voltage */
+            mib[4] = 0; /* the single voltage sensor acpibat exposes */
             struct sensor volts;
             size_t vlen = sizeof(struct sensor);
             if (sysctl(mib, 5, &volts, &vlen, NULL, 0) != -1
