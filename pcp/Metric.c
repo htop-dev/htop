@@ -56,6 +56,9 @@ pmAtomValue* Metric_values(Metric metric, pmAtomValue* atom, int count, int type
 }
 
 int Metric_instanceCount(Metric metric) {
+   if (pcp->result == NULL)
+      return 0;
+
    pmValueSet* vset = pcp->result->vset[metric];
    if (vset)
       return vset->numval;
@@ -63,6 +66,9 @@ int Metric_instanceCount(Metric metric) {
 }
 
 int Metric_instanceOffset(Metric metric, int inst) {
+   if (pcp->result == NULL)
+      return 0;
+
    pmValueSet* vset = pcp->result->vset[metric];
    if (!vset || vset->numval <= 0)
       return 0;
