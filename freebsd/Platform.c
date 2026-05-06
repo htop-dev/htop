@@ -534,8 +534,12 @@ void Platform_getBattery(BatteryInfo* info) {
       }
 
       /* htop convention: positive = discharging, negative = charging.
-       * ACPI _BST reports rate as a magnitude; charging direction is in bst->state. */
+       * ACPI _BST reports rate as a magnitude; charging direction is in
+       * bst->state. Some firmware sets both DISCHARG and CHARGING bits;
+       * the kernel treats that as discharging, so only negate when
+       * CHARGING is set and DISCHARG is clear (mirroring DragonFly). */
       if (bst->state != ACPI_BATT_STAT_NOT_PRESENT &&
+          (bst->state & ACPI_BATT_STAT_DISCHARG) == 0 &&
           (bst->state & ACPI_BATT_STAT_CHARGING) != 0) {
          batteryPower = -batteryPower;
       }

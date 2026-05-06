@@ -484,7 +484,11 @@ void Platform_getBattery(BatteryInfo* info) {
       }
 
       if (haveRate) {
-         if (batteryState & 0x02)
+         /* htop convention: positive=discharging, negative=charging. ACPI
+          * state bit 0x01 = discharging, 0x02 = charging. Some firmware
+          * sets both bits; the kernel resolves to discharging in that
+          * case, so only negate when 0x02 is set and 0x01 is clear. */
+         if ((batteryState & 0x02) && !(batteryState & 0x01))
             batteryPower = -batteryPower;
 
          totalPower += batteryPower;
