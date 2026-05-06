@@ -236,7 +236,7 @@ static const char* Platform_metricNames[] = {
    [PCP_VFS_FILES_MAX] = "vfs.files.max",
    [PCP_DENKI_POWER_NOW] = "denki.bat.power_now",
    [PCP_DENKI_ENERGY_NOW] = "denki.bat.energy_now",
-   [PCP_DENKI_ENERGY_FULL] = "denki.bat.capacity",
+   [PCP_DENKI_CAPACITY] = "denki.bat.capacity",
 
    [PCP_PROC_PID] = "proc.psinfo.pid",
    [PCP_PROC_PPID] = "proc.psinfo.ppid",
@@ -873,41 +873,59 @@ void Platform_getBattery(BatteryInfo* info) {
    info->energyCurr = NAN;
    info->energyFull = NAN;
 
-   if (Metric_desc(PCP_DENKI_ENERGY_NOW) == NULL)
+   if (Metric_desc(PCP_DENKI_CAPACITY) == NULL)
       return;
 
-   int i, count = Metric_instanceCount(PCP_DENKI_ENERGY_NOW);
+   int i, count = Metric_instanceCount(PCP_DENKI_CAPACITY);
    if (count < 1) {
       info->ac = AC_PRESENT;
       return;
    }
 
-   pmAtomValue* batteryEnergyCurr = xCalloc(count, sizeof(pmAtomValue));
-   pmAtomValue* batteryEnergyFull = xCalloc(count, sizeof(pmAtomValue));
-   if (Metric_values(PCP_DENKI_ENERGY_NOW, batteryEnergyCurr, count, PM_TYPE_DOUBLE) &&
-       Metric_values(PCP_DENKI_ENERGY_FULL, batteryEnergyFull, count, PM_TYPE_DOUBLE)) {
-      info->energyCurr = 0.0;
-      info->energyFull = 0.0;
+   /* denki.bat.capacity is the sysfs CAPACITY field (percent, 0-100).
+    * Average across battery instances to produce an overall percent. */
+   pmAtomValue* batteryCapacity = xCalloc(count, sizeof(pmAtomValue));
+   if (Metric_values(PCP_DENKI_CAPACITY, batteryCapacity, count, PM_TYPE_DOUBLE)) {
+      double total = 0.0;
+      int valid = 0;
       for (i = 0; i < count; i++) {
-         info->energyCurr += CLAMP(batteryEnergyCurr[i].d, 0, batteryEnergyFull[i].d);
-         info->energyFull += isNonnegative(batteryEnergyFull[i].d) ? batteryEnergyFull[i].d : 0;
+         if (isNonnegative(batteryCapacity[i].d)) {
+            total += batteryCapacity[i].d;
+            valid++;
+         }
       }
-
-      if (info->energyFull > 0) {
-         info->percent = CLAMP((info->energyCurr / info->energyFull) * 100.0, 0.0, 100.0);
+      if (valid > 0) {
+         info->percent = CLAMP(total / valid, 0.0, 100.0);
       }
    }
-   free(batteryEnergyCurr);
-   free(batteryEnergyFull);
+   free(batteryCapacity);
 
-   pmAtomValue* batteryPowerCurr = xCalloc(count, sizeof(pmAtomValue));
-   if (Metric_values(PCP_DENKI_POWER_NOW, batteryPowerCurr, count, PM_TYPE_DOUBLE)) {
-      info->powerCurr = 0.0;
-      for (i = 0; i < count; i++) {
-         info->powerCurr += batteryPowerCurr[i].d;
+   /* denki.bat.energy_now (sysfs ENERGY_NOW, Wh) is optional and only
+    * populates info->energyCurr; the denki PMDA does not expose a
+    * corresponding ENERGY_FULL metric, so info->energyFull stays NaN. */
+   if (Metric_desc(PCP_DENKI_ENERGY_NOW) != NULL) {
+      pmAtomValue* batteryEnergyCurr = xCalloc(count, sizeof(pmAtomValue));
+      if (Metric_values(PCP_DENKI_ENERGY_NOW, batteryEnergyCurr, count, PM_TYPE_DOUBLE)) {
+         double total = 0.0;
+         for (i = 0; i < count; i++) {
+            if (isNonnegative(batteryEnergyCurr[i].d))
+               total += batteryEnergyCurr[i].d;
+         }
+         info->energyCurr = total;
       }
+      free(batteryEnergyCurr);
    }
-   free(batteryPowerCurr);
+
+   if (Metric_desc(PCP_DENKI_POWER_NOW) != NULL) {
+      pmAtomValue* batteryPowerCurr = xCalloc(count, sizeof(pmAtomValue));
+      if (Metric_values(PCP_DENKI_POWER_NOW, batteryPowerCurr, count, PM_TYPE_DOUBLE)) {
+         info->powerCurr = 0.0;
+         for (i = 0; i < count; i++) {
+            info->powerCurr += batteryPowerCurr[i].d;
+         }
+      }
+      free(batteryPowerCurr);
+   }
 
    if (info->powerCurr < 0) {
       info->ac = AC_ABSENT;

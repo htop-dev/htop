@@ -109,7 +109,7 @@ typedef enum Metric_ {
    PCP_VFS_FILES_MAX,           /* vfs.files.max */
    PCP_DENKI_POWER_NOW,         /* denki.bat.power_now */
    PCP_DENKI_ENERGY_NOW,        /* denki.bat.energy_now */
-   PCP_DENKI_ENERGY_FULL,       /* denki.bat.capacity */
+   PCP_DENKI_CAPACITY,          /* denki.bat.capacity (percent, 0-100) */
 
    PCP_PROC_PID,                /* proc.psinfo.pid */
    PCP_PROC_PPID,               /* proc.psinfo.ppid */
