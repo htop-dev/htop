@@ -858,8 +858,10 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
    if (!dir)
       return;
 
-   uint64_t totalFull = 0;
-   uint64_t totalRemain = 0;
+   uint64_t totalEnergyFull = 0;
+   uint64_t totalEnergyRemain = 0;
+   uint64_t totalChargeFull = 0;
+   uint64_t totalChargeRemain = 0;
    int64_t totalPower = 0;
 
    bool havePower = false;
@@ -1018,8 +1020,14 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
          }
 
          if (haveBatteryEnergyFull && haveBatteryEnergyCurr && batteryEnergyFull > 0) {
-            totalFull += batteryEnergyFull;
-            totalRemain += batteryEnergyCurr > batteryEnergyFull ? batteryEnergyFull : batteryEnergyCurr;
+            totalEnergyFull += batteryEnergyFull;
+            totalEnergyRemain += batteryEnergyCurr > batteryEnergyFull ? batteryEnergyFull : batteryEnergyCurr;
+         } else if (haveBatteryChargeFull && haveBatteryChargeCurr && batteryChargeFull > 0) {
+            // No voltage available to convert charge to energy; accumulate charge so
+            // that the percentage can still be computed. The energy fields remain
+            // unset for this battery.
+            totalChargeFull += batteryChargeFull;
+            totalChargeRemain += batteryChargeCurr > batteryChargeFull ? batteryChargeFull : batteryChargeCurr;
          }
 
          if (!haveBatteryPower && haveBatteryCurrent && haveBatteryVoltage) {
@@ -1054,10 +1062,19 @@ next:
 
    closedir(dir);
 
+   if (totalEnergyFull > 0) {
+      info->energyCurr = (double) totalEnergyRemain / 1000000.0;
+      info->energyFull = (double) totalEnergyFull / 1000000.0;
+   }
+
+   // Compute percentage from whichever accumulator has data. If both are
+   // populated (mixed-battery system where some entries lack voltage), combine
+   // them; this is dimensionally inexact but matches pre-PR behaviour and
+   // keeps the meter functional rather than reporting N/A.
+   uint64_t totalFull = totalEnergyFull + totalChargeFull;
+   uint64_t totalRemain = totalEnergyRemain + totalChargeRemain;
    if (totalFull > 0) {
       info->percent = ((double) totalRemain * 100.0) / (double) totalFull;
-      info->energyCurr = (double) totalRemain / 1000000.0;
-      info->energyFull = (double) totalFull / 1000000.0;
    }
 
    if (havePower) {
