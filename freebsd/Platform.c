@@ -435,9 +435,9 @@ void Platform_getBattery(BatteryInfo* info) {
    bool energyComplete = true;
    bool powerComplete = true;
 
-   int64_t totalRemain = 0;
-   int64_t totalFull = 0;
-   int64_t totalPower = 0;
+   int64_t totalRemain = 0;     /* µWh */
+   int64_t totalFull = 0;       /* µWh */
+   int64_t totalPower = 0;      /* µW */
 
    for (int u = 0; u < units; u++) {
       union acpi_battery_ioctl_arg bixArg = { .unit = u };
@@ -491,8 +491,7 @@ void Platform_getBattery(BatteryInfo* info) {
 
       if (haveBatteryEnergyCurr && haveBatteryEnergyFull && batteryEnergyFull > 0) {
          /* Clamp curr <= full per battery (firmware can report cap > lfcap). */
-         int64_t clampedCurr = batteryEnergyCurr > batteryEnergyFull ? batteryEnergyFull : batteryEnergyCurr;
-         totalRemain += clampedCurr;
+         totalRemain += MINIMUM(batteryEnergyCurr, batteryEnergyFull);
          totalFull += batteryEnergyFull;
          haveTotalRemain = true;
          haveTotalFull = true;

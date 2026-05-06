@@ -847,6 +847,13 @@ static void Platform_Battery_getProcData(BatteryInfo* info) {
 // READ FROM /sys
 // ----------------------------------------
 
+/* Pick the first present, positive voltage; 0 means "no usable voltage". */
+static uint64_t selectVoltage(bool havePref, uint64_t pref, bool haveAlt, uint64_t alt) {
+   if (havePref && pref > 0) return pref;
+   if (haveAlt && alt > 0) return alt;
+   return 0;
+}
+
 static void Platform_Battery_getSysData(BatteryInfo* info) {
    info->percent = NAN;
    info->ac = AC_ERROR;
@@ -1053,13 +1060,10 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
          }
 
          /* Charge+voltage batteries contribute to both accumulators.
-          * Design voltage preferred; reject 0 (sysfs reports present
-          * fields with 0 value when the driver can't read them). */
-         uint64_t referenceVoltage = 0;
-         if (haveBatteryVoltageNominal && batteryVoltageNominal > 0)
-            referenceVoltage = batteryVoltageNominal;
-         else if (haveBatteryVoltageNow && batteryVoltageNow > 0)
-            referenceVoltage = batteryVoltageNow;
+          * Design preferred for energy reference. */
+         uint64_t referenceVoltage = selectVoltage(
+            haveBatteryVoltageNominal, batteryVoltageNominal,
+            haveBatteryVoltageNow, batteryVoltageNow);
 
          if (!(haveBatteryEnergyFull && haveBatteryEnergyCurr)
                && haveBatteryChargeFull && haveBatteryChargeCurr
@@ -1076,13 +1080,13 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
 
          if (haveBatteryEnergyFull && haveBatteryEnergyCurr && batteryEnergyFull > 0) {
             totalEnergyFull += batteryEnergyFull;
-            totalEnergyRemain += batteryEnergyCurr > batteryEnergyFull ? batteryEnergyFull : batteryEnergyCurr;
+            totalEnergyRemain += MINIMUM(batteryEnergyCurr, batteryEnergyFull);
             batteryContributedEnergy = true;
          }
 
          if (haveBatteryChargeFull && haveBatteryChargeCurr && batteryChargeFull > 0) {
             totalChargeFull += batteryChargeFull;
-            totalChargeRemain += batteryChargeCurr > batteryChargeFull ? batteryChargeFull : batteryChargeCurr;
+            totalChargeRemain += MINIMUM(batteryChargeCurr, batteryChargeFull);
             batteryContributedCharge = true;
          }
 
@@ -1105,12 +1109,10 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
                batteryPower = 0;
                haveBatteryPower = true;
             } else {
-               uint64_t powerVoltage = 0;
-               if (haveBatteryVoltageNow && batteryVoltageNow > 0)
-                  powerVoltage = batteryVoltageNow;
-               else if (haveBatteryVoltageNominal && batteryVoltageNominal > 0)
-                  powerVoltage = batteryVoltageNominal;
-
+               /* Present voltage preferred for instantaneous I*V. */
+               uint64_t powerVoltage = selectVoltage(
+                  haveBatteryVoltageNow, batteryVoltageNow,
+                  haveBatteryVoltageNominal, batteryVoltageNominal);
                if (powerVoltage > 0) {
                   batteryPower = (batteryCurrent * (int64_t)powerVoltage) / 1000000;
                   haveBatteryPower = true;

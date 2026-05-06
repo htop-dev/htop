@@ -594,8 +594,7 @@ void Platform_getBattery(BatteryInfo* info) {
             if (chargeIsAmpHours) {
                /* Charge fallback when voltage is unknown. */
                if (maxCharge > 0) {
-                  intmax_t clampedCharge = curCharge > maxCharge ? maxCharge : curCharge;
-                  batteryChargeRemain = clampedCharge;
+                  batteryChargeRemain = MINIMUM(curCharge, maxCharge);
                   batteryChargeFull = maxCharge;
                   batteryContributedCharge = true;
                }
@@ -644,8 +643,7 @@ void Platform_getBattery(BatteryInfo* info) {
          }
 
          if (batteryContributedEnergy) {
-            intmax_t clampedEnergy = batteryEnergyRemain > batteryEnergyFull ? batteryEnergyFull : batteryEnergyRemain;
-            totalEnergyRemain += clampedEnergy;
+            totalEnergyRemain += MINIMUM(batteryEnergyRemain, batteryEnergyFull);
             totalEnergyFull += batteryEnergyFull;
          }
          if (batteryContributedCharge) {

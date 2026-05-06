@@ -395,9 +395,9 @@ void Platform_getBattery(BatteryInfo* info) {
       bool haveTotalRemain = false;
       bool haveTotalPower = false;
 
-      int64_t totalFull = 0;
-      int64_t totalRemain = 0;
-      int64_t totalPower = 0;
+      int64_t totalFull = 0;     /* µWh */
+      int64_t totalRemain = 0;   /* µWh */
+      int64_t totalPower = 0;    /* µW */
 
       /* See sys/dev/acpi/acpibat.c. FUNKNOWN means cur-value is meaningless. */
       mib[3] = SENSOR_WATTHOUR;
@@ -426,7 +426,7 @@ void Platform_getBattery(BatteryInfo* info) {
 
       if (haveTotalRemain && haveTotalFull && totalFull > 0) {
          /* Clamp remain <= full (firmware may report remain > last-full). */
-         int64_t clampedRemain = totalRemain > totalFull ? totalFull : totalRemain;
+         int64_t clampedRemain = MINIMUM(totalRemain, totalFull);
          info->percent = ((double) clampedRemain * 100.0) / (double) totalFull;
 
          info->energyCurr = (double) clampedRemain / 1000000.0;

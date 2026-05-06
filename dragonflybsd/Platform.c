@@ -406,7 +406,7 @@ void Platform_getBattery(BatteryInfo* info) {
    int64_t totalChargeFull = 0;
    int unitsWithCharge = 0;
 
-   int64_t totalPower = 0;
+   int64_t totalPower = 0;            /* µW */
    int unitsCovered = 0;
    bool powerComplete = true;
 
@@ -485,15 +485,13 @@ void Platform_getBattery(BatteryInfo* info) {
 
       /* Clamp curr <= full per battery (firmware may report cap > lfcap). */
       if (haveBatteryEnergyCurr && haveBatteryEnergyFull && batteryEnergyFull > 0) {
-         int64_t clampedEnergy = batteryEnergyCurr > batteryEnergyFull ? batteryEnergyFull : batteryEnergyCurr;
-         totalEnergyRemain += clampedEnergy;
+         totalEnergyRemain += MINIMUM(batteryEnergyCurr, batteryEnergyFull);
          totalEnergyFull += batteryEnergyFull;
          unitsWithEnergy++;
       }
 
       if (haveBatteryChargeCurr && haveBatteryChargeFull && batteryChargeFull > 0) {
-         int64_t clampedCharge = batteryChargeCurr > batteryChargeFull ? batteryChargeFull : batteryChargeCurr;
-         totalChargeRemain += clampedCharge;
+         totalChargeRemain += MINIMUM(batteryChargeCurr, batteryChargeFull);
          totalChargeFull += batteryChargeFull;
          unitsWithCharge++;
       }
