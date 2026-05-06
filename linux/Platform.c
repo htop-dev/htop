@@ -1044,11 +1044,21 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
           * discharges, which would make batteryEnergyFull drift over time and
           * skew multi-battery percent weighting. Fall back to VOLTAGE_NOW only
           * when no design voltage is exposed -- imperfect, but better than
-          * dropping the battery from the totals entirely. */
+          * dropping the battery from the totals entirely.
+          *
+          * Require the chosen voltage to be > 0: the kernel marks
+          * VOLTAGE_MIN_DESIGN/VOLTAGE_NOW as present even when its driver can't
+          * read the value (publishing 0). Selecting on presence alone would
+          * pick a 0 over a valid sibling and zero out batteryEnergyFull. */
+         uint64_t referenceVoltage = 0;
+         if (haveBatteryVoltageNominal && batteryVoltageNominal > 0)
+            referenceVoltage = batteryVoltageNominal;
+         else if (haveBatteryVoltageNow && batteryVoltageNow > 0)
+            referenceVoltage = batteryVoltageNow;
+
          if (!(haveBatteryEnergyFull && haveBatteryEnergyCurr)
                && haveBatteryChargeFull && haveBatteryChargeCurr
-               && (haveBatteryVoltageNominal || haveBatteryVoltageNow)) {
-            uint64_t referenceVoltage = haveBatteryVoltageNominal ? batteryVoltageNominal : batteryVoltageNow;
+               && referenceVoltage > 0) {
             batteryEnergyFull = (batteryChargeFull * referenceVoltage) / 1000000;
             haveBatteryEnergyFull = true;
 
@@ -1082,17 +1092,32 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
 
          /* Instantaneous power P = I * V wants the present terminal voltage,
           * so prefer VOLTAGE_NOW here; fall back to design voltage only when
-          * VOLTAGE_NOW is unavailable.
+          * VOLTAGE_NOW is unavailable or zero.
           *
-          * Guard powerVoltage > 0: the kernel marks VOLTAGE_NOW/MIN_DESIGN as
-          * present even when it can't read the value (publishing 0). Without
-          * the guard we would publish 0 W as a known-good power reading
-          * instead of leaving power unknown. */
-         if (!haveBatteryPower && haveBatteryCurrent && (haveBatteryVoltageNow || haveBatteryVoltageNominal)) {
-            uint64_t powerVoltage = haveBatteryVoltageNow ? batteryVoltageNow : batteryVoltageNominal;
-            if (powerVoltage > 0) {
-               batteryPower = (batteryCurrent * (int64_t)powerVoltage) / 1000000;
+          * Selection enforces > 0 directly: the kernel marks
+          * VOLTAGE_NOW/MIN_DESIGN as present even when it can't read the
+          * value (publishing 0). Picking on presence alone would publish 0 W
+          * as a known-good power reading instead of leaving power unknown.
+          *
+          * Special case batteryCurrent == 0: I * V = 0 regardless of V, so
+          * idle-on-AC is a known 0 W reading even when no usable voltage is
+          * exposed. Without this short-circuit the powerVoltage > 0 guard
+          * would leave power unknown for a value we can compute exactly. */
+         if (!haveBatteryPower && haveBatteryCurrent) {
+            if (batteryCurrent == 0) {
+               batteryPower = 0;
                haveBatteryPower = true;
+            } else {
+               uint64_t powerVoltage = 0;
+               if (haveBatteryVoltageNow && batteryVoltageNow > 0)
+                  powerVoltage = batteryVoltageNow;
+               else if (haveBatteryVoltageNominal && batteryVoltageNominal > 0)
+                  powerVoltage = batteryVoltageNominal;
+
+               if (powerVoltage > 0) {
+                  batteryPower = (batteryCurrent * (int64_t)powerVoltage) / 1000000;
+                  haveBatteryPower = true;
+               }
             }
          }
 
