@@ -36,6 +36,7 @@ in the source distribution for its full text.
 #include <sys/time.h>
 #include <sys/types.h>
 
+#include "Battery.h"
 #include "CPUMeter.h"
 #include "DateTimeMeter.h"
 #include "FileDescriptorMeter.h"
@@ -446,23 +447,158 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
+#define ENVSYS_MAX_BATTERIES 32
+
+/* envsys reports magnitudes in 10^-6 SI units. Convert when known and
+ * non-negative; the kernel uses negative values as an "invalid" sentinel
+ * separate from the explicit state="invalid" tag. */
+static double envsysToSI(intmax_t value) {
+   return (value >= 0) ? (double) value / 1000000.0 : NAN;
+}
+
+/* Read sensor fields from a single envsys device into a BatteryRaw.
+ * Returns false to skip non-battery devices and absent batteries. */
+static bool parseEnvsysBattery(prop_object_iterator_t fieldsIter, BatteryRaw* out, bool* isACAdapter, bool* haveConnected, intmax_t* isConnected) {
+   *out = (BatteryRaw){
+      .level = NAN,
+      .energyFull = NAN, .energyNow = NAN,
+      .chargeFull = NAN, .chargeNow = NAN,
+      .voltageNow = NAN, .voltageDesign = NAN,
+      .current = NAN, .power = NAN,
+   };
+   *isACAdapter = false;
+   *haveConnected = false;
+
+   bool isBattery = false;
+   intmax_t isPresent = 1;
+
+   intmax_t curCharge = 0, maxCharge = 0;
+   bool haveCharge = false;
+   bool chargeIsAmpHours = false;
+
+   intmax_t chargeRateMag = 0, dischargeRateMag = 0;
+   bool haveChargeRate = false, haveDischargeRate = false;
+   bool chargeRateIsAmps = false, dischargeRateIsAmps = false;
+
+   prop_object_t fields;
+   while ((fields = prop_object_iterator_next(fieldsIter)) != NULL) {
+      prop_object_t props = prop_dictionary_get(fields, "device-properties");
+      if (props != NULL) {
+         prop_object_t class = prop_dictionary_get(props, "device-class");
+         if (prop_string_equals_string(class, "ac-adapter"))
+            *isACAdapter = true;
+         else if (prop_string_equals_string(class, "battery"))
+            isBattery = true;
+         continue;
+      }
+
+      prop_object_t curValue = prop_dictionary_get(fields, "cur-value");
+      prop_object_t maxValue = prop_dictionary_get(fields, "max-value");
+      prop_object_t descField = prop_dictionary_get(fields, "description");
+      prop_object_t typeField = prop_dictionary_get(fields, "type");
+      prop_object_t stateField = prop_dictionary_get(fields, "state");
+
+      if (descField == NULL || curValue == NULL)
+         continue;
+
+      /* Reject sensors the kernel marks invalid. */
+      if (stateField != NULL && prop_string_equals_string(stateField, "invalid"))
+         continue;
+
+      if (prop_string_equals_string(descField, "connected")) {
+         *isConnected = prop_number_signed_value(curValue);
+         *haveConnected = true;
+      } else if (prop_string_equals_string(descField, "present")) {
+         isPresent = prop_number_signed_value(curValue);
+      } else if (prop_string_equals_string(descField, "voltage")) {
+         out->voltageNow = envsysToSI(prop_number_signed_value(curValue));
+      } else if (prop_string_equals_string(descField, "design voltage")) {
+         out->voltageDesign = envsysToSI(prop_number_signed_value(curValue));
+      } else if (prop_string_equals_string(descField, "charge")) {
+         if (maxValue == NULL)
+            continue;
+         curCharge = prop_number_signed_value(curValue);
+         maxCharge = prop_number_signed_value(maxValue);
+         haveCharge = true;
+         chargeIsAmpHours = typeField != NULL &&
+            prop_string_equals_string(typeField, "Ampere hour");
+      } else if (prop_string_equals_string(descField, "charge rate")) {
+         chargeRateMag = prop_number_signed_value(curValue);
+         chargeRateIsAmps = typeField != NULL &&
+            prop_string_equals_string(typeField, "Ampere");
+         haveChargeRate = true;
+      } else if (prop_string_equals_string(descField, "discharge rate")) {
+         dischargeRateMag = prop_number_signed_value(curValue);
+         dischargeRateIsAmps = typeField != NULL &&
+            prop_string_equals_string(typeField, "Ampere");
+         haveDischargeRate = true;
+      }
+   }
+
+   if (!isBattery || !isPresent)
+      return false;
+
+   /* charge sensor populates one capacity axis; the aggregator derives
+    * energy from charge * voltage when only Ah are known. */
+   if (haveCharge && maxCharge > 0) {
+      if (chargeIsAmpHours) {
+         out->chargeFull = (double) maxCharge / 1000000.0;
+         out->chargeNow  = (double) curCharge / 1000000.0;
+      } else {
+         out->energyFull = (double) maxCharge / 1000000.0;
+         out->energyNow  = (double) curCharge / 1000000.0;
+      }
+   }
+
+   /* Net rate = discharge - charge in canonical sign (positive = discharge).
+    * Each side may be in Watts or Amperes; combine after unit normalization
+    * via the instantaneous voltage (which the aggregator also uses). */
+   double instV = NAN;
+   if (out->voltageNow > 0)
+      instV = out->voltageNow;
+   else if (out->voltageDesign > 0)
+      instV = out->voltageDesign;
+
+   double netPower = 0.0;
+   double netCurrent = 0.0;
+   bool havePower = false;
+   bool haveCurrent = false;
+
+   if (haveChargeRate && chargeRateMag >= 0) {
+      double mag = (double) chargeRateMag / 1000000.0;
+      if (chargeRateIsAmps) {
+         if (instV > 0) { netPower -= mag * instV; havePower = true; }
+         else if (chargeRateMag == 0) { /* 0 A => 0 W known regardless of V */ havePower = true; }
+         netCurrent -= mag;
+         haveCurrent = true;
+      } else {
+         netPower -= mag;
+         havePower = true;
+      }
+   }
+
+   if (haveDischargeRate && dischargeRateMag >= 0) {
+      double mag = (double) dischargeRateMag / 1000000.0;
+      if (dischargeRateIsAmps) {
+         if (instV > 0) { netPower += mag * instV; havePower = true; }
+         else if (dischargeRateMag == 0) { havePower = true; }
+         netCurrent += mag;
+         haveCurrent = true;
+      } else {
+         netPower += mag;
+         havePower = true;
+      }
+   }
+
+   if (havePower)
+      out->power = netPower;
+   if (haveCurrent && !havePower)
+      out->current = netCurrent;
+
+   return true;
+}
+
 void Platform_getBattery(BatteryInfo* info) {
-   prop_dictionary_t dict, fields, props;
-   prop_object_t device, class;
-
-   /* charge+voltage batteries contribute to BOTH accumulators. */
-   intmax_t totalEnergyRemain = 0;     /* µWh */
-   intmax_t totalEnergyFull = 0;
-   intmax_t totalChargeRemain = 0;     /* µAh */
-   intmax_t totalChargeFull = 0;
-
-   int unitsPresent = 0;
-   int unitsContributingEnergy = 0;
-   int unitsContributingCharge = 0;
-   int unitsContributingPower = 0;
-
-   intmax_t totalPower = 0;
-
    *info = (BatteryInfo) {
       .ac = AC_ERROR,
       .percent = NAN,
@@ -473,222 +609,46 @@ void Platform_getBattery(BatteryInfo* info) {
 
    int fd = open(_PATH_SYSMON, O_RDONLY);
    if (fd == -1)
-      goto error;
+      return;
 
-   if (prop_dictionary_recv_ioctl(fd, ENVSYS_GETDICTIONARY, &dict) != 0)
-      goto error;
+   prop_dictionary_t dict;
+   if (prop_dictionary_recv_ioctl(fd, ENVSYS_GETDICTIONARY, &dict) != 0) {
+      close(fd);
+      return;
+   }
+
+   BatteryRaw raws[ENVSYS_MAX_BATTERIES];
+   size_t nbat = 0;
 
    prop_object_iterator_t devIter = prop_dictionary_iterator(dict);
-   if (devIter == NULL)
-      goto error;
-
-   while ((device = prop_object_iterator_next(devIter)) != NULL) {
+   prop_object_t device;
+   while (devIter != NULL && (device = prop_object_iterator_next(devIter)) != NULL) {
       prop_object_t fieldsArray = prop_dictionary_get_keysym(dict, device);
       if (fieldsArray == NULL)
-         goto error;
+         continue;
 
       prop_object_iterator_t fieldsIter = prop_array_iterator(fieldsArray);
       if (fieldsIter == NULL)
-         goto error;
+         continue;
 
-      bool isACAdapter = false;
-      bool isBattery = false;
-
-      /* only assume battery is not present if explicitly stated */
-      intmax_t isPresent = 1;
+      bool isACAdapter;
+      bool haveConnected;
       intmax_t isConnected = 0;
-      bool haveConnected = false;
-      intmax_t curCharge = 0;
-      intmax_t maxCharge = 0;
-      intmax_t chargeRate = 0;
-      intmax_t dischargeRate = 0;
-      intmax_t voltage = 0;
-      intmax_t designVoltage = 0;
+      BatteryRaw raw;
+      bool isBattery = parseEnvsysBattery(fieldsIter, &raw, &isACAdapter, &haveConnected, &isConnected);
+      prop_object_iterator_release(fieldsIter);
 
-      bool haveCharge = false;
-      bool haveChargeRate = false;
-      bool haveDischargeRate = false;
-      bool chargeIsAmpHours = false;
-      bool chargeRateIsAmps = false;
-      bool dischargeRateIsAmps = false;
-
-      while ((fields = prop_object_iterator_next(fieldsIter)) != NULL) {
-         props = prop_dictionary_get(fields, "device-properties");
-         if (props != NULL) {
-            class = prop_dictionary_get(props, "device-class");
-
-            if (prop_string_equals_string(class, "ac-adapter")) {
-               isACAdapter = true;
-            } else if (prop_string_equals_string(class, "battery")) {
-               isBattery = true;
-            }
-            continue;
-         }
-
-         prop_object_t curValue = prop_dictionary_get(fields, "cur-value");
-         prop_object_t maxValue = prop_dictionary_get(fields, "max-value");
-         prop_object_t descField = prop_dictionary_get(fields, "description");
-         prop_object_t typeField = prop_dictionary_get(fields, "type");
-         prop_object_t stateField = prop_dictionary_get(fields, "state");
-
-         if (descField == NULL || curValue == NULL)
-            continue;
-
-         /* Reject sensors the kernel marks invalid. */
-         if (stateField != NULL && prop_string_equals_string(stateField, "invalid"))
-            continue;
-
-         if (prop_string_equals_string(descField, "connected")) {
-            isConnected = prop_number_signed_value(curValue);
-            haveConnected = true;
-         } else if (prop_string_equals_string(descField, "present")) {
-            isPresent = prop_number_signed_value(curValue);
-         } else if (prop_string_equals_string(descField, "voltage")) {
-            voltage = prop_number_signed_value(curValue);
-         } else if (prop_string_equals_string(descField, "design voltage")) {
-            designVoltage = prop_number_signed_value(curValue);
-         } else if (prop_string_equals_string(descField, "charge")) {
-            if (maxValue == NULL)
-               continue;
-            curCharge = prop_number_signed_value(curValue);
-            maxCharge = prop_number_signed_value(maxValue);
-            haveCharge = true;
-            chargeIsAmpHours = typeField != NULL &&
-               prop_string_equals_string(typeField, "Ampere hour");
-         } else if (prop_string_equals_string(descField, "charge rate")) {
-            chargeRate = prop_number_signed_value(curValue);
-            chargeRateIsAmps = typeField != NULL &&
-               prop_string_equals_string(typeField, "Ampere");
-            haveChargeRate = true;
-         } else if (prop_string_equals_string(descField, "discharge rate")) {
-            dischargeRate = prop_number_signed_value(curValue);
-            dischargeRateIsAmps = typeField != NULL &&
-               prop_string_equals_string(typeField, "Ampere");
-            haveDischargeRate = true;
-         }
-      }
-
-      if (isBattery && isPresent) {
-         /* Counts before any sensor-dependent check; an all-invalid pack
-          * still blocks publication. */
-         unitsPresent++;
-
-         /* Design for energy reference; present for I*V. */
-         intmax_t referenceVoltage = (designVoltage != 0) ? designVoltage : voltage;
-         intmax_t rateVoltage = (voltage != 0) ? voltage : designVoltage;
-
-         bool haveBatteryChargeRate = false;
-         bool haveBatteryDischargeRate = false;
-
-         bool batteryContributedEnergy = false;
-         bool batteryContributedCharge = false;
-
-         intmax_t batteryChargeRate = 0;
-         intmax_t batteryDischargeRate = 0;
-         intmax_t batteryEnergyRemain = 0;
-         intmax_t batteryEnergyFull = 0;
-         intmax_t batteryChargeRemain = 0;
-         intmax_t batteryChargeFull = 0;
-
-         if (haveCharge) {
-            if (chargeIsAmpHours) {
-               /* Charge fallback when voltage is unknown. */
-               if (maxCharge > 0) {
-                  batteryChargeRemain = MINIMUM(curCharge, maxCharge);
-                  batteryChargeFull = maxCharge;
-                  batteryContributedCharge = true;
-               }
-               if (referenceVoltage > 0 && maxCharge > 0) {
-                  batteryEnergyRemain = curCharge * referenceVoltage / 1000000;
-                  batteryEnergyFull = maxCharge * referenceVoltage / 1000000;
-                  batteryContributedEnergy = true;
-               }
-            } else if (maxCharge > 0) {
-               /* Watt-hour battery: energy only. */
-               batteryEnergyRemain = curCharge;
-               batteryEnergyFull = maxCharge;
-               batteryContributedEnergy = true;
-            }
-         }
-
-         /* envsys rates are magnitudes; reject negative sentinels. */
-         if (haveChargeRate && chargeRate >= 0) {
-            if (chargeRateIsAmps) {
-               if (chargeRate == 0) {
-                  /* I=0 ⇒ 0 W known. */
-                  haveBatteryChargeRate = true;
-               } else if (rateVoltage > 0) {
-                  batteryChargeRate = chargeRate * rateVoltage / 1000000;
-                  haveBatteryChargeRate = true;
-               }
-            } else {
-               batteryChargeRate = chargeRate;
-               haveBatteryChargeRate = true;
-            }
-         }
-
-         if (haveDischargeRate && dischargeRate >= 0) {
-            if (dischargeRateIsAmps) {
-               if (dischargeRate == 0) {
-                  /* I=0 ⇒ 0 W known. */
-                  haveBatteryDischargeRate = true;
-               } else if (rateVoltage > 0) {
-                  batteryDischargeRate = dischargeRate * rateVoltage / 1000000;
-                  haveBatteryDischargeRate = true;
-               }
-            } else {
-               batteryDischargeRate = dischargeRate;
-               haveBatteryDischargeRate = true;
-            }
-         }
-
-         if (batteryContributedEnergy) {
-            totalEnergyRemain += MINIMUM(batteryEnergyRemain, batteryEnergyFull);
-            totalEnergyFull += batteryEnergyFull;
-         }
-         if (batteryContributedCharge) {
-            totalChargeRemain += batteryChargeRemain;
-            totalChargeFull += batteryChargeFull;
-         }
-         if (batteryContributedEnergy)
-            unitsContributingEnergy++;
-         if (batteryContributedCharge)
-            unitsContributingCharge++;
-
-         /* Rate contribution independent of capacity contribution. */
-         if (haveBatteryChargeRate || haveBatteryDischargeRate) {
-            totalPower += batteryDischargeRate - batteryChargeRate;
-            unitsContributingPower++;
-         }
-      }
+      if (isBattery && nbat < ENVSYS_MAX_BATTERIES)
+         raws[nbat++] = raw;
 
       /* Invalid connected sensor leaves AC at AC_ERROR. */
-      if (isACAdapter && haveConnected && info->ac != AC_PRESENT) {
+      if (isACAdapter && haveConnected && info->ac != AC_PRESENT)
          info->ac = isConnected ? AC_PRESENT : AC_ABSENT;
-      }
    }
+   if (devIter != NULL)
+      prop_object_iterator_release(devIter);
 
-   /* Energy ratio preferred; mixing µWh and µAh would be invalid. */
-   if (unitsPresent > 0 && unitsContributingEnergy == unitsPresent && totalEnergyFull > 0) {
-      info->percent = ((double) totalEnergyRemain * 100.0) / (double) totalEnergyFull;
-      if (totalEnergyRemain >= totalEnergyFull)
-         info->percent = 100.0;
-   } else if (unitsPresent > 0 && unitsContributingCharge == unitsPresent && totalChargeFull > 0) {
-      info->percent = ((double) totalChargeRemain * 100.0) / (double) totalChargeFull;
-      if (totalChargeRemain >= totalChargeFull)
-         info->percent = 100.0;
-   }
+   close(fd);
 
-   if (unitsPresent > 0 && unitsContributingEnergy == unitsPresent && totalEnergyFull > 0) {
-      info->energyCurr = (double) totalEnergyRemain / 1000000.0;
-      info->energyFull = (double) totalEnergyFull / 1000000.0;
-   }
-
-   if (unitsPresent > 0 && unitsContributingPower == unitsPresent) {
-      info->powerCurr = (double) totalPower / 1000000.0;
-   }
-
-error:
-   if (fd != -1)
-      close(fd);
+   Battery_aggregate(raws, nbat, info);
 }
