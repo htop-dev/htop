@@ -396,13 +396,24 @@ void Platform_getBattery(BatteryInfo* info) {
       return;
    }
 
-   bool haveTotalRemain = false;
-   bool haveTotalFull = false;
-   bool haveTotalPower = false;
+   /* Energy totals (require voltage on mAh systems) — used for energyCurr/Full
+    * and as the preferred basis for info->percent. */
+   int64_t totalEnergyRemain = 0;
+   int64_t totalEnergyFull = 0;
+   int unitsWithEnergy = 0;
 
-   int64_t totalRemain = 0;
-   int64_t totalFull = 0;
+   /* Parallel charge-or-energy totals — used solely as a fallback for
+    * info->percent when voltage is unknown on mAh systems. */
+   int64_t totalChargeRemain = 0;
+   int64_t totalChargeFull = 0;
+   int unitsWithCharge = 0;
+
+   /* Power total. Idle batteries (rate == ACPI_BATT_UNKNOWN) contribute 0 W;
+    * a unit is considered "covered" once its BIF/BST data is in hand. Only
+    * publish powerCurr when every unit was covered. */
    int64_t totalPower = 0;
+   int unitsCovered = 0;
+   bool powerComplete = true;
 
    for (int u = 0; u < units; u++) {
       union acpi_battery_ioctl_arg bifArg = { .unit = u };
@@ -413,15 +424,21 @@ void Platform_getBattery(BatteryInfo* info) {
       if (ioctl(fd, ACPIIO_BATT_GET_BST, &bstArg) == -1)
          continue;
 
+      unitsCovered++;
+
       const struct acpi_bif* bif = &bifArg.bif;
       const struct acpi_bst* bst = &bstArg.bst;
 
       bool haveBatteryEnergyCurr = false;
       bool haveBatteryEnergyFull = false;
+      bool haveBatteryChargeCurr = false;
+      bool haveBatteryChargeFull = false;
       bool haveBatteryPower = false;
 
       int64_t batteryEnergyCurr = 0;
       int64_t batteryEnergyFull = 0;
+      int64_t batteryChargeCurr = 0;
+      int64_t batteryChargeFull = 0;
       int64_t batteryPower = 0;
 
       if (bif->lfcap != ACPI_BATT_UNKNOWN && bst->cap != ACPI_BATT_UNKNOWN) {
@@ -431,6 +448,13 @@ void Platform_getBattery(BatteryInfo* info) {
             haveBatteryEnergyCurr = true;
             haveBatteryEnergyFull = true;
          } else {
+            /* Always populate the charge fallback so we can still compute
+             * percent when voltage is unknown. */
+            batteryChargeCurr = (int64_t) bst->cap;
+            batteryChargeFull = (int64_t) bif->lfcap;
+            haveBatteryChargeCurr = true;
+            haveBatteryChargeFull = true;
+
             uint32_t batteryVoltage = (bst->volt != ACPI_BATT_UNKNOWN) ? bst->volt : bif->dvol;
             if (batteryVoltage != ACPI_BATT_UNKNOWN && batteryVoltage != 0) {
                batteryEnergyCurr = (int64_t) bst->cap * batteryVoltage;
@@ -442,11 +466,21 @@ void Platform_getBattery(BatteryInfo* info) {
       }
 
       if (haveBatteryEnergyCurr && haveBatteryEnergyFull && batteryEnergyFull > 0) {
-         totalRemain += batteryEnergyCurr;
-         haveTotalRemain = true;
+         totalEnergyRemain += batteryEnergyCurr;
+         totalEnergyFull += batteryEnergyFull;
+         unitsWithEnergy++;
+      }
 
-         totalFull += batteryEnergyFull;
-         haveTotalFull = true;
+      if (haveBatteryChargeCurr && haveBatteryChargeFull && batteryChargeFull > 0) {
+         totalChargeRemain += batteryChargeCurr;
+         totalChargeFull += batteryChargeFull;
+         unitsWithCharge++;
+      } else if (haveBatteryEnergyCurr && haveBatteryEnergyFull && batteryEnergyFull > 0) {
+         /* mW-units batteries don't populate the charge fallback explicitly,
+          * but their energy values are equally valid as a percent basis. */
+         totalChargeRemain += batteryEnergyCurr;
+         totalChargeFull += batteryEnergyFull;
+         unitsWithCharge++;
       }
 
       if (bst->rate == ACPI_BATT_UNKNOWN)
@@ -464,29 +498,41 @@ void Platform_getBattery(BatteryInfo* info) {
          }
       }
 
-      if (!haveBatteryPower)
+      if (!haveBatteryPower) {
+         /* A non-zero rate that we couldn't convert (mAh with unknown voltage)
+          * means the totalPower sum is missing real charge/discharge activity. */
+         powerComplete = false;
          continue;
+      }
 
       if ((bst->state & ACPI_BATT_STAT_DISCHARG) == 0 &&
          (bst->state & ACPI_BATT_STAT_CHARGING) != 0)
          batteryPower = -batteryPower;
 
       totalPower += batteryPower;
-      haveTotalPower = true;
    }
 
    close(fd);
 
-   if (haveTotalRemain && haveTotalFull && totalFull > 0) {
-      info->percent = ((double) totalRemain * 100.0) / (double) totalFull;
-      if (totalRemain >= totalFull)
+   /* Only override the sysctl-derived percent when every battery unit
+    * contributed to the totals — partial aggregates would misrepresent the
+    * pack against the kernel's hw.acpi.battery.life summary. */
+   if (unitsWithCharge == units && totalChargeFull > 0) {
+      info->percent = ((double) totalChargeRemain * 100.0) / (double) totalChargeFull;
+      if (totalChargeRemain >= totalChargeFull)
          info->percent = 100;
-
-      info->energyCurr = (double) totalRemain / 1000000.0;
-      info->energyFull = (double) totalFull / 1000000.0;
    }
 
-   if (haveTotalPower) {
+   /* Only publish energy totals when complete in watt-hours for every unit. */
+   if (unitsWithEnergy == units && totalEnergyFull > 0) {
+      info->energyCurr = (double) totalEnergyRemain / 1000000.0;
+      info->energyFull = (double) totalEnergyFull / 1000000.0;
+   }
+
+   /* Only publish power when every unit was covered and convertible to W.
+    * Idle batteries (unknown rate) contribute 0 W and are still considered
+    * complete. */
+   if (powerComplete && unitsCovered == units) {
       info->powerCurr = (double) totalPower / 1000000.0;
    }
 }
