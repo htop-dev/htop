@@ -234,6 +234,10 @@ static const char* Platform_metricNames[] = {
    [PCP_MEM_ZSWAPPED] = "mem.util.zswapped",
    [PCP_VFS_FILES_COUNT] = "vfs.files.count",
    [PCP_VFS_FILES_MAX] = "vfs.files.max",
+   /* The denki.bat.* metrics are optional - they require the denki PMDA.
+    * pmLookupName tolerates missing individual metrics; Metric_desc()
+    * returns NULL at runtime if a metric was not resolved, which the
+    * battery code uses to short-circuit the path. */
    [PCP_DENKI_POWER_NOW] = "denki.bat.power_now",
    [PCP_DENKI_ENERGY_NOW] = "denki.bat.energy_now",
    [PCP_DENKI_CAPACITY] = "denki.bat.capacity",
