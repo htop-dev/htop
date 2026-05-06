@@ -502,6 +502,7 @@ void Platform_getBattery(BatteryInfo* info) {
       /* only assume battery is not present if explicitly stated */
       intmax_t isPresent = 1;
       intmax_t isConnected = 0;
+      bool haveConnected = false;
       intmax_t curCharge = 0;
       intmax_t maxCharge = 0;
       intmax_t chargeRate = 0;
@@ -550,6 +551,7 @@ void Platform_getBattery(BatteryInfo* info) {
 
          if (prop_string_equals_string(descField, "connected")) {
             isConnected = prop_number_signed_value(curValue);
+            haveConnected = true;
          } else if (prop_string_equals_string(descField, "present")) {
             isPresent = prop_number_signed_value(curValue);
          } else if (prop_string_equals_string(descField, "voltage")) {
@@ -684,7 +686,11 @@ void Platform_getBattery(BatteryInfo* info) {
          }
       }
 
-      if (isACAdapter && info->ac != AC_PRESENT) {
+      /* Only publish AC_PRESENT/AC_ABSENT when we actually read a valid
+         "connected" sample. If the connected sensor exists but was rejected
+         by the state="invalid" filter above, leave info->ac as AC_ERROR
+         rather than misreporting an unknown state as "running on battery". */
+      if (isACAdapter && haveConnected && info->ac != AC_PRESENT) {
          info->ac = isConnected ? AC_PRESENT : AC_ABSENT;
       }
    }
