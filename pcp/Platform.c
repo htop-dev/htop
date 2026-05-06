@@ -17,6 +17,7 @@ in the source distribution for its full text.
 #include <string.h>
 #include <unistd.h>
 
+#include "Battery.h"
 #include "BatteryMeter.h"
 #include "CPUMeter.h"
 #include "DateTimeMeter.h"
@@ -871,100 +872,68 @@ void Platform_getFileDescriptors(double* used, double* max) {
       *max = value.l;
 }
 
+#define DENKI_MAX_BATTERIES 32
+
 void Platform_getBattery(BatteryInfo* info) {
    info->ac = AC_ERROR;
    info->percent = NAN;
    info->powerCurr = NAN;
    info->energyCurr = NAN;
    info->energyFull = NAN;
+   /* denki has no AC sensor; info->ac stays AC_ERROR. */
 
    if (Metric_desc(PCP_DENKI_CAPACITY) == NULL)
       return;
 
    int count = Metric_instanceCount(PCP_DENKI_CAPACITY);
-   if (count < 1) {
-      /* denki has no AC sensor; absence of batteries ≠ AC_PRESENT. */
+   if (count < 1)
       return;
+   if (count > DENKI_MAX_BATTERIES)
+      count = DENKI_MAX_BATTERIES;
+
+   BatteryRaw raws[DENKI_MAX_BATTERIES];
+   int instIds[DENKI_MAX_BATTERIES];
+   size_t nbat = 0;
+
+   /* Join metrics by instance id (not array offset). A failed
+    * Metric_instance leaves the corresponding BatteryRaw with NaN
+    * fields so the aggregator's all-or-nothing gates close. */
+   int instid = -1, offset = -1;
+   while (Metric_iterate(PCP_DENKI_CAPACITY, &instid, &offset, sizeof(pmAtomValue))
+          && nbat < (size_t) count) {
+      raws[nbat] = (BatteryRaw){
+         .level = NAN,
+         .energyFull = NAN, .energyNow = NAN,
+         .chargeFull = NAN, .chargeNow = NAN,
+         .voltageNow = NAN, .voltageDesign = NAN,
+         .current = NAN, .power = NAN,
+      };
+      instIds[nbat] = instid;
+
+      pmAtomValue atom;
+      if (Metric_instance(PCP_DENKI_CAPACITY, instid, offset, &atom, PM_TYPE_DOUBLE) != NULL
+            && isNonnegative(atom.d)) {
+         raws[nbat].level = CLAMP(atom.d, 0.0, 100.0);
+      }
+      nbat++;
    }
 
-   /* Join metrics by instance id (not array offset). aggregateComplete
-    * clears on any Metric_instance failure to avoid partial aggregates. */
-
-   /* denki.bat.capacity is the sysfs CAPACITY field (percent, 0-100). */
-   pmAtomValue* batteryCapacity = xCalloc(count, sizeof(pmAtomValue));
-   int* batteryInst = xCalloc(count, sizeof(int));
-   int capacityCount = 0;
-   bool aggregateComplete = true;
-   {
-      int instid = -1, offset = -1;
-      while (Metric_iterate(PCP_DENKI_CAPACITY, &instid, &offset, sizeof(pmAtomValue))) {
-         if (capacityCount >= count)
-            break;
+   /* power_now is in Watts (PMDA divides by 1e6 internally and strips sign);
+    * each capacity instance must have a matching power sample, otherwise
+    * partial sums would misrepresent whole-pack power on multi-battery
+    * systems. */
+   if (Metric_desc(PCP_DENKI_POWER_NOW) != NULL) {
+      for (size_t i = 0; i < nbat; i++) {
          pmAtomValue atom;
-         if (Metric_instance(PCP_DENKI_CAPACITY, instid, offset, &atom, PM_TYPE_DOUBLE) == NULL) {
-            /* Unknown which instance dropped; aggregate is incomplete. */
-            aggregateComplete = false;
-            continue;
-         }
-         batteryCapacity[capacityCount] = atom;
-         batteryInst[capacityCount] = instid;
-         capacityCount++;
-      }
-   }
-   bool haveCapacity = capacityCount > 0;
-
-   /* energy_now unused: denki may back it with µAh or µWh per instance,
-    * indistinguishably. info->energyCurr/Full stay NaN. */
-
-   if (haveCapacity && aggregateComplete) {
-      if (capacityCount == 1) {
-         if (isNonnegative(batteryCapacity[0].d))
-            info->percent = CLAMP(batteryCapacity[0].d, 0.0, 100.0);
-      } else {
-         /* Unweighted average; mixed Wh/mAh backing prevents weighting.
-          * Any invalid sample blocks publication. */
-         double total = 0.0;
-         bool allValid = true;
-         for (int i = 0; i < capacityCount; i++) {
-            if (!isNonnegative(batteryCapacity[i].d)) {
-               allValid = false;
-               break;
-            }
-            total += CLAMP(batteryCapacity[i].d, 0.0, 100.0);
-         }
-         if (allValid) {
-            info->percent = total / capacityCount;
-         }
+         if (Metric_instance(PCP_DENKI_POWER_NOW, instIds[i], 0, &atom, PM_TYPE_DOUBLE) != NULL)
+            raws[i].power = atom.d;
       }
    }
 
-   if (Metric_desc(PCP_DENKI_POWER_NOW) != NULL && haveCapacity) {
-      /* Sum power_now across the same battery instances we saw for
-       * capacity, again joining by instance id rather than array offset.
-       * Require every capacity instance to have a matching power_now
-       * sample: a partial sum across only the reporting instances would
-       * misrepresent whole-pack power on multi-battery systems (e.g.
-       * publishing one battery's draw as if it were the total). */
-      double totalPower = 0.0;
-      bool allMatched = true;
-      for (int i = 0; i < capacityCount; i++) {
-         pmAtomValue atom;
-         if (Metric_instance(PCP_DENKI_POWER_NOW, batteryInst[i], 0, &atom, PM_TYPE_DOUBLE) == NULL) {
-            allMatched = false;
-            break;
-         }
-         totalPower += atom.d;
-      }
-      if (allMatched && aggregateComplete) {
-         /* denki PMDA already exposes power_now in watts. */
-         info->powerCurr = totalPower;
-      }
-   }
+   /* energy_now intentionally unread: denki may back it with µAh or µWh per
+    * instance, indistinguishably. Leave energy axis NaN. */
 
-   free(batteryInst);
-   free(batteryCapacity);
-
-   /* denki has no AC sensor; info->ac stays AC_ERROR. */
+   Battery_aggregate(raws, nbat, info);
 }
 
 const char* Platform_getFailedState(void) {
