@@ -1051,7 +1051,7 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
           * the aggregate totals. Counting them toward unitsTotal would
           * prevent the real laptop battery from satisfying the
           * completeness gates and the meter would regress to N/A; adding
-          * their fields to totalEnergy*/totalCharge* would pollute the
+          * their fields to totalEnergyFull/Remain or totalChargeFull/Remain would pollute the
           * pack value while still being skipped from unitsTotal. */
          if (!isPresent || scopeIsDevice)
             goto next;

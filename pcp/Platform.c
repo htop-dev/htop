@@ -1013,8 +1013,12 @@ void Platform_getBattery(BatteryInfo* info) {
          }
          totalPower += atom.d;
       }
-      if (allMatched && aggregateComplete)
-         info->powerCurr = totalPower;
+      if (allMatched && aggregateComplete) {
+         /* denki.bat.power_now is the raw sysfs power_now value in
+          * microwatts; BatteryInfo.powerCurr contracts to watts. Divide
+          * before publishing, matching the linux/freebsd conversion. */
+         info->powerCurr = totalPower / 1000000.0;
+      }
    }
 
    free(batteryInst);
