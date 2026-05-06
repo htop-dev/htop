@@ -733,8 +733,11 @@ void Platform_getBattery(BatteryInfo* info) {
 
    if (cap_max > 0.0) {
       info->percent = 100.0 * cap_current / cap_max;
-      info->energyCurr = cap_current;
-      info->energyFull = cap_max;
+      /* IOPS capacity keys (kIOPSCurrentCapacityKey/kIOPSMaxCapacityKey) are
+       * unitless (typically a 0-100 percentage) and cannot be assigned to
+       * energyCurr/energyFull, which the BatteryInfo contract specifies as
+       * Watt-hours.  Leave the energy fields as NaN; we have no reliable way
+       * to derive Wh from AppleSmartBattery without a nominal voltage. */
    }
 
    io_service_t batt = IOServiceGetMatchingService(iokit_port, IOServiceMatching("AppleSmartBattery"));
