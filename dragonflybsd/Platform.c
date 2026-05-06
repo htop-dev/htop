@@ -417,6 +417,12 @@ void Platform_getBattery(BatteryInfo* info) {
    int unitsCovered = 0;
    bool powerComplete = true;
 
+   /* Energy/charge completeness flags. Cleared when a per-unit ioctl fails
+    * so we don't override the kernel's hw.acpi.battery.life sysctl with a
+    * partial aggregate that omits units we couldn't read. */
+   bool energyComplete = true;
+   bool chargeComplete = true;
+
    /* Count slots that are physically present. ACPI may report N units while
     * one bay is empty; an empty bay's BST succeeds with NOT_PRESENT and zero
     * fields, which would otherwise drag down aggregate percent/energy. */
@@ -424,12 +430,24 @@ void Platform_getBattery(BatteryInfo* info) {
 
    for (int u = 0; u < units; u++) {
       union acpi_battery_ioctl_arg bifArg = { .unit = u };
-      if (ioctl(fd, ACPIIO_BATT_GET_BIF, &bifArg) == -1)
+      if (ioctl(fd, ACPIIO_BATT_GET_BIF, &bifArg) == -1) {
+         /* Failed read: we don't know whether this slot is present or not,
+          * so conservatively mark every aggregate incomplete. Otherwise a
+          * partial sum would override the kernel's authoritative sysctl. */
+         energyComplete = false;
+         chargeComplete = false;
+         powerComplete = false;
          continue;
+      }
 
       union acpi_battery_ioctl_arg bstArg = { .unit = u };
-      if (ioctl(fd, ACPIIO_BATT_GET_BST, &bstArg) == -1)
+      if (ioctl(fd, ACPIIO_BATT_GET_BST, &bstArg) == -1) {
+         /* Same reasoning as the BIF failure above. */
+         energyComplete = false;
+         chargeComplete = false;
+         powerComplete = false;
          continue;
+      }
 
       const struct acpi_bst* bst = &bstArg.bst;
 
@@ -535,22 +553,25 @@ void Platform_getBattery(BatteryInfo* info) {
    /* Only override the sysctl-derived percent when every present battery
     * unit contributed to the totals — partial aggregates would misrepresent
     * the pack against the kernel's hw.acpi.battery.life summary. Compare
-    * against unitsPresent so empty bays don't fail the check. Prefer the
-    * energy (Wh) ratio over the raw-charge (mAh) ratio: on multi-pack
-    * systems with differing voltages the energy ratio is the physically
-    * correct aggregate, while an mAh-weighted ratio is not. */
-   if (unitsPresent > 0 && unitsWithEnergy == unitsPresent && totalEnergyFull > 0) {
+    * against unitsPresent so empty bays don't fail the check, and require
+    * the matching completeness flag (energyComplete / chargeComplete) so a
+    * BIF/BST ioctl failure on any unit forces us back to the kernel's
+    * authoritative summary instead of publishing a partial aggregate.
+    * Prefer the energy (Wh) ratio over the raw-charge (mAh) ratio: on
+    * multi-pack systems with differing voltages the energy ratio is the
+    * physically correct aggregate, while an mAh-weighted ratio is not. */
+   if (energyComplete && unitsPresent > 0 && unitsWithEnergy == unitsPresent && totalEnergyFull > 0) {
       info->percent = ((double) totalEnergyRemain * 100.0) / (double) totalEnergyFull;
       if (totalEnergyRemain >= totalEnergyFull)
          info->percent = 100;
-   } else if (unitsPresent > 0 && unitsWithCharge == unitsPresent && totalChargeFull > 0) {
+   } else if (chargeComplete && unitsPresent > 0 && unitsWithCharge == unitsPresent && totalChargeFull > 0) {
       info->percent = ((double) totalChargeRemain * 100.0) / (double) totalChargeFull;
       if (totalChargeRemain >= totalChargeFull)
          info->percent = 100;
    }
 
    /* Only publish energy totals when complete in watt-hours for every present unit. */
-   if (unitsPresent > 0 && unitsWithEnergy == unitsPresent && totalEnergyFull > 0) {
+   if (energyComplete && unitsPresent > 0 && unitsWithEnergy == unitsPresent && totalEnergyFull > 0) {
       info->energyCurr = (double) totalEnergyRemain / 1000000.0;
       info->energyFull = (double) totalEnergyFull / 1000000.0;
    }
