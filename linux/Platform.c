@@ -934,8 +934,11 @@ static bool parseSysfsBattery(openat_arg_t entryFd, BatteryRaw* out) {
    /* Reject true peripherals: no FULL counter and no instantaneous signal.
     * A system battery with FULL but stale NOW must still contribute so its
     * missing dimension blocks the pack gate. CAPACITY alone is reported by
-    * peripherals like wireless headsets; reject those too. */
-   if (!(out->energyFull > 0) && !(out->chargeFull > 0)
+    * peripherals like wireless headsets; reject those too. Use isfinite()
+    * so a present battery whose firmware reports FULL=0 still enters the
+    * array and the aggregator's > 0 gate (not parse-time filter) closes
+    * the multi-battery all-or-nothing gate. */
+   if (!isfinite(out->energyFull) && !isfinite(out->chargeFull)
          && !isfinite(out->power) && !isfinite(out->current))
       return false;
 
