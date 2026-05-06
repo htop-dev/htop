@@ -1081,9 +1081,12 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
             batteryContributedCharge = true;
          }
 
-         if (!batteryContributedEnergy && !batteryContributedCharge)
-            goto next;
-
+         /* Count every present battery slot, even one whose data lets us
+          * derive only instantaneous power (POWER_NOW or CURRENT_NOW) and
+          * not energy/charge percent. Skipping such a battery from
+          * unitsTotal would let the surviving packs satisfy
+          * unitsContributingEnergy == unitsTotal and silently publish
+          * partial percent/power as if it represented the whole pack. */
          unitsTotal++;
          if (batteryContributedEnergy)
             unitsContributingEnergy++;
