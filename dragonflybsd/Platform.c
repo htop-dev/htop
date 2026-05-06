@@ -402,15 +402,17 @@ void Platform_getBattery(BatteryInfo* info) {
    int64_t totalEnergyFull = 0;
    int unitsWithEnergy = 0;
 
-   /* Parallel charge-or-energy totals — used solely as a fallback for
-    * info->percent when voltage is unknown on mAh systems. */
+   /* Parallel raw-charge totals — used solely as a fallback basis for
+    * info->percent when voltage is unknown on mAh systems and the energy
+    * totals are therefore incomplete. */
    int64_t totalChargeRemain = 0;
    int64_t totalChargeFull = 0;
    int unitsWithCharge = 0;
 
-   /* Power total. Idle batteries (rate == ACPI_BATT_UNKNOWN) contribute 0 W;
-    * a unit is considered "covered" once its BIF/BST data is in hand. Only
-    * publish powerCurr when every unit was covered. */
+   /* Power total. A unit is considered "covered" once its BIF/BST data is
+    * in hand; powerComplete additionally requires every unit's rate to be
+    * known and convertible to watts. Only publish powerCurr when both
+    * conditions hold for every unit. */
    int64_t totalPower = 0;
    int unitsCovered = 0;
    bool powerComplete = true;
@@ -475,16 +477,16 @@ void Platform_getBattery(BatteryInfo* info) {
          totalChargeRemain += batteryChargeCurr;
          totalChargeFull += batteryChargeFull;
          unitsWithCharge++;
-      } else if (haveBatteryEnergyCurr && haveBatteryEnergyFull && batteryEnergyFull > 0) {
-         /* mW-units batteries don't populate the charge fallback explicitly,
-          * but their energy values are equally valid as a percent basis. */
-         totalChargeRemain += batteryEnergyCurr;
-         totalChargeFull += batteryEnergyFull;
-         unitsWithCharge++;
       }
 
-      if (bst->rate == ACPI_BATT_UNKNOWN)
+      if (bst->rate == ACPI_BATT_UNKNOWN) {
+         /* A genuinely unknown rate means the totalPower sum can't represent
+          * this unit. Treat as incomplete so we don't publish a misleading
+          * 0 W aggregate; the 0.0 fallback is reserved for known-zero rates
+          * (e.g., idle on AC). */
+         powerComplete = false;
          continue;
+      }
 
       if (bif->units == ACPI_BIF_UNITS_MW) {
          batteryPower = (int64_t) bst->rate * 1000;
@@ -516,8 +518,15 @@ void Platform_getBattery(BatteryInfo* info) {
 
    /* Only override the sysctl-derived percent when every battery unit
     * contributed to the totals — partial aggregates would misrepresent the
-    * pack against the kernel's hw.acpi.battery.life summary. */
-   if (unitsWithCharge == units && totalChargeFull > 0) {
+    * pack against the kernel's hw.acpi.battery.life summary. Prefer the
+    * energy (Wh) ratio over the raw-charge (mAh) ratio: on multi-pack
+    * systems with differing voltages the energy ratio is the physically
+    * correct aggregate, while an mAh-weighted ratio is not. */
+   if (unitsWithEnergy == units && totalEnergyFull > 0) {
+      info->percent = ((double) totalEnergyRemain * 100.0) / (double) totalEnergyFull;
+      if (totalEnergyRemain >= totalEnergyFull)
+         info->percent = 100;
+   } else if (unitsWithCharge == units && totalChargeFull > 0) {
       info->percent = ((double) totalChargeRemain * 100.0) / (double) totalChargeFull;
       if (totalChargeRemain >= totalChargeFull)
          info->percent = 100;
@@ -529,9 +538,10 @@ void Platform_getBattery(BatteryInfo* info) {
       info->energyFull = (double) totalEnergyFull / 1000000.0;
    }
 
-   /* Only publish power when every unit was covered and convertible to W.
-    * Idle batteries (unknown rate) contribute 0 W and are still considered
-    * complete. */
+   /* Only publish power when every unit was covered and every rate was
+    * known and convertible to W. An unknown rate on any unit leaves the
+    * sysctl-derived powerCurr (NaN) in place rather than reporting a
+    * misleading 0 W aggregate. */
    if (powerComplete && unitsCovered == units) {
       info->powerCurr = (double) totalPower / 1000000.0;
    }
