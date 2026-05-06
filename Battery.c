@@ -57,6 +57,7 @@ void Battery_aggregate(const BatteryRaw* raws, size_t n, BatteryInfo* out) {
    size_t chargeContrib = 0;
    size_t levelContrib = 0;
    size_t powerContrib = 0;
+   size_t capacityAttempts = 0;
 
    for (size_t i = 0; i < n; i++) {
       BatteryRaw bat = raws[i];
@@ -85,6 +86,9 @@ void Battery_aggregate(const BatteryRaw* raws, size_t n, BatteryInfo* out) {
          bat.energyFull = bat.chargeFull * refV;
          bat.energyNow  = bat.chargeNow  * refV;
       }
+
+      if (isfinite(bat.energyFull) || isfinite(bat.chargeFull))
+         capacityAttempts++;
 
       if (bat.energyFull > 0 && bat.energyNow >= 0) {
          sumEnergyFull += bat.energyFull;
@@ -133,7 +137,12 @@ void Battery_aggregate(const BatteryRaw* raws, size_t n, BatteryInfo* out) {
       out->percent    = CLAMP((sumEnergyNow / sumEnergyFull) * 100.0, 0.0, 100.0);
    } else if (chargeComplete && sumChargeFull > 0) {
       out->percent    = CLAMP((sumChargeNow / sumChargeFull) * 100.0, 0.0, 100.0);
-   } else if (levelComplete) {
+   } else if (levelComplete && capacityAttempts == 0) {
+      /* Level fallback applies only when no battery has any FULL counter
+       * to attempt -- e.g. PCP denki and Darwin IOPS.  When a capacity
+       * axis was attempted but failed (Linux FULL=0 on a present pack),
+       * the all-or-nothing intent is to keep percent unknown rather than
+       * publish an unweighted level average. */
       out->percent    = CLAMP(sumLevel / (double) n, 0.0, 100.0);
    }
 

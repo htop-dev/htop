@@ -440,7 +440,11 @@ static bool parseAcpiBattery(int fd, int unit, BatteryRaw* out) {
       if (unitsAreMW) {
          out->energyFull = (double) bix->lfcap / 1000.0;
          out->energyNow  = (double) bst->cap   / 1000.0;
-      } else {
+      } else if (out->voltageDesign > 0 || out->voltageNow > 0) {
+         /* Store charge only when a voltage is available so the aggregator
+          * derives energy from charge * voltage. The FreeBSD getter has no
+          * charge-axis fallback historically; without voltage the per-
+          * battery path stays empty so hw.acpi.battery.life can run. */
          out->chargeFull = (double) bix->lfcap / 1000.0;
          out->chargeNow  = (double) bst->cap   / 1000.0;
       }
