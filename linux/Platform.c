@@ -1046,6 +1046,16 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
             }
          }
 
+         /* Skip empty bays (PRESENT=0) and peripheral batteries
+          * (SCOPE=Device, e.g. wireless mouse) BEFORE any contribution to
+          * the aggregate totals. Counting them toward unitsTotal would
+          * prevent the real laptop battery from satisfying the
+          * completeness gates and the meter would regress to N/A; adding
+          * their fields to totalEnergy*/totalCharge* would pollute the
+          * pack value while still being skipped from unitsTotal. */
+         if (!isPresent || scopeIsDevice)
+            goto next;
+
          if (haveBatteryLevel) {
             // If we have capacity level but not charge or energy, we infer approximate values
             if (haveBatteryChargeFull && !haveBatteryChargeCurr) {
@@ -1104,14 +1114,6 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
             totalChargeRemain += batteryChargeCurr > batteryChargeFull ? batteryChargeFull : batteryChargeCurr;
             batteryContributedCharge = true;
          }
-
-         /* Skip empty bays (PRESENT=0) and peripheral batteries
-          * (SCOPE=Device, e.g. wireless mouse). Counting them toward
-          * unitsTotal would prevent the real laptop battery from
-          * satisfying the completeness gates and the meter would
-          * regress to N/A. */
-         if (!isPresent || scopeIsDevice)
-            goto next;
 
          /* Count every present system battery slot, even one whose data
           * lets us derive only instantaneous power (POWER_NOW or
