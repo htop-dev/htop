@@ -417,6 +417,11 @@ void Platform_getBattery(BatteryInfo* info) {
    int unitsCovered = 0;
    bool powerComplete = true;
 
+   /* Count slots that are physically present. ACPI may report N units while
+    * one bay is empty; an empty bay's BST succeeds with NOT_PRESENT and zero
+    * fields, which would otherwise drag down aggregate percent/energy. */
+   int unitsPresent = 0;
+
    for (int u = 0; u < units; u++) {
       union acpi_battery_ioctl_arg bifArg = { .unit = u };
       if (ioctl(fd, ACPIIO_BATT_GET_BIF, &bifArg) == -1)
@@ -426,10 +431,22 @@ void Platform_getBattery(BatteryInfo* info) {
       if (ioctl(fd, ACPIIO_BATT_GET_BST, &bstArg) == -1)
          continue;
 
+      const struct acpi_bst* bst = &bstArg.bst;
+
+      /* Empty battery bay: BST can succeed with zeroed cap/rate fields and
+       * the NOT_PRESENT state bit set. Skip it entirely — the kernel's
+       * hw.acpi.battery.life sysctl already accounts for absence, and
+       * counting a missing pack as a 0 Wh battery would drag the aggregate
+       * percent and energy totals down. The completeness checks below use
+       * unitsPresent (not units) so absent slots are treated as
+       * nonexistent rather than as units with missing data. */
+      if ((bst->state & ACPI_BATT_STAT_NOT_PRESENT) != 0)
+         continue;
+
+      unitsPresent++;
       unitsCovered++;
 
       const struct acpi_bif* bif = &bifArg.bif;
-      const struct acpi_bst* bst = &bstArg.bst;
 
       bool haveBatteryEnergyCurr = false;
       bool haveBatteryEnergyFull = false;
@@ -516,33 +533,34 @@ void Platform_getBattery(BatteryInfo* info) {
 
    close(fd);
 
-   /* Only override the sysctl-derived percent when every battery unit
-    * contributed to the totals — partial aggregates would misrepresent the
-    * pack against the kernel's hw.acpi.battery.life summary. Prefer the
+   /* Only override the sysctl-derived percent when every present battery
+    * unit contributed to the totals — partial aggregates would misrepresent
+    * the pack against the kernel's hw.acpi.battery.life summary. Compare
+    * against unitsPresent so empty bays don't fail the check. Prefer the
     * energy (Wh) ratio over the raw-charge (mAh) ratio: on multi-pack
     * systems with differing voltages the energy ratio is the physically
     * correct aggregate, while an mAh-weighted ratio is not. */
-   if (unitsWithEnergy == units && totalEnergyFull > 0) {
+   if (unitsPresent > 0 && unitsWithEnergy == unitsPresent && totalEnergyFull > 0) {
       info->percent = ((double) totalEnergyRemain * 100.0) / (double) totalEnergyFull;
       if (totalEnergyRemain >= totalEnergyFull)
          info->percent = 100;
-   } else if (unitsWithCharge == units && totalChargeFull > 0) {
+   } else if (unitsPresent > 0 && unitsWithCharge == unitsPresent && totalChargeFull > 0) {
       info->percent = ((double) totalChargeRemain * 100.0) / (double) totalChargeFull;
       if (totalChargeRemain >= totalChargeFull)
          info->percent = 100;
    }
 
-   /* Only publish energy totals when complete in watt-hours for every unit. */
-   if (unitsWithEnergy == units && totalEnergyFull > 0) {
+   /* Only publish energy totals when complete in watt-hours for every present unit. */
+   if (unitsPresent > 0 && unitsWithEnergy == unitsPresent && totalEnergyFull > 0) {
       info->energyCurr = (double) totalEnergyRemain / 1000000.0;
       info->energyFull = (double) totalEnergyFull / 1000000.0;
    }
 
-   /* Only publish power when every unit was covered and every rate was
-    * known and convertible to W. An unknown rate on any unit leaves the
+   /* Only publish power when every present unit was covered and every rate
+    * was known and convertible to W. An unknown rate on any unit leaves the
     * sysctl-derived powerCurr (NaN) in place rather than reporting a
     * misleading 0 W aggregate. */
-   if (powerComplete && unitsCovered == units) {
+   if (powerComplete && unitsPresent > 0 && unitsCovered == unitsPresent) {
       info->powerCurr = (double) totalPower / 1000000.0;
    }
 }

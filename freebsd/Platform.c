@@ -458,6 +458,14 @@ void Platform_getBattery(BatteryInfo* info) {
       const struct acpi_bix* bix = &bixArg.bix;
       const struct acpi_bst* bst = &bstArg.bst;
 
+      /* Empty battery bay: BST can succeed with zeroed cap/rate fields and
+       * the NOT_PRESENT state bit set. Skip it entirely — the kernel's
+       * hw.acpi.battery.life sysctl already accounts for absence, and
+       * counting a missing pack as a 0 Wh battery would drag the aggregate
+       * percent and energy totals down. */
+      if ((bst->state & ACPI_BATT_STAT_NOT_PRESENT) != 0)
+         continue;
+
       bool haveBatteryEnergyCurr = false;
       bool haveBatteryEnergyFull = false;
       bool haveBatteryPower = false;
