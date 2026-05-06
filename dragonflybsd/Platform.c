@@ -26,6 +26,7 @@ in the source distribution for its full text.
 #include <sys/types.h>
 #include <vm/vm_param.h>
 
+#include "Battery.h"
 #include "CPUMeter.h"
 #include "DateTimeMeter.h"
 #include "FileDescriptorMeter.h"
@@ -367,26 +368,74 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
-void Platform_getBattery(BatteryInfo* info) {
-   *info = (BatteryInfo) {
-      .ac = AC_ERROR,
-      .percent = NAN,
-      .powerCurr = NAN,
-      .energyCurr = NAN,
-      .energyFull = NAN,
+#define ACPI_MAX_BATTERIES 32
+
+/* Read one ACPI battery into canonical SI units. Returns false to skip:
+ * NOT_PRESENT bays drop entirely so they don't block the aggregation gate.
+ * ioctl failures return true with an empty BatteryRaw so the unit still
+ * counts and forces the gate closed. */
+static bool parseAcpiBattery(int fd, int unit, BatteryRaw* out) {
+   *out = (BatteryRaw){
+      .level = NAN,
+      .energyFull = NAN, .energyNow = NAN,
+      .chargeFull = NAN, .chargeNow = NAN,
+      .voltageNow = NAN, .voltageDesign = NAN,
+      .current = NAN, .power = NAN,
    };
 
-   int life;
-   size_t life_len = sizeof(life);
-   if (sysctlbyname("hw.acpi.battery.life", &life, &life_len, NULL, 0) != -1)
-      info->percent = life;
+   union acpi_battery_ioctl_arg bifArg = { .unit = unit };
+   if (ioctl(fd, ACPIIO_BATT_GET_BIF, &bifArg) == -1)
+      return true;
 
-   int acline;
-   size_t acline_len = sizeof(acline);
-   if (sysctlbyname("hw.acpi.acline", &acline, &acline_len, NULL, 0) != -1)
-      info->ac = (acline == 0) ? AC_ABSENT : AC_PRESENT;
+   union acpi_battery_ioctl_arg bstArg = { .unit = unit };
+   if (ioctl(fd, ACPIIO_BATT_GET_BST, &bstArg) == -1)
+      return true;
 
-   /* DragonFly lacks ACPIIO_BATT_GET_UNITS; use sysctl like FreeBSD. */
+   const struct acpi_bif* bif = &bifArg.bif;
+   const struct acpi_bst* bst = &bstArg.bst;
+
+   /* NOT_PRESENT is a synthetic _BST mask value, not a single bit. */
+   if (bst->state == ACPI_BATT_STAT_NOT_PRESENT)
+      return false;
+
+   if (bif->dvol != ACPI_BATT_UNKNOWN && bif->dvol != 0)
+      out->voltageDesign = (double) bif->dvol / 1000.0;
+   if (bst->volt != ACPI_BATT_UNKNOWN && bst->volt != 0)
+      out->voltageNow = (double) bst->volt / 1000.0;
+
+   /* mWh capacity flag: bif->lfcap and bst->cap are in mWh, bst->rate in mW.
+    * Otherwise the same fields are in mAh / mA, with voltage from BIF/BST. */
+   bool unitsAreMW = (bif->units == ACPI_BIF_UNITS_MW);
+
+   if (bif->lfcap != ACPI_BATT_UNKNOWN && bst->cap != ACPI_BATT_UNKNOWN) {
+      if (unitsAreMW) {
+         out->energyFull = (double) bif->lfcap / 1000.0;
+         out->energyNow  = (double) bst->cap   / 1000.0;
+      } else {
+         out->chargeFull = (double) bif->lfcap / 1000.0;
+         out->chargeNow  = (double) bst->cap   / 1000.0;
+      }
+   }
+
+   /* Sign convention: + discharging in htop. CHARGING bit (without DISCHARG)
+    * flips the magnitude; the firmware reports rate as unsigned. */
+   bool charging = (bst->state & ACPI_BATT_STAT_DISCHARG) == 0
+                && (bst->state & ACPI_BATT_STAT_CHARGING) != 0;
+   double sign = charging ? -1.0 : 1.0;
+
+   if (bst->rate != ACPI_BATT_UNKNOWN) {
+      if (unitsAreMW)
+         out->power = sign * ((double) bst->rate / 1000.0);
+      else
+         out->current = sign * ((double) bst->rate / 1000.0);
+   }
+
+   return true;
+}
+
+/* DragonFly lacks ACPIIO_BATT_GET_UNITS; use the sysctl that FreeBSD also
+ * exposes for the ACPI batteries enumeration. */
+static void getAcpiBatteries(BatteryInfo* info) {
    int units = 0;
    size_t units_len = sizeof(units);
    if (sysctlbyname("hw.acpi.battery.units", &units, &units_len, NULL, 0) == -1 || units <= 0)
@@ -396,158 +445,42 @@ void Platform_getBattery(BatteryInfo* info) {
    if (fd == -1)
       return;
 
-   /* µWh (energy preferred for percent). */
-   int64_t totalEnergyRemain = 0;
-   int64_t totalEnergyFull = 0;
-   int unitsWithEnergy = 0;
+   if (units > ACPI_MAX_BATTERIES)
+      units = ACPI_MAX_BATTERIES;
 
-   /* µAh (charge fallback when voltage unknown). */
-   int64_t totalChargeRemain = 0;
-   int64_t totalChargeFull = 0;
-   int unitsWithCharge = 0;
-
-   int64_t totalPower = 0;            /* µW */
-   bool powerComplete = true;
-
-   /* Cleared on ioctl failure to keep partial aggregates out. */
-   bool energyComplete = true;
-   bool chargeComplete = true;
-
-   int unitsPresent = 0;
-
+   BatteryRaw raws[ACPI_MAX_BATTERIES];
+   size_t nbat = 0;
    for (int u = 0; u < units; u++) {
-      union acpi_battery_ioctl_arg bifArg = { .unit = u };
-      if (ioctl(fd, ACPIIO_BATT_GET_BIF, &bifArg) == -1) {
-         /* Read failed; aggregate stays incomplete. */
-         energyComplete = false;
-         chargeComplete = false;
-         powerComplete = false;
-         continue;
-      }
-
-      union acpi_battery_ioctl_arg bstArg = { .unit = u };
-      if (ioctl(fd, ACPIIO_BATT_GET_BST, &bstArg) == -1) {
-         energyComplete = false;
-         chargeComplete = false;
-         powerComplete = false;
-         continue;
-      }
-
-      const struct acpi_bst* bst = &bstArg.bst;
-
-      /* NOT_PRESENT is a synthetic _BST mask value, not a single bit. */
-      if (bst->state == ACPI_BATT_STAT_NOT_PRESENT)
-         continue;
-
-      unitsPresent++;
-
-      const struct acpi_bif* bif = &bifArg.bif;
-
-      bool haveBatteryEnergyCurr = false;
-      bool haveBatteryEnergyFull = false;
-      bool haveBatteryChargeCurr = false;
-      bool haveBatteryChargeFull = false;
-      bool haveBatteryPower = false;
-
-      int64_t batteryEnergyCurr = 0;
-      int64_t batteryEnergyFull = 0;
-      int64_t batteryChargeCurr = 0;
-      int64_t batteryChargeFull = 0;
-      int64_t batteryPower = 0;
-
-      if (bif->lfcap != ACPI_BATT_UNKNOWN && bst->cap != ACPI_BATT_UNKNOWN) {
-         if (bif->units == ACPI_BIF_UNITS_MW) {
-            batteryEnergyCurr = (int64_t) bst->cap * 1000;
-            batteryEnergyFull = (int64_t) bif->lfcap * 1000;
-            haveBatteryEnergyCurr = true;
-            haveBatteryEnergyFull = true;
-         } else {
-            /* Charge fallback for percent when voltage is unknown. */
-            batteryChargeCurr = (int64_t) bst->cap;
-            batteryChargeFull = (int64_t) bif->lfcap;
-            haveBatteryChargeCurr = true;
-            haveBatteryChargeFull = true;
-
-            /* Design voltage for energy reference. */
-            uint32_t referenceVoltage = (bif->dvol != ACPI_BATT_UNKNOWN && bif->dvol != 0)
-                                         ? bif->dvol
-                                         : bst->volt;
-            if (referenceVoltage != ACPI_BATT_UNKNOWN && referenceVoltage != 0) {
-               batteryEnergyCurr = (int64_t) bst->cap * referenceVoltage;
-               batteryEnergyFull = (int64_t) bif->lfcap * referenceVoltage;
-               haveBatteryEnergyCurr = true;
-               haveBatteryEnergyFull = true;
-            }
-         }
-      }
-
-      /* Clamp curr <= full per battery (firmware may report cap > lfcap). */
-      if (haveBatteryEnergyCurr && haveBatteryEnergyFull && batteryEnergyFull > 0) {
-         totalEnergyRemain += MINIMUM(batteryEnergyCurr, batteryEnergyFull);
-         totalEnergyFull += batteryEnergyFull;
-         unitsWithEnergy++;
-      }
-
-      if (haveBatteryChargeCurr && haveBatteryChargeFull && batteryChargeFull > 0) {
-         totalChargeRemain += MINIMUM(batteryChargeCurr, batteryChargeFull);
-         totalChargeFull += batteryChargeFull;
-         unitsWithCharge++;
-      }
-
-      if (bst->rate == ACPI_BATT_UNKNOWN) {
-         powerComplete = false;
-         continue;
-      }
-
-      if (bst->rate == 0) {
-         /* I=0 ⇒ 0 W known regardless of voltage. */
-         haveBatteryPower = true;
-      } else if (bif->units == ACPI_BIF_UNITS_MW) {
-         batteryPower = (int64_t) bst->rate * 1000;
-         haveBatteryPower = true;
-      } else {
-         /* Present voltage for I*V. */
-         uint32_t rateVoltage = (bst->volt != ACPI_BATT_UNKNOWN && bst->volt != 0)
-                                 ? bst->volt
-                                 : bif->dvol;
-
-         if (rateVoltage != ACPI_BATT_UNKNOWN && rateVoltage != 0) {
-            batteryPower = (int64_t) bst->rate * rateVoltage;
-            haveBatteryPower = true;
-         }
-      }
-
-      if (!haveBatteryPower) {
-         powerComplete = false;
-         continue;
-      }
-
-      if ((bst->state & ACPI_BATT_STAT_DISCHARG) == 0 &&
-         (bst->state & ACPI_BATT_STAT_CHARGING) != 0)
-         batteryPower = -batteryPower;
-
-      totalPower += batteryPower;
+      if (parseAcpiBattery(fd, u, &raws[nbat]))
+         nbat++;
    }
-
    close(fd);
 
-   /* Energy ratio preferred (mAh-weighted is wrong on mixed-voltage packs). */
-   if (energyComplete && unitsPresent > 0 && unitsWithEnergy == unitsPresent && totalEnergyFull > 0) {
-      info->percent = ((double) totalEnergyRemain * 100.0) / (double) totalEnergyFull;
-      if (totalEnergyRemain >= totalEnergyFull)
-         info->percent = 100;
-   } else if (chargeComplete && unitsPresent > 0 && unitsWithCharge == unitsPresent && totalChargeFull > 0) {
-      info->percent = ((double) totalChargeRemain * 100.0) / (double) totalChargeFull;
-      if (totalChargeRemain >= totalChargeFull)
-         info->percent = 100;
-   }
+   Battery_aggregate(raws, nbat, info);
+}
 
-   if (energyComplete && unitsPresent > 0 && unitsWithEnergy == unitsPresent && totalEnergyFull > 0) {
-      info->energyCurr = (double) totalEnergyRemain / 1000000.0;
-      info->energyFull = (double) totalEnergyFull / 1000000.0;
-   }
+void Platform_getBattery(BatteryInfo* info) {
+   *info = (BatteryInfo) {
+      .ac = AC_ERROR,
+      .percent = NAN,
+      .powerCurr = NAN,
+      .energyCurr = NAN,
+      .energyFull = NAN,
+   };
 
-   if (powerComplete && unitsPresent > 0) {
-      info->powerCurr = (double) totalPower / 1000000.0;
+   int acline;
+   size_t acline_len = sizeof(acline);
+   if (sysctlbyname("hw.acpi.acline", &acline, &acline_len, NULL, 0) != -1)
+      info->ac = (acline == 0) ? AC_ABSENT : AC_PRESENT;
+
+   getAcpiBatteries(info);
+
+   /* hw.acpi.battery.life is the ACPI BIOS-aggregated percent; use it only
+    * when the per-battery path could not produce a reading. */
+   if (!isfinite(info->percent)) {
+      int life;
+      size_t life_len = sizeof(life);
+      if (sysctlbyname("hw.acpi.battery.life", &life, &life_len, NULL, 0) != -1)
+         info->percent = life;
    }
 }
