@@ -858,18 +858,22 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
    if (!dir)
       return;
 
-   uint64_t totalEnergyFull = 0;
+   uint64_t totalEnergyFull = 0;     /* µWh, energy-based or charge*voltage */
    uint64_t totalEnergyRemain = 0;
-   uint64_t totalChargeFull = 0;
+   uint64_t totalChargeFull = 0;     /* µAh, raw charge counters */
    uint64_t totalChargeRemain = 0;
-   int64_t totalPower = 0;
+   int64_t totalPower = 0;           /* µW */
 
-   bool havePower = false;
-   /* Tracks whether every contributing battery had energy data (or charge+voltage
-    * convertible to energy). Cleared the first time we fall back to a charge-only
-    * accumulation, so the aggregate energy fields stay NaN rather than publishing
-    * a partial Wh total that silently omits part of the pack. */
-   bool energyComplete = true;
+   /* Per-unit contribution tracking. A battery that exposes only charge counters
+    * with voltage contributes to BOTH accumulators (raw µAh into totalCharge*,
+    * converted µWh into totalEnergy*); a charge-only battery without voltage
+    * contributes only to totalCharge*; a pure-energy battery contributes only
+    * to totalEnergy*. The percent calculation then prefers whichever accumulator
+    * received every battery, avoiding the dimensionally invalid sum of µWh+µAh. */
+   int unitsTotal = 0;
+   int unitsContributingEnergy = 0;
+   int unitsContributingCharge = 0;
+   int unitsContributingPower = 0;
 
    const struct dirent* dirEntry;
    while ((dirEntry = readdir(dir))) {
@@ -1013,10 +1017,12 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
             }
          }
 
-         if (haveBatteryEnergyFull && haveBatteryEnergyCurr) {
-            // No need for conversion needed
-         } else if (haveBatteryChargeFull && haveBatteryChargeCurr && haveBatteryVoltage) {
-            // Convert charge to energy using voltage
+         /* Convert charge+voltage to energy when energy is not directly reported,
+          * but keep the raw charge values: a charge+voltage battery contributes
+          * to both accumulators so the charge total stays complete on packs that
+          * mix charge+voltage units with charge-only units. */
+         if (!(haveBatteryEnergyFull && haveBatteryEnergyCurr)
+               && haveBatteryChargeFull && haveBatteryChargeCurr && haveBatteryVoltage) {
             batteryEnergyFull = (batteryChargeFull * batteryVoltage) / 1000000;
             haveBatteryEnergyFull = true;
 
@@ -1024,17 +1030,29 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
             haveBatteryEnergyCurr = true;
          }
 
+         bool batteryContributedEnergy = false;
+         bool batteryContributedCharge = false;
+
          if (haveBatteryEnergyFull && haveBatteryEnergyCurr && batteryEnergyFull > 0) {
             totalEnergyFull += batteryEnergyFull;
             totalEnergyRemain += batteryEnergyCurr > batteryEnergyFull ? batteryEnergyFull : batteryEnergyCurr;
-         } else if (haveBatteryChargeFull && haveBatteryChargeCurr && batteryChargeFull > 0) {
-            // No voltage available to convert charge to energy; accumulate charge so
-            // that the percentage can still be computed. The energy fields remain
-            // unset for this battery, so the aggregate energy total is now partial.
+            batteryContributedEnergy = true;
+         }
+
+         if (haveBatteryChargeFull && haveBatteryChargeCurr && batteryChargeFull > 0) {
             totalChargeFull += batteryChargeFull;
             totalChargeRemain += batteryChargeCurr > batteryChargeFull ? batteryChargeFull : batteryChargeCurr;
-            energyComplete = false;
+            batteryContributedCharge = true;
          }
+
+         if (!batteryContributedEnergy && !batteryContributedCharge)
+            goto next;
+
+         unitsTotal++;
+         if (batteryContributedEnergy)
+            unitsContributingEnergy++;
+         if (batteryContributedCharge)
+            unitsContributingCharge++;
 
          if (!haveBatteryPower && haveBatteryCurrent && haveBatteryVoltage) {
             batteryPower = (batteryCurrent * batteryVoltage) / 1000000;
@@ -1043,7 +1061,7 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
 
          if (haveBatteryPower) {
             totalPower += batteryPower;
-            havePower = true;
+            unitsContributingPower++;
          }
       } else if (type == AC) {
          if (info->ac != AC_ERROR)
@@ -1068,26 +1086,32 @@ next:
 
    closedir(dir);
 
-   /* Only publish aggregate Wh values when every contributing battery had energy
-    * data (or charge + voltage convertible to energy). On a mixed pack where one
-    * battery exposed only charge counters without voltage, totalEnergyFull omits
-    * that battery and would understate the pack — leave the fields NaN instead. */
+   /* Publish aggregate Wh only when every contributing battery had energy data
+    * (or charge + voltage convertible to energy). On a mixed pack where one
+    * battery exposes only charge counters without voltage, totalEnergyFull
+    * omits that battery and would understate the pack — leave the fields NaN. */
+   bool energyComplete = (unitsTotal > 0) && (unitsContributingEnergy == unitsTotal);
+   bool chargeComplete = (unitsTotal > 0) && (unitsContributingCharge == unitsTotal);
+
    if (energyComplete && totalEnergyFull > 0) {
       info->energyCurr = (double) totalEnergyRemain / 1000000.0;
       info->energyFull = (double) totalEnergyFull / 1000000.0;
    }
 
-   // Compute percentage from whichever accumulator has data. If both are
-   // populated (mixed-battery system where some entries lack voltage), combine
-   // them; this is dimensionally inexact but matches pre-PR behaviour and
-   // keeps the meter functional rather than reporting N/A.
-   uint64_t totalFull = totalEnergyFull + totalChargeFull;
-   uint64_t totalRemain = totalEnergyRemain + totalChargeRemain;
-   if (totalFull > 0) {
-      info->percent = ((double) totalRemain * 100.0) / (double) totalFull;
+   /* Compute percent from a single, dimensionally consistent accumulator: prefer
+    * the energy total when every battery contributed to it, otherwise the charge
+    * total when every battery contributed to it. Summing µWh + µAh would be
+    * dimensionally invalid and voltage-weighted in arbitrary ways on mixed packs. */
+   if (energyComplete && totalEnergyFull > 0) {
+      info->percent = ((double) totalEnergyRemain * 100.0) / (double) totalEnergyFull;
+   } else if (chargeComplete && totalChargeFull > 0) {
+      info->percent = ((double) totalChargeRemain * 100.0) / (double) totalChargeFull;
    }
 
-   if (havePower) {
+   /* Publish aggregate power only when every contributing battery reported
+    * usable power (either POWER_NOW directly, or CURRENT_NOW with voltage).
+    * Otherwise totalPower omits part of the pack and would understate draw. */
+   if (unitsTotal > 0 && unitsContributingPower == unitsTotal) {
       info->powerCurr = (double) totalPower / 1000000.0;
    }
 }
