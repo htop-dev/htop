@@ -892,7 +892,7 @@ typedef struct {
    int unitsContributingPower;
 } SysfsAggregate;
 
-static void parseSysfsBattery(int entryFd, SysfsBattery* bat) {
+static void parseSysfsBattery(openat_arg_t entryFd, SysfsBattery* bat) {
    *bat = (SysfsBattery){ .isPresent = true };
 
    char buffer[1024];
