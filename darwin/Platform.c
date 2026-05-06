@@ -50,6 +50,7 @@ in the source distribution for its full text.
 #include "SysArchMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
+#include "XUtils.h"
 #include "darwin/DarwinMachine.h"
 #include "darwin/PlatformHelpers.h"
 #include "generic/fdstat_sysctl.h"
