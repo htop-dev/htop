@@ -464,8 +464,8 @@ void Platform_getBattery(BatteryInfo* info) {
    int unitsTotal = 0;
    int unitsContributingEnergy = 0;
    int unitsContributingCharge = 0;
+   int unitsContributingPower = 0;
 
-   bool havePower = false;
    intmax_t totalPower = 0;
 
    *info = (BatteryInfo) {
@@ -653,7 +653,8 @@ void Platform_getBattery(BatteryInfo* info) {
 
          if (haveBatteryChargeRate || haveBatteryDischargeRate) {
             totalPower += batteryDischargeRate - batteryChargeRate;
-            havePower = true;
+            if (batteryContributedEnergy || batteryContributedCharge)
+               unitsContributingPower++;
          }
       }
 
@@ -685,7 +686,10 @@ void Platform_getBattery(BatteryInfo* info) {
       info->energyFull = (double) totalEnergyFull / 1000000.0;
    }
 
-   if (havePower) {
+   /* Publish aggregate power only when every counted battery contributed
+      power. Otherwise totalPower would omit a sibling pack's draw and be
+      published as the whole-pack rate, understating the true power. */
+   if (unitsTotal > 0 && unitsContributingPower == unitsTotal) {
       info->powerCurr = (double) totalPower / 1000000.0;
    }
 
