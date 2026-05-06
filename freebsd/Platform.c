@@ -16,7 +16,6 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
-#include <dev/acpica/acpiio.h>
 #include <net/if.h>
 #include <net/if_mib.h>
 #include <sys/_types.h>
@@ -28,6 +27,9 @@ in the source distribution for its full text.
 #include <sys/sysctl.h>
 #include <sys/time.h>
 #include <sys/types.h>
+/* <dev/acpica/acpiio.h> uses _IOWR macros from <sys/ioccom.h> (pulled in via
+ * <sys/ioctl.h>) but does not include them itself; keep this after <sys/ioctl.h>. */
+#include <dev/acpica/acpiio.h>
 #include <vm/vm_param.h>
 
 #include "CPUMeter.h"
@@ -504,6 +506,13 @@ void Platform_getBattery(BatteryInfo* info) {
                haveBatteryPower = true;
             }
          }
+      }
+
+      /* htop convention: positive = discharging, negative = charging.
+       * ACPI _BST reports rate as a magnitude; charging direction is in bst->state. */
+      if (bst->state != ACPI_BATT_STAT_NOT_PRESENT &&
+          (bst->state & ACPI_BATT_STAT_CHARGING) != 0) {
+         batteryPower = -batteryPower;
       }
 
       if (haveBatteryPower) {
