@@ -34,6 +34,7 @@ in the source distribution for its full text.
 #include <IOKit/ps/IOPSKeys.h>
 #include <IOKit/storage/IOBlockStorageDriver.h>
 
+#include "Battery.h"
 #include "CPUMeter.h"
 #include "CRT.h"
 #include "DateTimeMeter.h"
@@ -682,6 +683,94 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
+#define IOPS_MAX_BATTERIES 32
+
+/* Walk IOPS power sources, populate per-source BatteryRaw entries with
+ * the IOPS unitless capacity (treated as energy: percent = sum/sum*100
+ * stays correct under the aggregator's energy axis). Sets info->ac as a
+ * side effect. Returns the number of internal-type sources captured. */
+static size_t parseIOPS(BatteryInfo* info, BatteryRaw* raws, size_t cap) {
+   CFTypeRef power_sources = IOPSCopyPowerSourcesInfo();
+   if (!power_sources)
+      return 0;
+
+   CFArrayRef list = IOPSCopyPowerSourcesList(power_sources);
+   if (!list) {
+      CFRelease(power_sources);
+      return 0;
+   }
+
+   size_t nbat = 0;
+   size_t len = CFArrayGetCount(list);
+   for (size_t i = 0; i < len && nbat < cap; ++i) {
+      CFDictionaryRef power_source = IOPSGetPowerSourceDescription(power_sources, CFArrayGetValueAtIndex(list, i)); /* GET rule */
+      if (!power_source)
+         continue;
+
+      CFStringRef power_type = CFDictionaryGetValue(power_source, CFSTR(kIOPSTransportTypeKey)); /* GET rule */
+      if (kCFCompareEqualTo != CFStringCompare(power_type, CFSTR(kIOPSInternalType), 0))
+         continue;
+
+      CFStringRef power_state = CFDictionaryGetValue(power_source, CFSTR(kIOPSPowerSourceStateKey));
+      if (info->ac != AC_PRESENT)
+         info->ac = (kCFCompareEqualTo == CFStringCompare(power_state, CFSTR(kIOPSACPowerValue), 0)) ? AC_PRESENT : AC_ABSENT;
+
+      raws[nbat] = (BatteryRaw){
+         .level = NAN,
+         .energyFull = NAN, .energyNow = NAN,
+         .chargeFull = NAN, .chargeNow = NAN,
+         .voltageNow = NAN, .voltageDesign = NAN,
+         .current = NAN, .power = NAN,
+      };
+
+      double cur = 0.0, max = 0.0;
+      if (CFNumberGetValue(CFDictionaryGetValue(power_source, CFSTR(kIOPSCurrentCapacityKey)), kCFNumberDoubleType, &cur)
+            && CFNumberGetValue(CFDictionaryGetValue(power_source, CFSTR(kIOPSMaxCapacityKey)), kCFNumberDoubleType, &max)
+            && max > 0.0) {
+         /* IOPS values are unitless; storing them on the energy axis lets
+          * the aggregator compute a correctly capacity-weighted percent
+          * across multiple sources. energyCurr / energyFull on BatteryInfo
+          * will be the same unitless sum, which BatteryMeter ignores. */
+         raws[nbat].energyFull = max;
+         raws[nbat].energyNow = cur;
+      }
+
+      nbat++;
+   }
+
+   CFRelease(list);
+   CFRelease(power_sources);
+   return nbat;
+}
+
+/* AppleSmartBattery exposes a single system-wide rate (not per-source);
+ * read it independently of the IOPS per-battery loop so multi-battery
+ * Macs do not lose powerCurr to the aggregator's all-or-nothing gate.
+ * IOKit Amperage sign is reversed from htop's (+ = charging on IOKit,
+ * + = discharging on htop). */
+static void parseSmartBatteryPower(BatteryInfo* info) {
+   io_service_t batt = IOServiceGetMatchingService(iokit_port, IOServiceMatching("AppleSmartBattery"));
+   if (!batt)
+      return;
+
+   CFNumberRef ampRef = IORegistryEntryCreateCFProperty(batt, CFSTR("Amperage"), kCFAllocatorDefault, 0);
+   CFNumberRef voltRef = IORegistryEntryCreateCFProperty(batt, CFSTR("Voltage"), kCFAllocatorDefault, 0);
+
+   double ampMA = 0.0, voltMV = 0.0;
+   if (ampRef && voltRef
+         && CFNumberGetValue(ampRef, kCFNumberDoubleType, &ampMA)
+         && CFNumberGetValue(voltRef, kCFNumberDoubleType, &voltMV)
+         && voltMV > 0.0) {
+      info->powerCurr = -(ampMA * voltMV) / 1e6;
+   }
+
+   if (ampRef)
+      CFRelease(ampRef);
+   if (voltRef)
+      CFRelease(voltRef);
+   IOObjectRelease(batt);
+}
+
 void Platform_getBattery(BatteryInfo* info) {
    *info = (BatteryInfo) {
       .ac = AC_ERROR,
@@ -691,84 +780,15 @@ void Platform_getBattery(BatteryInfo* info) {
       .energyFull = NAN,
    };
 
-   CFArrayRef list = NULL;
+   BatteryRaw raws[IOPS_MAX_BATTERIES];
+   size_t nbat = parseIOPS(info, raws, IOPS_MAX_BATTERIES);
+   Battery_aggregate(raws, nbat, info);
 
-   CFTypeRef power_sources = IOPSCopyPowerSourcesInfo();
-   if (!power_sources)
-      goto cleanup;
+   /* IOPS capacity is unitless; energyCurr/energyFull are not real Wh. */
+   info->energyCurr = NAN;
+   info->energyFull = NAN;
 
-   list = IOPSCopyPowerSourcesList(power_sources);
-   if (!list)
-      goto cleanup;
-
-   double cap_current = 0.0;
-   double cap_max = 0.0;
-
-   /* Get the battery */
-   size_t len = CFArrayGetCount(list);
-   for (size_t i = 0; i < len; ++i) {
-      CFDictionaryRef power_source = IOPSGetPowerSourceDescription(power_sources, CFArrayGetValueAtIndex(list, i)); /* GET rule */
-
-      if (!power_source)
-         continue;
-
-      CFStringRef power_type = CFDictionaryGetValue(power_source, CFSTR(kIOPSTransportTypeKey)); /* GET rule */
-
-      if (kCFCompareEqualTo != CFStringCompare(power_type, CFSTR(kIOPSInternalType), 0))
-         continue;
-
-      /* Determine the AC state */
-      CFStringRef power_state = CFDictionaryGetValue(power_source, CFSTR(kIOPSPowerSourceStateKey));
-
-      if (info->ac != AC_PRESENT)
-         info->ac = (kCFCompareEqualTo == CFStringCompare(power_state, CFSTR(kIOPSACPowerValue), 0)) ? AC_PRESENT : AC_ABSENT;
-
-      /* Get the percentage remaining */
-      double tmp;
-      CFNumberGetValue(CFDictionaryGetValue(power_source, CFSTR(kIOPSCurrentCapacityKey)), kCFNumberDoubleType, &tmp);
-      cap_current += tmp;
-      CFNumberGetValue(CFDictionaryGetValue(power_source, CFSTR(kIOPSMaxCapacityKey)), kCFNumberDoubleType, &tmp);
-      cap_max += tmp;
-   }
-
-   if (cap_max > 0.0) {
-      /* Clamp to [0..100]; IOPS may report cap_current > cap_max. */
-      double pct = 100.0 * cap_current / cap_max;
-      info->percent = pct > 100.0 ? 100.0 : (pct < 0.0 ? 0.0 : pct);
-      /* IOPS capacity is unitless; energyCurr/energyFull stay NaN. */
-   }
-
-   io_service_t batt = IOServiceGetMatchingService(iokit_port, IOServiceMatching("AppleSmartBattery"));
-   if (batt) {
-      CFNumberRef ampRef = IORegistryEntryCreateCFProperty(batt, CFSTR("Amperage"), kCFAllocatorDefault, 0);
-      CFNumberRef voltRef = IORegistryEntryCreateCFProperty(batt, CFSTR("Voltage"), kCFAllocatorDefault, 0);
-
-      if (ampRef && voltRef) {
-         double ampMA = 0.0;
-         CFNumberGetValue(ampRef, kCFNumberDoubleType, &ampMA);
-
-         double voltMV = 0.0;
-         CFNumberGetValue(voltRef, kCFNumberDoubleType, &voltMV);
-
-         /* IOKit Amperage sign is reversed; htop wants positive=discharging. */
-         if (voltMV > 0.0)
-            info->powerCurr = -(ampMA * voltMV) / 1e6;
-      }
-
-      if (ampRef)
-         CFRelease(ampRef);
-      if (voltRef)
-         CFRelease(voltRef);
-
-      IOObjectRelease(batt);
-   }
-
-cleanup:
-   if (list)
-      CFRelease(list);
-
-   if (power_sources)
-      CFRelease(power_sources);
+   parseSmartBatteryPower(info);
 }
 
 void Platform_gettime_monotonic(uint64_t* msec) {
