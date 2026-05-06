@@ -1115,6 +1115,19 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
             batteryContributedCharge = true;
          }
 
+         /* A battery slot that exposes no usable counter at all (only
+          * CAPACITY level, or a SCOPE-less peripheral) cannot contribute
+          * to any aggregate. Counting it toward unitsTotal would block
+          * the laptop pack's percent/energy/power gates and the meter
+          * would regress to N/A on hosts where such a device sits next
+          * to the real battery. Skip if neither energy/charge nor
+          * instantaneous power is available; power-only batteries
+          * (POWER_NOW or CURRENT_NOW without FULL counters) still
+          * count via the haveBatteryPower / haveBatteryCurrent paths. */
+         if (!batteryContributedEnergy && !batteryContributedCharge
+               && !haveBatteryPower && !haveBatteryCurrent)
+            goto next;
+
          /* Count every present system battery slot, even one whose data
           * lets us derive only instantaneous power (POWER_NOW or
           * CURRENT_NOW) and not energy/charge percent. Skipping such a
