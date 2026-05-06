@@ -882,7 +882,10 @@ void Platform_getBattery(BatteryInfo* info) {
 
    int i, count = Metric_instanceCount(PCP_DENKI_CAPACITY);
    if (count < 1) {
-      info->ac = AC_PRESENT;
+      /* No battery instances. The denki PMDA does not expose AC adapter
+       * state, so absence of batteries does not imply AC presence (e.g. a
+       * desktop with denki loaded but no batteries). Leave info->ac at its
+       * initial AC_ERROR ("AC unknown") rather than claiming AC_PRESENT. */
       return;
    }
 
@@ -914,39 +917,56 @@ void Platform_getBattery(BatteryInfo* info) {
          /* Single battery: use its capacity directly; no aggregation needed. */
          if (isNonnegative(batteryCapacity[0].d))
             info->percent = CLAMP(batteryCapacity[0].d, 0.0, 100.0);
-      } else if (haveEnergy) {
-         /* Multi-battery: weight by inferred per-instance full energy
-          * (energy_now / (capacity/100)). This yields the correct overall
-          * percent for unequal-sized batteries, e.g. 90Wh@50% + 10Wh@100%
-          * reports 55%, not the 75% a simple average would give. */
-         double totalEnergyNow = 0.0;
-         double totalEnergyFull = 0.0;
-         for (i = 0; i < count; i++) {
-            double cap = batteryCapacity[i].d;
-            double eNow = batteryEnergyCurr[i].d;
-            if (isNonnegative(cap) && cap > 0.0 && isNonnegative(eNow)) {
-               double eFull = eNow / (cap / 100.0);
-               totalEnergyNow += eNow;
-               totalEnergyFull += eFull;
-            }
-         }
-         if (totalEnergyFull > 0.0) {
-            info->percent = CLAMP((totalEnergyNow / totalEnergyFull) * 100.0, 0.0, 100.0);
-         }
       } else {
-         /* Multi-battery with no energy_now: fall back to a simple average.
-          * This is inaccurate when batteries have unequal capacities, but
-          * without per-instance energy data we cannot infer their sizes. */
-         double total = 0.0;
-         int valid = 0;
+         /* Multi-battery aggregation. Energy-weighted is preferred for
+          * unequal-sized batteries (e.g. 90Wh@50% + 10Wh@100% should report
+          * 55%, not 75%), but inferring per-instance full energy from
+          * energy_now / (capacity/100) requires capacity > 0. If any
+          * instance is depleted we cannot infer its size, so fall back to
+          * a simple unweighted capacity average — less accurate when
+          * batteries differ in size, but it correctly handles 0% values
+          * (equal batteries at 0% and 100% report 50%, not 100%; all at
+          * 0% report 0%, not NaN). */
+         bool anyZeroCapacity = false;
          for (i = 0; i < count; i++) {
-            if (isNonnegative(batteryCapacity[i].d)) {
-               total += batteryCapacity[i].d;
-               valid++;
+            /* "Capacity is exactly zero": nonnegative (rules out NaN and
+             * negatives) and not positive. Avoids -Wfloat-equal. */
+            if (isNonnegative(batteryCapacity[i].d) && !isPositive(batteryCapacity[i].d)) {
+               anyZeroCapacity = true;
+               break;
             }
          }
-         if (valid > 0) {
-            info->percent = CLAMP(total / valid, 0.0, 100.0);
+         if (haveEnergy && !anyZeroCapacity) {
+            /* Energy-weighted: every instance has cap > 0 so per-instance
+             * full energy is well-defined. */
+            double totalEnergyNow = 0.0;
+            double totalEnergyFull = 0.0;
+            for (i = 0; i < count; i++) {
+               double cap = batteryCapacity[i].d;
+               double eNow = batteryEnergyCurr[i].d;
+               if (isNonnegative(cap) && cap > 0.0 && isNonnegative(eNow)) {
+                  double eFull = eNow / (cap / 100.0);
+                  totalEnergyNow += eNow;
+                  totalEnergyFull += eFull;
+               }
+            }
+            if (totalEnergyFull > 0.0) {
+               info->percent = CLAMP((totalEnergyNow / totalEnergyFull) * 100.0, 0.0, 100.0);
+            }
+         } else {
+            /* Unweighted average: used when energy_now is unavailable or
+             * any instance is depleted (so we cannot infer its size). */
+            double total = 0.0;
+            int valid = 0;
+            for (i = 0; i < count; i++) {
+               if (isNonnegative(batteryCapacity[i].d)) {
+                  total += batteryCapacity[i].d;
+                  valid++;
+               }
+            }
+            if (valid > 0) {
+               info->percent = CLAMP(total / valid, 0.0, 100.0);
+            }
          }
       }
    }
