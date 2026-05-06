@@ -935,6 +935,16 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
          bool haveBatteryPower = false;
          bool haveBatteryStatus = false;
 
+         /* Skip filters: an empty bay reports POWER_SUPPLY_PRESENT=0, and
+          * peripheral batteries (e.g. wireless mouse, headset) report
+          * POWER_SUPPLY_SCOPE=Device rather than System. Counting them as
+          * required contributors would suppress the real laptop battery's
+          * percent because they cannot satisfy unitsContributingEnergy ==
+          * unitsTotal. PRESENT defaults to true: built-in laptop batteries
+          * frequently omit the field entirely. */
+         bool isPresent = true;
+         bool scopeIsDevice = false;
+
          uint64_t batteryEnergyFull = 0;
          uint64_t batteryEnergyCurr = 0;
 
@@ -963,9 +973,23 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
                continue;
             }
 
+            /* SCOPE is a string ("System" or "Device"). Only system-scope
+             * batteries belong in the laptop pack aggregate. */
+            char scope[32] = {0};
+            if (sscanf(line, "POWER_SUPPLY_SCOPE=%31s", scope) == 1) {
+               if (String_eq(scope, "Device"))
+                  scopeIsDevice = true;
+               continue;
+            }
+
             int64_t val = 0;
             if (2 != sscanf(line, "POWER_SUPPLY_%99[^=]=%" SCNd64, field, &val))
                continue;
+
+            if (String_eq(field, "PRESENT")) {
+               isPresent = (val != 0);
+               continue;
+            }
 
             if (String_eq(field, "CAPACITY")) {
                batteryLevel = val;
@@ -1081,10 +1105,18 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
             batteryContributedCharge = true;
          }
 
-         /* Count every present battery slot, even one whose data lets us
-          * derive only instantaneous power (POWER_NOW or CURRENT_NOW) and
-          * not energy/charge percent. Skipping such a battery from
-          * unitsTotal would let the surviving packs satisfy
+         /* Skip empty bays (PRESENT=0) and peripheral batteries
+          * (SCOPE=Device, e.g. wireless mouse). Counting them toward
+          * unitsTotal would prevent the real laptop battery from
+          * satisfying the completeness gates and the meter would
+          * regress to N/A. */
+         if (!isPresent || scopeIsDevice)
+            goto next;
+
+         /* Count every present system battery slot, even one whose data
+          * lets us derive only instantaneous power (POWER_NOW or
+          * CURRENT_NOW) and not energy/charge percent. Skipping such a
+          * battery from unitsTotal would let the surviving packs satisfy
           * unitsContributingEnergy == unitsTotal and silently publish
           * partial percent/power as if it represented the whole pack. */
          unitsTotal++;
