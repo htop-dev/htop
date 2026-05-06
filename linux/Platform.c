@@ -991,18 +991,20 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
                continue;
             }
 
-            /* Reject negative sysfs values for the unsigned uint64_t
-             * accumulators below. The kernel publishes -1 on some drivers
-             * to mean "unknown" (CAPACITY is the documented case, others
-             * are quirks). Storing a negative val into an unsigned variable
-             * wraps to a huge value; the downstream `> 0` gates pass
-             * (huge unsigned > 0), and the published percent / energyCurr /
-             * energyFull become astronomical. Treat negative as
-             * "field absent". batteryCurrent and batteryPower are int64_t
-             * so they handle negatives natively and skip this filter. */
-            if (val < 0
-                  && !String_eq(field, "CURRENT_NOW")
-                  && !String_eq(field, "POWER_NOW"))
+            /* Reject negative sysfs values for fields that are documented
+             * as unsigned. The kernel publishes -1 on some drivers to
+             * mean "unknown"; treating that as a magnitude would produce
+             * astronomical wrapped values for uint64_t destinations and
+             * a misleading near-zero power reading for POWER_NOW (which
+             * the kernel ABI documents as an unsigned magnitude — see
+             * Documentation/ABI/testing/sysfs-class-power).
+             *
+             * Only CURRENT_NOW is signed: its sign carries the kernel's
+             * charge/discharge direction (convention varies by driver,
+             * but the sign is meaningful). Exempt CURRENT_NOW from the
+             * negative-rejection so its native sign reaches the abs +
+             * STATUS-based sign normalization below. */
+            if (val < 0 && !String_eq(field, "CURRENT_NOW"))
                continue;
 
             if (String_eq(field, "CAPACITY")) {

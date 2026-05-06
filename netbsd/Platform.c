@@ -637,7 +637,15 @@ void Platform_getBattery(BatteryInfo* info) {
             }
          }
 
-         if (haveChargeRate) {
+         /* envsys "charge rate" / "discharge rate" are unsigned magnitudes
+          * (the sign is encoded by which sensor name is used, not by the
+          * cur-value). Some drivers publish a negative cur-value as a
+          * sentinel for "unknown" while leaving the sensor state at
+          * "valid", so the state="invalid" filter does not catch it.
+          * Reject negative rates so an unknown reading leaves the rate
+          * unpublished rather than producing a wrong-sign or near-zero
+          * power total. */
+         if (haveChargeRate && chargeRate >= 0) {
             if (chargeRateIsAmps) {
                if (chargeRate == 0) {
                   /* Zero current is a known 0 W reading regardless of
@@ -653,7 +661,7 @@ void Platform_getBattery(BatteryInfo* info) {
             }
          }
 
-         if (haveDischargeRate) {
+         if (haveDischargeRate && dischargeRate >= 0) {
             if (dischargeRateIsAmps) {
                if (dischargeRate == 0) {
                   /* Zero current is a known 0 W reading regardless of
