@@ -461,7 +461,6 @@ bool Platform_init(void) {
     * is visible at the call site of Platform_getBattery and survives any
     * future refactor of the bulk-enable loop. */
    Metric_enable(PCP_DENKI_CAPACITY, true);
-   Metric_enable(PCP_DENKI_ENERGY_NOW, true);
    Metric_enable(PCP_DENKI_POWER_NOW, true);
 
    /* enable metrics for all dynamic columns (including those from dynamic screens) */
@@ -928,47 +927,26 @@ void Platform_getBattery(BatteryInfo* info) {
    }
    bool haveCapacity = capacityCount > 0;
 
-   /* denki.bat.energy_now is optional and ambiguous: the denki PMDA can back
-    * this metric with sysfs ENERGY_NOW (Wh, true energy) OR sysfs CHARGE_NOW
-    * (uAh / mAh, charge -- NOT energy). The metric descriptor does not
-    * disclose which backing source was used, so we cannot distinguish the
-    * two from the metric alone. BatteryMeter.h contracts info->energyCurr
-    * to be in Wh, so we deliberately do NOT publish info->energyCurr from
-    * PCP -- it stays NaN (the default set above). The denki PMDA also does
-    * not expose a corresponding ENERGY_FULL metric, so info->energyFull
-    * likewise stays NaN.
+   /* denki.bat.energy_now is intentionally unused.
     *
-    * We still read these values for the energy-weighted percent calculation
-    * below: on a single host all denki instances share the same backing
-    * source (whichever the kernel exposes for that battery class), so the
-    * intra-host ratio energy_now / inferred_full is dimensionally consistent
-    * even when the unit is charge rather than energy. Percent is unitless,
-    * so the result is meaningful regardless of which sysfs field backs the
-    * metric. The variable retains the "Energy" name to match the metric id,
-    * but readers should treat its values as opaque samples whose unit may
-    * be Wh or charge. */
-   pmAtomValue* batteryEnergyCurr = NULL;
-   bool haveEnergy = false;
-   if (Metric_desc(PCP_DENKI_ENERGY_NOW) != NULL && haveCapacity) {
-      batteryEnergyCurr = xCalloc(capacityCount, sizeof(pmAtomValue));
-      /* Look up energy_now per capacity instance id. If any capacity
-       * instance has no matching energy_now value, leave haveEnergy=false
-       * so we fall back to the simple unweighted capacity average rather
-       * than producing a result misaligned by instance id. */
-      bool allMatched = true;
-      for (int i = 0; i < capacityCount; i++) {
-         pmAtomValue atom;
-         if (Metric_instance(PCP_DENKI_ENERGY_NOW, batteryInst[i], 0, &atom, PM_TYPE_DOUBLE) == NULL) {
-            allMatched = false;
-            break;
-         }
-         batteryEnergyCurr[i] = atom;
-      }
-      if (allMatched) {
-         haveEnergy = true;
-         /* info->energyCurr intentionally NOT set: see comment above. */
-      }
-   }
+    * BatteryMeter.h contracts info->energyCurr to be in Wh, but the denki
+    * PMDA can back denki.bat.energy_now with sysfs ENERGY_NOW (Wh, true
+    * energy) OR sysfs CHARGE_NOW (uAh / mAh, charge -- NOT energy), and
+    * the metric descriptor does not disclose which backing source was
+    * used. info->energyCurr therefore stays NaN (the default set above);
+    * the denki PMDA also does not expose a corresponding ENERGY_FULL
+    * metric, so info->energyFull likewise stays NaN.
+    *
+    * We previously also used these samples for an energy-weighted percent
+    * across multiple batteries, on the assumption that all denki instances
+    * on one host share a single backing source. That assumption is wrong:
+    * the kernel can back ENERGY_NOW for one battery and CHARGE_NOW for
+    * another on the same host (different battery class drivers), so
+    * summing eNow / (cap/100) across instances mixes Wh and mAh and
+    * yields a meaningless ratio. We cannot detect homogeneity from PCP,
+    * so the only safe behaviour for multi-battery hosts is the unweighted
+    * capacity average. The energy_now metric is therefore not enabled or
+    * read here. */
 
    if (haveCapacity) {
       if (capacityCount == 1) {
@@ -976,59 +954,22 @@ void Platform_getBattery(BatteryInfo* info) {
          if (isNonnegative(batteryCapacity[0].d))
             info->percent = CLAMP(batteryCapacity[0].d, 0.0, 100.0);
       } else {
-         /* Multi-battery aggregation. Energy-weighted is preferred for
-          * unequal-sized batteries (e.g. 90Wh@50% + 10Wh@100% should report
-          * 55%, not 75%), but inferring per-instance full energy from
-          * energy_now / (capacity/100) requires capacity > 0. If any
-          * instance is depleted we cannot infer its size, so fall back to
-          * a simple unweighted capacity average -- less accurate when
-          * batteries differ in size, but it correctly handles 0% values
-          * (equal batteries at 0% and 100% report 50%, not 100%; all at
-          * 0% report 0%, not NaN). */
-         bool anyZeroCapacity = false;
+         /* Multi-battery: unweighted capacity average. An energy-weighted
+          * average would be more accurate for unequal-sized batteries
+          * (e.g. 90Wh@50% + 10Wh@100% should report 55%, not 75%), but it
+          * requires that every instance's energy_now sample share a unit.
+          * The denki PMDA does not guarantee that across a host (see the
+          * comment above), so we always use the unweighted average here. */
+         double total = 0.0;
+         int valid = 0;
          for (int i = 0; i < capacityCount; i++) {
-            /* "Capacity is exactly zero": nonnegative (rules out NaN and
-             * negatives) and not positive. Avoids -Wfloat-equal. */
-            if (isNonnegative(batteryCapacity[i].d) && !isPositive(batteryCapacity[i].d)) {
-               anyZeroCapacity = true;
-               break;
+            if (isNonnegative(batteryCapacity[i].d)) {
+               total += CLAMP(batteryCapacity[i].d, 0.0, 100.0);
+               valid++;
             }
          }
-         if (haveEnergy && !anyZeroCapacity) {
-            /* Energy-weighted: every instance has cap > 0 so per-instance
-             * full energy is well-defined. batteryEnergyCurr[i] is the
-             * energy_now sample for the SAME instance id as
-             * batteryCapacity[i] (joined via Metric_instance above), not
-             * merely the same array offset. */
-            double totalEnergyNow = 0.0;
-            double totalEnergyFull = 0.0;
-            for (int i = 0; i < capacityCount; i++) {
-               double cap = batteryCapacity[i].d;
-               double eNow = batteryEnergyCurr[i].d;
-               if (isNonnegative(cap) && cap > 0.0 && isNonnegative(eNow)) {
-                  double eFull = eNow / (cap / 100.0);
-                  totalEnergyNow += eNow;
-                  totalEnergyFull += eFull;
-               }
-            }
-            if (totalEnergyFull > 0.0) {
-               info->percent = CLAMP((totalEnergyNow / totalEnergyFull) * 100.0, 0.0, 100.0);
-            }
-         } else {
-            /* Unweighted average: used when energy_now is unavailable,
-             * partially-reported (instance mismatch), or any instance is
-             * depleted (so we cannot infer its size). */
-            double total = 0.0;
-            int valid = 0;
-            for (int i = 0; i < capacityCount; i++) {
-               if (isNonnegative(batteryCapacity[i].d)) {
-                  total += batteryCapacity[i].d;
-                  valid++;
-               }
-            }
-            if (valid > 0) {
-               info->percent = CLAMP(total / valid, 0.0, 100.0);
-            }
+         if (valid > 0) {
+            info->percent = total / valid;
          }
       }
    }
@@ -1054,7 +995,6 @@ void Platform_getBattery(BatteryInfo* info) {
          info->powerCurr = totalPower;
    }
 
-   free(batteryEnergyCurr);
    free(batteryInst);
    free(batteryCapacity);
 
