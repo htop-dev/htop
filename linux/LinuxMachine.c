@@ -762,7 +762,7 @@ static void LinuxMachine_computeThreadIndices(LinuxMachine* this) {
 
    /* Now compute a normalized physical core index for each CPU.
       On many systems, this index will match the following:
-        physicalID*(maxPhysicalID+1)+coreID
+        physicalID*(maxCoreID+1)+coreID
       But there are some systems where this is not true, either
       because CoreIDs are not contiguous or because cpus are
       enumerated in an alternative order, or both. */
