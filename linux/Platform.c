@@ -1066,7 +1066,7 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
             unitsContributingCharge++;
 
          if (!haveBatteryPower && haveBatteryCurrent && haveBatteryVoltage) {
-            batteryPower = (batteryCurrent * batteryVoltage) / 1000000;
+            batteryPower = (batteryCurrent * (int64_t)batteryVoltage) / 1000000;
             haveBatteryPower = true;
          }
 
