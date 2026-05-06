@@ -1263,6 +1263,10 @@ IGNORE_WCASTQUAL_END
    }
    if (termType && (String_startsWith(termType, "rxvt"))) {
       define_key("\033[Z", KEY_SHIFT_TAB);
+      define_key("\033[a", KEY_SR); // SR = scroll reverse, Shift-UP
+      define_key("\033[b", KEY_SF); // SF = scroll forward, Shift-DOWN
+      define_key("\033\033[A", KEY_SR); // SR = scroll reverse, Alt-UP
+      define_key("\033\033[B", KEY_SF); // SF = scroll forward, Alt-DOWN
    }
 
    CRT_installSignalHandlers();
