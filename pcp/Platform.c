@@ -453,6 +453,17 @@ bool Platform_init(void) {
    Metric_enable(PCP_UNAME_MACHINE, true);
    Metric_enable(PCP_UNAME_DISTRO, true);
 
+   /* Battery (denki PMDA, optional). Machine_scan only re-enables metrics
+    * with index >= PCP_PROC_PID; everything below that index is enabled
+    * once here in Platform_init and stays enabled for every subsequent
+    * Metric_fetch. The bulk loop further down (`metric < PCP_PROC_PID`)
+    * already covers these, but enable them explicitly so the dependency
+    * is visible at the call site of Platform_getBattery and survives any
+    * future refactor of the bulk-enable loop. */
+   Metric_enable(PCP_DENKI_CAPACITY, true);
+   Metric_enable(PCP_DENKI_ENERGY_NOW, true);
+   Metric_enable(PCP_DENKI_POWER_NOW, true);
+
    /* enable metrics for all dynamic columns (including those from dynamic screens) */
    Metric metric = Metric_fromId(pcp->columns.offset);
    for (; metric < pcp->columns.offset + pcp->columns.count; metric++)
@@ -880,7 +891,7 @@ void Platform_getBattery(BatteryInfo* info) {
    if (Metric_desc(PCP_DENKI_CAPACITY) == NULL)
       return;
 
-   int i, count = Metric_instanceCount(PCP_DENKI_CAPACITY);
+   int count = Metric_instanceCount(PCP_DENKI_CAPACITY);
    if (count < 1) {
       /* No battery instances. The denki PMDA does not expose AC adapter
        * state, so absence of batteries does not imply AC presence (e.g. a
@@ -889,9 +900,33 @@ void Platform_getBattery(BatteryInfo* info) {
       return;
    }
 
+   /* PCP value sets are keyed by instance id, not array offset. The denki
+    * PMDA can return different instance counts (or different instance sets)
+    * for capacity vs. energy_now vs. power_now -- e.g. a battery present in
+    * sysfs CAPACITY but not yet in ENERGY_NOW. Joining the per-metric arrays
+    * by array offset would silently mismatch the instances. We therefore
+    * walk the capacity metric with Metric_iterate to get authoritative
+    * (instid, offset) pairs, then look up the matching instances in the
+    * other denki metrics with Metric_instance. */
+
    /* denki.bat.capacity is the sysfs CAPACITY field (percent, 0-100). */
    pmAtomValue* batteryCapacity = xCalloc(count, sizeof(pmAtomValue));
-   bool haveCapacity = Metric_values(PCP_DENKI_CAPACITY, batteryCapacity, count, PM_TYPE_DOUBLE) != NULL;
+   int* batteryInst = xCalloc(count, sizeof(int));
+   int capacityCount = 0;
+   {
+      int instid = -1, offset = -1;
+      while (Metric_iterate(PCP_DENKI_CAPACITY, &instid, &offset, sizeof(pmAtomValue))) {
+         if (capacityCount >= count)
+            break;
+         pmAtomValue atom;
+         if (Metric_instance(PCP_DENKI_CAPACITY, instid, offset, &atom, PM_TYPE_DOUBLE) == NULL)
+            continue;
+         batteryCapacity[capacityCount] = atom;
+         batteryInst[capacityCount] = instid;
+         capacityCount++;
+      }
+   }
+   bool haveCapacity = capacityCount > 0;
 
    /* denki.bat.energy_now (sysfs ENERGY_NOW, Wh) is optional. The denki PMDA
     * does not expose a corresponding ENERGY_FULL metric, so info->energyFull
@@ -899,21 +934,32 @@ void Platform_getBattery(BatteryInfo* info) {
     * infer per-instance full-charge energy for a capacity-weighted average. */
    pmAtomValue* batteryEnergyCurr = NULL;
    bool haveEnergy = false;
-   if (Metric_desc(PCP_DENKI_ENERGY_NOW) != NULL) {
-      batteryEnergyCurr = xCalloc(count, sizeof(pmAtomValue));
-      if (Metric_values(PCP_DENKI_ENERGY_NOW, batteryEnergyCurr, count, PM_TYPE_DOUBLE)) {
-         haveEnergy = true;
-         double total = 0.0;
-         for (i = 0; i < count; i++) {
-            if (isNonnegative(batteryEnergyCurr[i].d))
-               total += batteryEnergyCurr[i].d;
+   if (Metric_desc(PCP_DENKI_ENERGY_NOW) != NULL && haveCapacity) {
+      batteryEnergyCurr = xCalloc(capacityCount, sizeof(pmAtomValue));
+      /* Look up energy_now per capacity instance id. If any capacity
+       * instance has no matching energy_now value, leave haveEnergy=false
+       * so we fall back to the simple unweighted capacity average rather
+       * than producing a result misaligned by instance id. */
+      bool allMatched = true;
+      double total = 0.0;
+      for (int i = 0; i < capacityCount; i++) {
+         pmAtomValue atom;
+         if (Metric_instance(PCP_DENKI_ENERGY_NOW, batteryInst[i], 0, &atom, PM_TYPE_DOUBLE) == NULL) {
+            allMatched = false;
+            break;
          }
+         batteryEnergyCurr[i] = atom;
+         if (isNonnegative(atom.d))
+            total += atom.d;
+      }
+      if (allMatched) {
+         haveEnergy = true;
          info->energyCurr = total;
       }
    }
 
    if (haveCapacity) {
-      if (count == 1) {
+      if (capacityCount == 1) {
          /* Single battery: use its capacity directly; no aggregation needed. */
          if (isNonnegative(batteryCapacity[0].d))
             info->percent = CLAMP(batteryCapacity[0].d, 0.0, 100.0);
@@ -923,12 +969,12 @@ void Platform_getBattery(BatteryInfo* info) {
           * 55%, not 75%), but inferring per-instance full energy from
           * energy_now / (capacity/100) requires capacity > 0. If any
           * instance is depleted we cannot infer its size, so fall back to
-          * a simple unweighted capacity average — less accurate when
+          * a simple unweighted capacity average -- less accurate when
           * batteries differ in size, but it correctly handles 0% values
           * (equal batteries at 0% and 100% report 50%, not 100%; all at
           * 0% report 0%, not NaN). */
          bool anyZeroCapacity = false;
-         for (i = 0; i < count; i++) {
+         for (int i = 0; i < capacityCount; i++) {
             /* "Capacity is exactly zero": nonnegative (rules out NaN and
              * negatives) and not positive. Avoids -Wfloat-equal. */
             if (isNonnegative(batteryCapacity[i].d) && !isPositive(batteryCapacity[i].d)) {
@@ -938,10 +984,13 @@ void Platform_getBattery(BatteryInfo* info) {
          }
          if (haveEnergy && !anyZeroCapacity) {
             /* Energy-weighted: every instance has cap > 0 so per-instance
-             * full energy is well-defined. */
+             * full energy is well-defined. batteryEnergyCurr[i] is the
+             * energy_now sample for the SAME instance id as
+             * batteryCapacity[i] (joined via Metric_instance above), not
+             * merely the same array offset. */
             double totalEnergyNow = 0.0;
             double totalEnergyFull = 0.0;
-            for (i = 0; i < count; i++) {
+            for (int i = 0; i < capacityCount; i++) {
                double cap = batteryCapacity[i].d;
                double eNow = batteryEnergyCurr[i].d;
                if (isNonnegative(cap) && cap > 0.0 && isNonnegative(eNow)) {
@@ -954,11 +1003,12 @@ void Platform_getBattery(BatteryInfo* info) {
                info->percent = CLAMP((totalEnergyNow / totalEnergyFull) * 100.0, 0.0, 100.0);
             }
          } else {
-            /* Unweighted average: used when energy_now is unavailable or
-             * any instance is depleted (so we cannot infer its size). */
+            /* Unweighted average: used when energy_now is unavailable,
+             * partially-reported (instance mismatch), or any instance is
+             * depleted (so we cannot infer its size). */
             double total = 0.0;
             int valid = 0;
-            for (i = 0; i < count; i++) {
+            for (int i = 0; i < capacityCount; i++) {
                if (isNonnegative(batteryCapacity[i].d)) {
                   total += batteryCapacity[i].d;
                   valid++;
@@ -971,19 +1021,27 @@ void Platform_getBattery(BatteryInfo* info) {
       }
    }
 
-   free(batteryCapacity);
-   free(batteryEnergyCurr);
-
-   if (Metric_desc(PCP_DENKI_POWER_NOW) != NULL) {
-      pmAtomValue* batteryPowerCurr = xCalloc(count, sizeof(pmAtomValue));
-      if (Metric_values(PCP_DENKI_POWER_NOW, batteryPowerCurr, count, PM_TYPE_DOUBLE)) {
-         info->powerCurr = 0.0;
-         for (i = 0; i < count; i++) {
-            info->powerCurr += batteryPowerCurr[i].d;
-         }
+   if (Metric_desc(PCP_DENKI_POWER_NOW) != NULL && haveCapacity) {
+      /* Sum power_now across the same battery instances we saw for
+       * capacity, again joining by instance id rather than array offset.
+       * Skip instances missing from power_now rather than counting them
+       * as 0 (a missing sample is not the same as a zero sample). */
+      double totalPower = 0.0;
+      bool anyPower = false;
+      for (int i = 0; i < capacityCount; i++) {
+         pmAtomValue atom;
+         if (Metric_instance(PCP_DENKI_POWER_NOW, batteryInst[i], 0, &atom, PM_TYPE_DOUBLE) == NULL)
+            continue;
+         totalPower += atom.d;
+         anyPower = true;
       }
-      free(batteryPowerCurr);
+      if (anyPower)
+         info->powerCurr = totalPower;
    }
+
+   free(batteryEnergyCurr);
+   free(batteryInst);
+   free(batteryCapacity);
 
    /* The denki PMDA does not expose AC adapter state, and denki.bat.power_now
     * is a magnitude (sysfs POWER_NOW is non-negative) rather than a signed
