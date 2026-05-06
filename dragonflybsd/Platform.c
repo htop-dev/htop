@@ -508,14 +508,20 @@ void Platform_getBattery(BatteryInfo* info) {
          }
       }
 
+      /* Clamp per-battery curr to full before summing: a quirky firmware
+       * can report bst->cap > bif->lfcap, which would otherwise let the
+       * published info->energyCurr / info->energyFull values exceed each
+       * other's bounds even though the percent gate caps at 100. */
       if (haveBatteryEnergyCurr && haveBatteryEnergyFull && batteryEnergyFull > 0) {
-         totalEnergyRemain += batteryEnergyCurr;
+         int64_t clampedEnergy = batteryEnergyCurr > batteryEnergyFull ? batteryEnergyFull : batteryEnergyCurr;
+         totalEnergyRemain += clampedEnergy;
          totalEnergyFull += batteryEnergyFull;
          unitsWithEnergy++;
       }
 
       if (haveBatteryChargeCurr && haveBatteryChargeFull && batteryChargeFull > 0) {
-         totalChargeRemain += batteryChargeCurr;
+         int64_t clampedCharge = batteryChargeCurr > batteryChargeFull ? batteryChargeFull : batteryChargeCurr;
+         totalChargeRemain += clampedCharge;
          totalChargeFull += batteryChargeFull;
          unitsWithCharge++;
       }

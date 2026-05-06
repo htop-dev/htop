@@ -499,7 +499,12 @@ void Platform_getBattery(BatteryInfo* info) {
       }
 
       if (haveBatteryEnergyCurr && haveBatteryEnergyFull && batteryEnergyFull > 0) {
-         totalRemain += batteryEnergyCurr;
+         /* Clamp curr to full per battery before summing: a quirky firmware
+          * can report bst->cap > bix->lfcap, which would otherwise let
+          * info->energyCurr exceed info->energyFull on the published value
+          * even though the percent gate already caps at 100. */
+         int64_t clampedCurr = batteryEnergyCurr > batteryEnergyFull ? batteryEnergyFull : batteryEnergyCurr;
+         totalRemain += clampedCurr;
          totalFull += batteryEnergyFull;
          haveTotalRemain = true;
          haveTotalFull = true;
