@@ -400,12 +400,17 @@ void Platform_getBattery(BatteryInfo* info) {
       int64_t totalPower = 0;
 
       /* See "sys/dev/acpi/acpibat.c" of OpenBSD source code for the indices
-         of the last field. */
+         of the last field.
+
+         OpenBSD acpibat can return a successful sysctl with the
+         SENSOR_FUNKNOWN flag set and a meaningless zero value when the
+         kernel cannot determine the underlying _BST/_BIF field.  Treat
+         such readings as missing rather than as a known zero. */
       mib[3] = SENSOR_WATTHOUR;
       mib[4] = 0; /* "last full capacity" */
       bool haveBatteryFull = false;
       int64_t batteryFull = 0;
-      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1)
+      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1 && (s.flags & SENSOR_FUNKNOWN) == 0)
          batteryFull = s.value;
 
       if (batteryFull > 0)
@@ -414,7 +419,7 @@ void Platform_getBattery(BatteryInfo* info) {
       if (haveBatteryFull) {
          mib[3] = SENSOR_WATTHOUR;
          mib[4] = 3; /* "remaining capacity" */
-         if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1) {
+         if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1 && (s.flags & SENSOR_FUNKNOWN) == 0) {
             int64_t batteryRemain = s.value;
             if (batteryRemain >= 0) {
                totalRemain += batteryRemain;
@@ -437,12 +442,12 @@ void Platform_getBattery(BatteryInfo* info) {
       mib[3] = SENSOR_INTEGER;
       mib[4] = 0; /* "battery state" */
       int64_t batteryState = 0;
-      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1)
+      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1 && (s.flags & SENSOR_FUNKNOWN) == 0)
          batteryState = s.value;
 
       mib[3] = SENSOR_WATTS;
       mib[4] = 0; /* "rate" */
-      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1) {
+      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1 && (s.flags & SENSOR_FUNKNOWN) == 0) {
          int64_t batteryPower = s.value;
          if (batteryState & 0x02)
             batteryPower = -batteryPower;
@@ -460,10 +465,11 @@ void Platform_getBattery(BatteryInfo* info) {
 
    if (found) {
       /* See "sys/dev/acpi/acpiac.c" of OpenBSD source code.
-         There is only one "sensor" for this device. */
+         There is only one "sensor" for this device.  As with acpibat, an
+         FUNKNOWN reading must not be promoted to AC_ABSENT. */
       mib[3] = SENSOR_INDICATOR;
       mib[4] = 0; /* "power supply" (status indicator) */
-      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1)
+      if (sysctl(mib, 5, &s, &slen, NULL, 0) != -1 && (s.flags & SENSOR_FUNKNOWN) == 0)
          info->ac = s.value != 0 ? AC_PRESENT : AC_ABSENT;
    }
 }
