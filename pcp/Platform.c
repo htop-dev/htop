@@ -906,20 +906,38 @@ void Platform_getBattery(BatteryInfo* info) {
     * by array offset would silently mismatch the instances. We therefore
     * walk the capacity metric with Metric_iterate to get authoritative
     * (instid, offset) pairs, then look up the matching instances in the
-    * other denki metrics with Metric_instance. */
+    * other denki metrics with Metric_instance.
+    *
+    * Metric_iterate signals that PCP knows about an instance, but the
+    * subsequent Metric_instance lookup can still fail (transient state, an
+    * instance disappearing between metric refreshes). Silently skipping
+    * such an instance shrinks capacityCount and lets the publication path
+    * report a partial aggregate as if it were whole-pack -- e.g. on a
+    * 2-battery host where one Metric_instance fails, the remaining
+    * battery's percent would be published as the system value. The
+    * aggregateComplete flag tracks whether every iterated instance was
+    * successfully read; if any read failed we conservatively mark the
+    * aggregate incomplete (we don't know which instance dropped out) and
+    * the publication block leaves info->percent and info->powerCurr at
+    * NaN rather than overriding with a partial sum. */
 
    /* denki.bat.capacity is the sysfs CAPACITY field (percent, 0-100). */
    pmAtomValue* batteryCapacity = xCalloc(count, sizeof(pmAtomValue));
    int* batteryInst = xCalloc(count, sizeof(int));
    int capacityCount = 0;
+   bool aggregateComplete = true;
    {
       int instid = -1, offset = -1;
       while (Metric_iterate(PCP_DENKI_CAPACITY, &instid, &offset, sizeof(pmAtomValue))) {
          if (capacityCount >= count)
             break;
          pmAtomValue atom;
-         if (Metric_instance(PCP_DENKI_CAPACITY, instid, offset, &atom, PM_TYPE_DOUBLE) == NULL)
+         if (Metric_instance(PCP_DENKI_CAPACITY, instid, offset, &atom, PM_TYPE_DOUBLE) == NULL) {
+            /* We can't tell which instance failed, so mark the aggregate
+             * incomplete and let the publication block fall back to NaN. */
+            aggregateComplete = false;
             continue;
+         }
          batteryCapacity[capacityCount] = atom;
          batteryInst[capacityCount] = instid;
          capacityCount++;
@@ -948,9 +966,13 @@ void Platform_getBattery(BatteryInfo* info) {
     * capacity average. The energy_now metric is therefore not enabled or
     * read here. */
 
-   if (haveCapacity) {
+   if (haveCapacity && aggregateComplete) {
       if (capacityCount == 1) {
-         /* Single battery: use its capacity directly; no aggregation needed. */
+         /* Single battery: use its capacity directly; no aggregation needed.
+          * aggregateComplete still matters here -- a 2-battery host where
+          * one Metric_instance failed would otherwise reach this branch
+          * with capacityCount == 1 and publish that battery's percent as
+          * the whole-pack value. */
          if (isNonnegative(batteryCapacity[0].d))
             info->percent = CLAMP(batteryCapacity[0].d, 0.0, 100.0);
       } else {
@@ -991,7 +1013,7 @@ void Platform_getBattery(BatteryInfo* info) {
          }
          totalPower += atom.d;
       }
-      if (allMatched)
+      if (allMatched && aggregateComplete)
          info->powerCurr = totalPower;
    }
 
