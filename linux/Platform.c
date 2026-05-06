@@ -991,17 +991,21 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
                continue;
             }
 
+            /* Reject negative sysfs values for the unsigned uint64_t
+             * accumulators below. The kernel publishes -1 on some drivers
+             * to mean "unknown" (CAPACITY is the documented case, others
+             * are quirks). Storing a negative val into an unsigned variable
+             * wraps to a huge value; the downstream `> 0` gates pass
+             * (huge unsigned > 0), and the published percent / energyCurr /
+             * energyFull become astronomical. Treat negative as
+             * "field absent". batteryCurrent and batteryPower are int64_t
+             * so they handle negatives natively and skip this filter. */
+            if (val < 0
+                  && !String_eq(field, "CURRENT_NOW")
+                  && !String_eq(field, "POWER_NOW"))
+               continue;
+
             if (String_eq(field, "CAPACITY")) {
-               /* sysfs CAPACITY is documented 0-100, but the kernel
-                * publishes -1 to signal "unknown" on some drivers.
-                * Assigning a negative val into the unsigned batteryLevel
-                * wraps to a huge value; the haveBatteryLevel fallback
-                * below would then infer a huge fake current charge,
-                * clamp it to full, and publish a misleading 100%. Reject
-                * negative values so haveBatteryLevel stays false and
-                * the meter reports unknown. */
-               if (val < 0)
-                  continue;
                batteryLevel = val;
                haveBatteryLevel = true;
                continue;
