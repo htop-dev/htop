@@ -386,15 +386,19 @@ void Platform_getBattery(BatteryInfo* info) {
    if (sysctlbyname("hw.acpi.acline", &acline, &acline_len, NULL, 0) != -1)
       info->ac = (acline == 0) ? AC_ABSENT : AC_PRESENT;
 
+   /* DragonFly does not define ACPIIO_BATT_GET_UNITS in
+    * <dev/acpica/acpiio.h> (only the BIF/BST ioctls are exposed), so
+    * obtain the unit count via the same hw.acpi.battery.units sysctl
+    * that FreeBSD uses. The /dev/acpi BIF/BST ioctls below remain the
+    * read source for per-unit data. */
    int units = 0;
+   size_t units_len = sizeof(units);
+   if (sysctlbyname("hw.acpi.battery.units", &units, &units_len, NULL, 0) == -1 || units <= 0)
+      return;
+
    int fd = open("/dev/acpi", O_RDONLY | O_CLOEXEC);
    if (fd == -1)
       return;
-
-   if (ioctl(fd, ACPIIO_BATT_GET_UNITS, &units) == -1 || units <= 0) {
-      close(fd);
-      return;
-   }
 
    /* Energy totals (require voltage on mAh systems) — used for energyCurr/Full
     * and as the preferred basis for info->percent. */
