@@ -619,6 +619,7 @@ void Platform_getBattery(BatteryInfo* info) {
 
    BatteryRaw raws[ENVSYS_MAX_BATTERIES];
    size_t nbat = 0;
+   bool batteryOverflow = false;
 
    prop_object_iterator_t devIter = prop_dictionary_iterator(dict);
    prop_object_t device;
@@ -638,8 +639,12 @@ void Platform_getBattery(BatteryInfo* info) {
       bool isBattery = parseEnvsysBattery(fieldsIter, &raw, &isACAdapter, &haveConnected, &isConnected);
       prop_object_iterator_release(fieldsIter);
 
-      if (isBattery && nbat < ENVSYS_MAX_BATTERIES)
-         raws[nbat++] = raw;
+      if (isBattery) {
+         if (nbat >= ENVSYS_MAX_BATTERIES)
+            batteryOverflow = true;
+         else
+            raws[nbat++] = raw;
+      }
 
       /* Invalid connected sensor leaves AC at AC_ERROR. */
       if (isACAdapter && haveConnected && info->ac != AC_PRESENT)
@@ -649,6 +654,10 @@ void Platform_getBattery(BatteryInfo* info) {
       prop_object_iterator_release(devIter);
 
    close(fd);
+
+   /* Refuse partial aggregation on overflow; percent stays NaN. */
+   if (batteryOverflow)
+      return;
 
    Battery_aggregate(raws, nbat, info);
 }

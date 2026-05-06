@@ -888,8 +888,11 @@ void Platform_getBattery(BatteryInfo* info) {
    int count = Metric_instanceCount(PCP_DENKI_CAPACITY);
    if (count < 1)
       return;
+   /* Refuse partial aggregation when more battery instances are reported
+    * than the fixed buffer holds; percent stays NaN rather than under-
+    * counted. */
    if (count > DENKI_MAX_BATTERIES)
-      count = DENKI_MAX_BATTERIES;
+      return;
 
    BatteryRaw raws[DENKI_MAX_BATTERIES];
    int instIds[DENKI_MAX_BATTERIES];

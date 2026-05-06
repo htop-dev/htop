@@ -956,6 +956,7 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
 
    BatteryRaw raws[SYSFS_MAX_BATTERIES];
    size_t nbat = 0;
+   bool batteryOverflow = false;
 
    const struct dirent* dirEntry;
    while ((dirEntry = readdir(dir))) {
@@ -988,9 +989,12 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
          }
       }
 
-      if (type == BAT && nbat < SYSFS_MAX_BATTERIES) {
-         if (parseSysfsBattery(entryFd, &raws[nbat]))
+      if (type == BAT) {
+         if (nbat >= SYSFS_MAX_BATTERIES) {
+            batteryOverflow = true;
+         } else if (parseSysfsBattery(entryFd, &raws[nbat])) {
             nbat++;
+         }
       } else if (type == AC && info->ac == AC_ERROR) {
          char buffer[2];
          ssize_t r = Compat_readfileat(entryFd, "online", buffer, sizeof(buffer));
@@ -1004,6 +1008,12 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
    }
 
    closedir(dir);
+
+   /* On overflow we cannot publish a partial total; let percent stay NaN
+    * so a stale or under-counted aggregate is not displayed. */
+   if (batteryOverflow)
+      return;
+
    Battery_aggregate(raws, nbat, info);
 }
 

@@ -445,8 +445,13 @@ static void getAcpiBatteries(BatteryInfo* info) {
    if (fd == -1)
       return;
 
-   if (units > ACPI_MAX_BATTERIES)
-      units = ACPI_MAX_BATTERIES;
+   /* Refuse to publish a partial aggregate when the firmware reports
+    * more batteries than the fixed buffer holds; the fallback path
+    * (hw.acpi.battery.life) still runs after this returns. */
+   if (units > ACPI_MAX_BATTERIES) {
+      close(fd);
+      return;
+   }
 
    BatteryRaw raws[ACPI_MAX_BATTERIES];
    size_t nbat = 0;
