@@ -992,6 +992,16 @@ static void Platform_Battery_getSysData(BatteryInfo* info) {
             }
 
             if (String_eq(field, "CAPACITY")) {
+               /* sysfs CAPACITY is documented 0-100, but the kernel
+                * publishes -1 to signal "unknown" on some drivers.
+                * Assigning a negative val into the unsigned batteryLevel
+                * wraps to a huge value; the haveBatteryLevel fallback
+                * below would then infer a huge fake current charge,
+                * clamp it to full, and publish a misleading 100%. Reject
+                * negative values so haveBatteryLevel stays false and
+                * the meter reports unknown. */
+               if (val < 0)
+                  continue;
                batteryLevel = val;
                haveBatteryLevel = true;
                continue;

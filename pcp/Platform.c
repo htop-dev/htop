@@ -1014,10 +1014,12 @@ void Platform_getBattery(BatteryInfo* info) {
          totalPower += atom.d;
       }
       if (allMatched && aggregateComplete) {
-         /* denki.bat.power_now is the raw sysfs power_now value in
-          * microwatts; BatteryInfo.powerCurr contracts to watts. Divide
-          * before publishing, matching the linux/freebsd conversion. */
-         info->powerCurr = totalPower / 1000000.0;
+         /* denki.bat.power_now is published by the denki PMDA in
+          * watts (the PMDA divides the raw sysfs power_now microwatt
+          * value by 1e6 and labels the metric with units "watt"; see
+          * pcp/src/pmdas/denki/denki.c). Assign the summed double
+          * directly, matching BatteryInfo.powerCurr's contract. */
+         info->powerCurr = totalPower;
       }
    }
 
