@@ -142,6 +142,18 @@ Scroll left to the beginning of the process entry (i.e. beginning of line).
 .B Ctrl-E, $
 Scroll right to the end of the process entry (i.e. end of line).
 .TP
+.B Shift-Up, Alt-Up
+Pan the process list view up.
+The Shift-Up key combination is often grabbed by the terminal emulator
+for scrollback handling. You may need to change its keybindings if you
+want to free the key combination for htop.
+.TP
+.B Shift-Down, Alt-Down
+Pan the process list view down.
+The Shift-Down key combination is often grabbed by the terminal emulator
+for scrollback handling. You may need to change its keybindings if you
+want to free the key combination for htop.
+.TP
 .B Space
 Tag or untag a process. Commands that can operate on multiple processes,
 like "kill", will then apply over the list of tagged processes, instead
@@ -261,6 +273,8 @@ Sort by time (top compatibility key).
 to move in the list, make the selection bar follow it. This is useful for
 monitoring a process: this way, you can keep a process always visible on
 screen. When a movement key is used, "follow" loses effect.
+You can press Shift or Alt plus the Up and Down cursor keys to pan the view
+when following a process.
 .TP
 .B K
 Hide kernel threads: prevent the threads belonging the kernel to be
