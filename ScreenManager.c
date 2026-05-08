@@ -185,9 +185,11 @@ static inline bool drawTab(const int* y, int* x, int l, const char* name, bool c
       return false;
    attrset(CRT_colors[cur ? SCREENS_CUR_BORDER : SCREENS_OTH_BORDER]);
    mvaddch(*y, *x, ']');
-   *x += 1 + SCREEN_TAB_COLUMN_GAP;
-   if (*x >= l)
+   if (*x >= l - (1 + SCREEN_TAB_COLUMN_GAP)) {
+      *x = l;
       return false;
+   }
+   *x += 1 + SCREEN_TAB_COLUMN_GAP;
    return true;
 }
 
