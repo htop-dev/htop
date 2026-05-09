@@ -762,15 +762,19 @@ static void LinuxMachine_computeThreadIndices(LinuxMachine* this) {
 
    /* Now compute a normalized physical core index for each CPU.
       On many systems, this index will match the following:
-        physicalID*(maxPhysicalID+1)+coreID
+        physicalID*(maxCoreID+1)+coreID
       But there are some systems where this is not true, either
       because CoreIDs are not contiguous or because cpus are
       enumerated in an alternative order, or both. */
+   int maxCoreIndex = 0;
    for (size_t i = 1; i <= super->existingCPUs; i++) {
-      cpus[i].coreIndex = 0;
+      cpus[i].coreIndex = maxCoreIndex++;
       for (size_t j = i - 1; j >= 1; j--) {
-         if (cpus[i].threadIndex == cpus[j].threadIndex) {
-            cpus[i].coreIndex = cpus[j].coreIndex + 1;
+         if (cpus[i].physicalID == cpus[j].physicalID &&
+             cpus[i].coreID == cpus[j].coreID) {
+            assert(cpus[i].threadIndex != cpus[j].threadIndex);
+            cpus[i].coreIndex = cpus[j].coreIndex;
+            maxCoreIndex--;
             break;
          }
       }
