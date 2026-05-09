@@ -1,4 +1,4 @@
-# [![htop logo](htop.png)](https://htop.dev)
+# [![htop logo](htop-logo.png)](https://htop.dev)
 
 [![CI](https://github.com/htop-dev/htop/workflows/CI/badge.svg)](https://github.com/htop-dev/htop/actions)
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/21665/badge.svg)](https://scan.coverity.com/projects/21665)
