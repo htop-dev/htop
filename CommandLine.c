@@ -214,6 +214,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
             }
             break;
          case 'd':
+            assert(optarg);
             if (sscanf(optarg, "%16d", &(flags->delay)) == 1) {
                if (flags->delay < 1)
                   flags->delay = 1;
@@ -225,6 +226,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
             }
             break;
          case 'n':
+            assert(optarg);
             if (sscanf(optarg, "%16d", &flags->iterationsRemaining) == 1) {
                if (flags->iterationsRemaining <= 0) {
                   fprintf(stderr, "Error: maximum iteration count must be positive.\n");
