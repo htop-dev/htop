@@ -352,7 +352,10 @@ AC_MSG_CHECKING(for __builtin_ctz)
 AC_LINK_IFELSE(
    [AC_LANG_PROGRAM(
       [],
-      [[volatile int test_ctz = __builtin_ctz(1); (void)test_ctz; /* Supported in GCC 3.4 or later */]]
+      [[
+         /* Supported in GCC 3.4 or later */
+         return __builtin_ctz(1U); /* Should be 0 (exit success) */
+      ]]
    )],
    AC_DEFINE([HAVE_BUILTIN_CTZ], 1, [Define to 1 if the compiler supports '__builtin_ctz' function.])
    AC_MSG_RESULT(yes),
