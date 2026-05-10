@@ -79,6 +79,8 @@ static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
    }
 
    if (update) {
+      Header_collapseLayout(this->header);
+      this->header->metersCopied = false;
       Settings* settings = this->host->settings;
       settings->changed = true;
       settings->lastUpdate++;
