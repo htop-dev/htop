@@ -8,6 +8,7 @@ in the source distribution for its full text.
 #include "config.h" // IWYU pragma: keep
 
 #include "Action.h"
+#include "CustomCommands.h"
 
 #include <assert.h>
 #include <pwd.h>
@@ -322,6 +323,15 @@ static Htop_Reaction actionIncFilter(State* st) {
    IncSet_activate(inc, INC_FILTER, (Panel*)st->mainPanel);
    host->activeTable->incFilter = IncSet_filter(inc);
    return HTOP_REFRESH | HTOP_KEEP_FOLLOWING;
+}
+
+static Htop_Reaction actionCommandMode(State* st) {
+    char cmd[256];
+    mvwgetnstr(stdscr, LINES-1, 0, cmd, 255);
+    if (handle_custom_command(cmd, st->scr)) {
+        return ACTION_REDRAW;
+    }
+    return ACTION_REDRAW;
 }
 
 static Htop_Reaction actionIncSearch(State* st) {
@@ -974,7 +984,7 @@ void Action_setBindings(Htop_Action* keys) {
    keys[','] = actionSetSortColumn;
    keys['-'] = actionExpandOrCollapse;
    keys['.'] = actionSetSortColumn;
-   keys['/'] = actionIncSearch;
+   keys['/'] = actionCommandMode;
    keys['<'] = actionSetSortColumn;
    keys['='] = actionExpandOrCollapse;
    keys['>'] = actionSetSortColumn;
