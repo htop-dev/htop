@@ -94,6 +94,11 @@ sudo pacman -S --needed base-devel ncurses
 brew install ncurses automake autoconf gcc
 ~~~
 
+**FreeBSD/Termux**
+~~~ shell
+pkg install ncurses automake autoconf clang
+~~~
+
 ### Compile from source:
 To compile from source, download from the Git repository (`git clone` or downloads from [GitHub releases](https://github.com/htop-dev/htop/releases/)), then run:
 ~~~ shell
