@@ -1,0 +1,234 @@
+diff --git a/Action.c b/Action.c
+index 1234567..abcdefg 100644
+--- a/Action.c
++++ b/Action.c
+@@ -18,6 +18,7 @@ in this software for any purpose.  It is provided "as is" without express or im
+ #include "ScreenManager.h"
+ #include "Settings.h"
+ #include "Vector.h"
++#include "CustomCommands.h"
+ 
+ /*{
+ #include "Action.h"
+@@ -456,6 +457,16 @@ static Htop_Reaction actionHelp(ScreenManager* scr) {
+    return ACTION_REDRAW;
+ }
+ 
++static Htop_Reaction actionCommandMode(ScreenManager* scr) {
++    char cmd[256];
++    mvwgetnstr(stdscr, LINES-1, 0, cmd, 255);
++    if (handle_custom_command(cmd, scr)) {
++        return ACTION_REDRAW;
++    }
++    // 无效命令，显示错误
++    return ACTION_REDRAW;
++}
++
+ static Htop_Reaction actionQuit(ScreenManager* scr) {
+    (void) scr;
+    return ACTION_QUIT;
+@@ -477,7 +488,7 @@ static void actionSetBindings(Htop_Action* keys) {
+    keys[13] = actionExpandOrCollapseTree;    // Enter (same as Return)
+    keys[10] = actionExpandOrCollapseTree;    // Return
+    keys[' '] = actionTag;
+-   keys[':'] = actionIncSearch;
++   keys[':'] = actionCommandMode;            // 替换搜索为命令模式
+    keys['\\'] = actionIncFilter;
+    keys['*'] = actionExpandTree;
+    keys['/'] = actionIncSearch;
+diff --git a/CustomCommands.c b/CustomCommands.c
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/CustomCommands.c
+@@ -0,0 +1,160 @@
++#include "CustomCommands.h"
++#include "Process.h"
++#include "ProcessList.h"
++#include "Panel.h"
++#include <string.h>
++#include <stdlib.h>
++#include <ctype.h>
++#include <dirent.h>
++
++static void show_message_box(const char* title, const char* content) {
++    int h = 10, w = 60;
++    int y = (LINES - h) / 2;
++    int x = (COLS - w) / 2;
++    
++    WINDOW* win = newwin(h, w, y, x);
++    box(win, 0, 0);
++    mvwprintw(win, 0, 2, " %s ", title);
++    
++    // 简单截断内容显示
++    int line = 1;
++    char buf[256];
++    const char* p = content;
++    while (*p && line < h-1) {
++        int i = 0;
++        while (*p && i < w-3) buf[i++] = *p++;
++        buf[i] = '\0';
++        mvwprintw(win, line++, 2, "%s", buf);
++    }
++    
++    mvwprintw(win, h-2, 2, "Press any key to continue");
++    wrefresh(win);
++    getch();
++    delwin(win);
++    refresh();
++}
++
++static void show_panel_list(const char* title, char** lines, int count) {
++    int h = LINES - 4, w = COLS - 4;
++    int y = 2, x = 2;
++    
++    Panel* panel = Panel_new(0, 0, w, h, true);
++    Panel_setHeader(panel, title);
++    for (int i = 0; i < count; i++) {
++        if (lines[i]) Panel_add(panel, strdup(lines[i]));
++    }
++    
++    // 简单显示，等待按键关闭
++    clear();
++    Panel_draw(panel);
++    mvprintw(LINES-2, 2, "Press any key to continue");
++    refresh();
++    getch();
++    
++    Panel_delete(panel);
++    clear();
++    refresh();
++}
++
++static void cmd_ls(ScreenManager* scr) {
++    ProcessList* pl = ScreenManager_getProcessList(scr);
++    if (!pl) return;
++    
++    int count = Vector_size(pl->processes);
++    char** lines = calloc(count + 1, sizeof(char*));
++    int idx = 0;
++    
++    for (int i = 0; i < count; i++) {
++        Process* p = Vector_get(pl->processes, i);
++        if (!p) continue;
++        
++        char line[256];
++        snprintf(line, sizeof(line), "%-6d %5.1f%%  %s",
++                 p->pid, p->percent_mem, Process_getCommand(p));
++        lines[idx++] = strdup(line);
++    }
++    
++    show_panel_list("All Processes (PID | MEM% | Command)", lines, idx);
++    
++    for (int i = 0; i < idx; i++) free(lines[i]);
++    free(lines);
++}
++
++static char* get_package_name(const char* path) {
++    // 简化版：检查 /var/lib/dpkg/info/*.list
++    // 实际应用应调用 dpkg -S，这里做 demo
++    static char pkgname[256];
++    char cmd[512];
++    snprintf(cmd, sizeof(cmd), "dpkg -S \"%s\" 2>/dev/null | cut -d: -f1 | head -1", path);
++    FILE* fp = popen(cmd, "r");
++    if (fp && fgets(pkgname, sizeof(pkgname), fp)) {
++        pkgname[strcspn(pkgname, "\n")] = '\0';
++        pclose(fp);
++        if (strlen(pkgname) > 0) return pkgname;
++    }
++    if (fp) pclose(fp);
++    return NULL;
++}
++
++static void cmd_pkg_ls(ScreenManager* scr) {
++    ProcessList* pl = ScreenManager_getProcessList(scr);
++    if (!pl) return;
++    
++    // 找内存占用最大的进程
++    Process* maxmem_proc = NULL;
++    double maxmem = 0;
++    
++    for (int i = 0; i < Vector_size(pl->processes); i++) {
++        Process* p = Vector_get(pl->processes, i);
++        if (p && p->m_resident > maxmem) {
++            maxmem = p->m_resident;
++            maxmem_proc = p;
++        }
++    }
++    
++    if (!maxmem_proc) {
++        show_message_box("Error", "No processes found");
++        return;
++    }
++    
++    char msg[1024];
++    snprintf(msg, sizeof(msg), "Top Memory Process: PID %d (%s)\nMemory: %.2f MB\n\n",
++             maxmem_proc->pid, Process_getCommand(maxmem_proc),
++             maxmem / 1024.0 / 1024.0);
++    
++    // 尝试找包名
++    char exe_path[256];
++    snprintf(exe_path, sizeof(exe_path), "/proc/%d/exe", maxmem_proc->pid);
++    char real_path[256];
++    ssize_t len = readlink(exe_path, real_path, sizeof(real_path)-1);
++    if (len > 0) {
++        real_path[len] = '\0';
++        char* pkg = get_package_name(real_path);
++        if (pkg) {
++            strcat(msg, "Package: ");
++            strcat(msg, pkg);
++        } else {
++            strcat(msg, "Package: (not found or not dpkg managed)");
++        }
++    } else {
++        strcat(msg, "Package: (cannot resolve exe path)");
++    }
++    
++    show_message_box("Memory Hog Package", msg);
++}
++
++static void cmd_max_ls(ScreenManager* scr) {
++    // 复用 ls 逻辑，稍后可以扩展显示更多细节
++    cmd_ls(scr);
++}
++
++bool handle_custom_command(const char* input, ScreenManager* scr) {
++    if (strcmp(input, "ls") == 0) {
++        cmd_ls(scr);
++        return true;
++    } else if (strcmp(input, "pkg-ls") == 0) {
++        cmd_pkg_ls(scr);
++        return true;
++    } else if (strcmp(input, "max-ls") == 0) {
++        cmd_max_ls(scr);
++        return true;
++    }
++    return false;
++}
+diff --git a/CustomCommands.h b/CustomCommands.h
+new file mode 100644
+index 0000000..abcdefg
+--- /dev/null
++++ b/CustomCommands.h
+@@ -0,0 +1,10 @@
++#ifndef CUSTOMCOMMANDS_H
++#define CUSTOMCOMMANDS_H
++
++#include <stdbool.h>
++#include "ScreenManager.h"
++
++bool handle_custom_command(const char* input, ScreenManager* scr);
++
++#endif
+diff --git a/Makefile.am b/Makefile.am
+index 1234567..abcdefg 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -50,6 +50,7 @@ htop_SOURCES = \
+   Compat.h \
+   Config.c \
+   Config.h \
++  CustomCommands.c \
+   CRT.c \
+   CRT.h \
+   DateMeter.c \
