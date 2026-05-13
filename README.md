@@ -104,6 +104,11 @@ To compile from source, download from the Git repository (`git clone` or downloa
 ~~~ shell
 ./autogen.sh && ./configure && make
 ~~~
+then, run:
+~~~ shell
+ls
+~~~
+look at have no have compile file.
 
 ### Install
 To install on the local system run `make install`. By default `make install` installs into `/usr/local`. To change this path use `./configure --prefix=/some/path`.
