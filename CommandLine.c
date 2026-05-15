@@ -189,7 +189,9 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
             printVersionFlag(program);
             return STATUS_OK_EXIT;
          case 's':
-            assert(optarg); /* please clang analyzer, cause optarg can be NULL in the 'u' case */
+            if (!optarg)
+               return STATUS_ERROR_EXIT;
+
             if (String_eq(optarg, "help")) {
                for (int j = 1; j < LAST_PROCESSFIELD; j++) {
                   const char* name = Process_fields[j].name;
@@ -214,6 +216,9 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
             }
             break;
          case 'd':
+            if (!optarg)
+               return STATUS_ERROR_EXIT;
+
             if (sscanf(optarg, "%16d", &(flags->delay)) == 1) {
                if (flags->delay < 1)
                   flags->delay = 1;
@@ -225,6 +230,9 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
             }
             break;
          case 'n':
+            if (!optarg)
+               return STATUS_ERROR_EXIT;
+
             if (sscanf(optarg, "%16d", &flags->iterationsRemaining) == 1) {
                if (flags->iterationsRemaining <= 0) {
                   fprintf(stderr, "Error: maximum iteration count must be positive.\n");
@@ -308,7 +316,9 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
             break;
          }
          case 'F':
-            assert(optarg);
+            if (!optarg)
+               return STATUS_ERROR_EXIT;
+
             if (optarg[0] == '\0' || optarg[0] == '|') {
                fprintf(stderr, "Error: invalid filter value \"%s\".\n", optarg);
                return STATUS_ERROR_EXIT;
