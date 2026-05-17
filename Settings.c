@@ -799,6 +799,74 @@ int Settings_write(const Settings* this, bool onCrash) {
    return r;
 }
 
+static void Settings_resolveSymlink(char** resolvedPath, const char* path) {
+   int fd = -1;
+   int openFlags = O_NOCTTY | O_NOFOLLOW | O_NONBLOCK;
+#ifdef O_EXEC
+   openFlags |= O_EXEC;
+#else
+   // O_EXEC is not supported in Linux.
+   openFlags |= O_RDONLY;
+#endif
+#ifdef O_PATH
+   // O_PATH is specific to Linux and FreeBSD.
+   openFlags |= O_PATH;
+#endif
+   do {
+      fd = open(path, openFlags);
+   } while (fd < 0 && errno == EINTR);
+
+   if (fd < 0)
+      goto noPath;
+
+   struct stat sb;
+   int err = fstat(fd, &sb);
+   if (err)
+      goto fileBroken;
+
+   if (!S_ISLNK(sb.st_mode) || (sb.st_uid != 0 && sb.st_uid != geteuid())) {
+      // Not a symbolic link or the symbolic link is not trusted.
+      // Return the path to the link itself. This allows the link
+      // target to be opened read-only when desirable.
+      close(fd);
+      *resolvedPath = xStrdup(path);
+      return;
+   }
+
+   if (sb.st_size < 0 || sb.st_size >= PATH_MAX)
+      goto fileBroken;
+
+   char buf[PATH_MAX];
+   ssize_t len = readlinkat(fd, "", buf, PATH_MAX);
+   close(fd);
+
+   if (len < 0 || len > sb.st_size)
+      goto noPath;
+
+   buf[len] = '\0';
+   size_t dirnameLen = 0;
+   if (buf[0] != '/') {
+      const char *lastSlash = strrchr(path, '/');
+      dirnameLen = lastSlash ? (size_t)(lastSlash - (const char*)path + 1) : 0;
+   }
+   char* intermediatePath = xMalloc(dirnameLen + (size_t)len + 1);
+   memcpy(intermediatePath, path, dirnameLen);
+   memcpy(intermediatePath + dirnameLen, buf, (size_t)len + 1);
+   char* ptr = realpath(intermediatePath, buf);
+   free(intermediatePath);
+   if (!ptr)
+      goto noPath;
+
+   *resolvedPath = xStrdup(buf);
+   return;
+
+fileBroken:
+   close(fd);
+noPath:
+   *resolvedPath = xStrdup("");
+   return;
+}
+
 Settings* Settings_new(const Machine* host, Hashtable* dynamicMeters, Hashtable* dynamicColumns, Hashtable* dynamicScreens) {
    Settings* this = xCalloc(1, sizeof(Settings));
 
@@ -877,9 +945,7 @@ Settings* Settings_new(const Machine* host, Hashtable* dynamicMeters, Hashtable*
       legacyDotfile = String_cat(home, "/.htoprc");
    }
 
-   this->filename = xMalloc(PATH_MAX);
-   if (!realpath(this->initialFilename, this->filename))
-      free_and_xStrdup(&this->filename, this->initialFilename);
+   Settings_resolveSymlink(&this->filename, this->initialFilename);
 
    this->colorScheme = 0;
 #ifdef HAVE_GETMOUSE
