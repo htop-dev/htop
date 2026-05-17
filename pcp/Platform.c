@@ -576,10 +576,12 @@ static double Platform_setOneCPUValues(Meter* this, const Settings* settings, pm
       v[CPU_METER_KERNEL] = values[CPU_SYSTEM_ALL_PERIOD].ull / total * 100.0;
       this->curItems = 3;
 
+      v[CPU_METER_IRQ] = 0.0;
+      v[CPU_METER_SOFTIRQ] = 0.0;
       value = values[CPU_STEAL_PERIOD].ull + values[CPU_GUEST_PERIOD].ull;
-      v[CPU_METER_IRQ] = value / total * 100.0;
+      v[CPU_METER_STEAL] = value / total * 100.0;
       if (settings->accountGuestInCPUMeter) {
-         this->curItems = 4;
+         this->curItems = 6;
       }
    }
 
