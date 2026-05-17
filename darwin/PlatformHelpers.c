@@ -30,7 +30,10 @@ void Platform_GetKernelVersion(KernelVersion* k) {
       size_t size = sizeof(str);
       int ret = sysctlbyname("kern.osrelease", str, &size, NULL, 0);
       if (ret == 0) {
-         sscanf(str, "%hd.%hd.%hd", &cachedKernelVersion.major, &cachedKernelVersion.minor, &cachedKernelVersion.patch);
+         int n = sscanf(str, "%hd.%hd.%hd", &cachedKernelVersion.major, &cachedKernelVersion.minor, &cachedKernelVersion.patch);
+         if (n != 3) {
+            cachedKernelVersion.major = cachedKernelVersion.minor = cachedKernelVersion.patch = -1;
+         }
       }
    }
    memcpy(k, &cachedKernelVersion, sizeof(cachedKernelVersion));
