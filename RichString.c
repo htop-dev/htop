@@ -197,7 +197,7 @@ static inline int RichString_writeFromWide(RichString* this, int attrs, const ch
    size_t newLen = from + len;
    RichString_setLen(this, newLen);
    for (size_t i = from, j = 0; i < newLen; i++, j++) {
-      this->chptr[i] = (((unsigned char)data_c[j]) >= 32 ? ((unsigned char)data_c[j]) : '?') | attrs;
+      this->chptr[i] = (Char_isControl(data_c[j]) ? '?' : (unsigned char)data_c[j]) | attrs;
    }
    this->chptr[newLen] = 0;
 
