@@ -224,7 +224,7 @@ if test "$my_htop_platform" = darwin; then
    AC_CHECK_HEADERS([mach/mach_time.h])
    AC_CHECK_TYPES([thread_extended_info_data_t], [], [], [[#include <mach/thread_info.h>]])
    AC_CHECK_MEMBERS([struct vm_statistics64.compressor_page_count], [], [], [[#include <mach/mach_host.h>]])
-   AC_CHECK_MEMBERS([struct vm_statistics64.external_page_count], [], [], [[#include <mach/mach_host.h>]])
+   AC_CHECK_MEMBERS([struct vm_statistics64.internal_page_count], [], [], [[#include <mach/mach_host.h>]])
 
    AC_CHECK_DECLS([kIOMainPortDefault], [], [], [[#include <IOKit/IOKitLib.h>]])
 fi
