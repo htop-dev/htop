@@ -135,12 +135,20 @@ static inline bool Char_isControl(char c) {
    return (unsigned char)c < ' ' || c == '\x7F';
 }
 
-/* Replace control characters (C0 and DEL) with a safe substitute. */
+static inline bool Char_isC1Control(char c, char next) {
+   return (unsigned char)c == 0xC2 && (unsigned char)next >= 0x80 && (unsigned char)next <= 0x9F;
+}
+
+/* Replace control characters (C0, DEL, and C1) with a safe substitute. */
 ATTR_NONNULL
 static inline void String_stripControlChars(char* s) {
-   for (; *s; s++) {
-      if (Char_isControl(*s))
-         *s = '?';
+   for (; s[0]; s++) {
+      if (Char_isControl(s[0])) {
+         s[0] = '?';
+      } else if (Char_isC1Control(s[0], s[1])) {
+         s[0] = s[1] = '?';
+         s++;
+      }
    }
 }
 
