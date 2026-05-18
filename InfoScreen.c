@@ -59,6 +59,8 @@ void InfoScreen_drawTitled(InfoScreen* this, const char* fmt, ...) {
       memset(&title[COLS - 3], '.', 3);
    }
 
+   String_stripControlChars(title);
+
    attrset(CRT_colors[METER_TEXT]);
    mvhline(0, 0, ' ', COLS);
    mvaddstr(0, 0, title);
