@@ -99,15 +99,22 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       reaction |= Action_setScreenTab(this->state, x);
       result = HANDLED;
    } else if (ch != ERR && this->inc->active) {
+      const bool wasSearch = !this->inc->active->isFilter;
       bool filterChanged = IncSet_handleKey(this->inc, ch, super, MainPanel_getValue, NULL);
       if (filterChanged) {
          host->activeTable->incFilter = IncSet_filter(this->inc);
          reaction = HTOP_REFRESH | HTOP_REDRAW_BAR;
       }
-      if (this->inc->found && this->inc->active && !this->inc->active->isFilter) {
+      /* Keep the active-search match separate from the Enter-confirm edge:
+       * IncSet_handleKey() may confirm the search and clear inc->active. */
+      const bool activeSearchMatch = this->inc->active && this->inc->found && !this->inc->active->isFilter;
+      const bool confirmedSearch = !this->inc->active && wasSearch && (ch == '\r' || ch == KEY_ENTER);
+      if (activeSearchMatch || confirmedSearch) {
          host->activeTable->following = MainPanel_selectedRow(this);
          Panel_setSelectionColor(super, PANEL_SELECTION_FOLLOW);
          reaction |= HTOP_KEEP_FOLLOWING;
+         if (confirmedSearch)
+            reaction |= HTOP_REFRESH;
       }
       result = HANDLED;
    } else if (ch == 27) {
