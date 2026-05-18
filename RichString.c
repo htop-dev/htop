@@ -21,6 +21,8 @@ in the source distribution for its full text.
 
 #define charBytes(n) (sizeof(CharType) * (n))
 
+#define RICHSTRING_MAX_WIDE_LEN 0x8000
+
 static void RichString_extendLen(RichString* this, size_t len) {
    if (this->chptr == this->chstr) {
       // String is in internal buffer
@@ -101,6 +103,9 @@ static inline int RichString_writeFromWide(RichString* this, int attrs, const ch
    if (len < 1)
       return 0;
 
+   if (len > RICHSTRING_MAX_WIDE_LEN)
+      len = RICHSTRING_MAX_WIDE_LEN;
+
    wchar_t data[len];
    len = mbstowcs_nonfatal(data, data_c, len);
    if (len <= 0)
@@ -116,6 +121,9 @@ static inline int RichString_writeFromWide(RichString* this, int attrs, const ch
 }
 
 int RichString_appendnWideColumns(RichString* this, int attrs, const char* data_c, size_t len, int* columns) {
+   if (len > RICHSTRING_MAX_WIDE_LEN)
+      len = RICHSTRING_MAX_WIDE_LEN;
+
    wchar_t data[len];
    len = mbstowcs_nonfatal(data, data_c, len);
    if (len <= 0)
