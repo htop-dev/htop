@@ -255,7 +255,7 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
    if (headerLen > 0) {
       attrset(header_attr);
       mvhline(y, x, ' ', this->w);
-      if (scrollH < headerLen) {
+      if (scrollH < headerLen && this->w > 0) {
          RichString_printoffnVal(this->header, y, x, scrollH,
             MINIMUM(headerLen - scrollH, this->w));
       }
