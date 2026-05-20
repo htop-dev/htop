@@ -80,3 +80,5 @@ The `pcp/` platform uses PMAPI to fetch metrics and supports dynamic column/mete
 ## AI Contributions Policy
 
 Disclose AI use via `Assisted-by:` or `Co-authored-by:` commit trailers. Contributor is fully responsible for quality and license compliance. See `docs/ai-contributions-policy.md`.
+
+Sign off commits with a `Signed-off-by:` trailer (`git commit -s`) to certify the [Developer Certificate of Origin](https://developercertificate.org/). Sign-off is distinct from AI disclosure: `Assisted-by:` records tool use; `Signed-off-by:` records human responsibility. An agent must not sign off on a contributor's behalf without confirmation.
