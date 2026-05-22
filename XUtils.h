@@ -22,7 +22,36 @@ in the source distribution for its full text.
 #include <string.h> // IWYU pragma: keep
 
 #include "Macros.h"
+#include "ProvideCurses.h"
 
+
+typedef struct WCharEncoderState_ {
+   size_t pos;
+   size_t size;
+   void* buf;
+   mbstate_t mbState;
+} WCharEncoderState;
+
+/* Object for reading wide characters from a multibyte string.
+   "str" and "maxLen" are input but will be modified during process.
+   "str" will be set to NULL when the decoding is finished with the
+   terminating L'\0' character. */
+typedef struct MBStringDecoder_ {
+   const char* str;
+   size_t maxLen;
+#ifdef HAVE_LIBNCURSESW
+   wint_t ch;
+   mbstate_t mbState;
+#else
+   int ch;
+#endif
+} MBStringDecoder;
+
+#ifdef HAVE_LIBNCURSESW
+typedef ATTR_NONNULL void (*EncodeWChar)(WCharEncoderState* ps, wchar_t wc);
+#else
+typedef ATTR_NONNULL void (*EncodeWChar)(WCharEncoderState* ps, int c);
+#endif
 
 ATTR_NORETURN
 void fail(void);
@@ -107,6 +136,27 @@ size_t String_safeStrncpy(char* restrict dest, const char* restrict src, size_t 
 #ifndef HAVE_STRNLEN
 size_t strnlen(const char* str, size_t maxLen);
 #endif
+
+ATTR_NONNULL_N(1, 4) ATTR_ACCESS2_W(1) ATTR_ACCESS3_R(2, 3)
+void EncodePrintableString(WCharEncoderState* ps, const char* src, size_t maxLen, EncodeWChar encodeWChar);
+
+ATTR_NONNULL ATTR_RETNONNULL ATTR_MALLOC ATTR_ACCESS3_R(1, 2)
+char* String_makePrintable(const char* str, size_t maxLen);
+
+ATTR_NONNULL
+bool MBStringDecoder_nextWChar(MBStringDecoder* ps);
+
+ATTR_NONNULL ATTR_ACCESS2_RW(1)
+int String_lineBreakWidth(const char** str, size_t maxLen, int maxWidth, char separator);
+
+/* Count the number of terminal columns needed to display a string, or
+   count how many characters from the string that can be displayed
+   with the column limit ("maxWidth").
+   "maxLen" is in bytes.
+   maxLen = SIZE_MAX to take the whole string.
+   maxWidth = INT_MAX for no terminal column limit. */
+ATTR_NONNULL ATTR_ACCESS2_RW(1)
+int String_mbswidth(const char** str, size_t maxLen, int maxWidth);
 
 ATTR_FORMAT(printf, 2, 3) ATTR_NONNULL_N(1, 2)
 int xAsprintf(char** strp, const char* fmt, ...);
