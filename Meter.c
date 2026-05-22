@@ -415,25 +415,73 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
    RichString_begin(out);
    Meter_displayBuffer(this, &out);
 
-   int len = RichString_sizeVal(out);
-   for (int i = 0; i < len; i++) {
-      int c = RichString_getCharVal(out, i);
+#ifdef HAVE_LIBNCURSESW
+   // If the character takes zero columns, include the character in the
+   // substring if the working encoding is UTF-8, and ignore it otherwise.
+   // In Unicode, combining characters are always placed after the base
+   // character, but some legacy 8-bit encodings instead place combining
+   // characters before the base character.
+   const bool isUnicode = CRT_utf8;
+#else
+   const bool isUnicode = false;
+#endif
+
+   size_t len = RichString_sizeVal(out);
+   size_t charPos = 0;
+   while (charPos < len) {
+#ifdef HAVE_LIBNCURSESW
+      wchar_t c = 0;
+#else
+      int c = 0;
+#endif
+
+      int subWidth = 0;
+      size_t breakPos = charPos;
+      size_t startPos = charPos;
+      while (charPos < len && (xx + subWidth < x + w || isUnicode)) {
+         assert(xx + subWidth <= x + w);
+
+         c = RichString_getCharVal(out, charPos);
+         assert(c != 0);
+         if (c >= '0' && c <= '9')
+            break;
+
+#ifdef HAVE_LIBNCURSESW
+         int cw = wcwidth(c);
+         assert(cw >= 0);
+#else
+         assert(isprint(c));
+         const int cw = 1;
+#endif
+
+         if ((unsigned int)cw > (unsigned int)(x + w - (xx + subWidth))) {
+            charPos = len;
+            break;
+         }
+
+         charPos++;
+
+         if (cw <= 0 && !isUnicode)
+            continue;
+
+         subWidth += cw;
+         breakPos = charPos;
+      }
+
+      if (breakPos > startPos) {
+         RichString_setAttrn(&out, CRT_colors[LED_COLOR], startPos, breakPos - startPos);
+         RichString_printoffnVal(out, yText, xx, startPos, breakPos - startPos);
+         xx += subWidth;
+      }
+
       if (c >= '0' && c <= '9') {
-         if (xx > x + w - 4)
+         const int cw = 4;
+         if (cw > x + w - xx)
             break;
 
          LEDMeterMode_drawDigit(xx, y, c - '0');
-         xx += 4;
-      } else {
-         if (xx > x + w - 1)
-            break;
-#ifdef HAVE_LIBNCURSESW
-         const cchar_t wc = { .chars = { c, '\0' }, .attr = 0 }; /* use LED_COLOR from attrset() */
-         mvadd_wch(yText, xx, &wc);
-#else
-         mvaddch(yText, xx, c);
-#endif
-         xx += 1;
+         xx += cw;
+         charPos++;
       }
    }
    RichString_delete(&out);
