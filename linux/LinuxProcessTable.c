@@ -1133,6 +1133,7 @@ static void LinuxProcessTable_readOomData(LinuxProcess* process, openat_arg_t pr
 
    char buffer[PROC_LINE_LENGTH + 1] = {0};
 
+   process->oom = UINT_MAX;
    ssize_t oomRead = Compat_readfileat(procFd, "oom_score", buffer, sizeof(buffer));
    if (oomRead < 1) {
       return;
