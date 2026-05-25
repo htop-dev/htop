@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include "linux/LinuxProcess.h"
 
 #include <assert.h>
+#include <limits.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -296,7 +297,14 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
       xSnprintf(buffer, n, "%-*.*s ", Row_fieldWidths[CONTAINER], Row_fieldWidths[CONTAINER], lp->container_short ? lp->container_short : "N/A");
       RichString_appendWide(str, attr, buffer);
       return;
-   case OOM: xSnprintf(buffer, n, "%4u ", lp->oom); break;
+   case OOM:
+      if (lp->oom == UINT_MAX) {
+         attr = CRT_colors[PROCESS_SHADOW];
+         xSnprintf(buffer, n, " N/A ");
+      } else {
+         xSnprintf(buffer, n, "%4u ", lp->oom);
+      }
+      break;
    case IO_PRIORITY: {
       int klass = IOPriority_class(lp->ioPriority);
       if (klass == IOPRIO_CLASS_NONE) {
