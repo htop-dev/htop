@@ -42,7 +42,7 @@ jobs:
       run: ./autogen.sh
 
     - name: Configure
-      run: ./configure --enable-werror --enable-openvz --enable-vserver --enable-ancient-vserver --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities
+      run: ./configure --enable-werror --enable-unicode --enable-hwloc --enable-delayacct --enable-sensors --enable-capabilities
 
     - name: Build
       run: make

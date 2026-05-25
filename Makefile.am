@@ -525,7 +525,7 @@ coverage:
 	$(MAKE) all AM_CPPFLAGS="-fprofile-arcs -ftest-coverage" AM_LDFLAGS="-lgcov"
 
 cppcheck:
-	cppcheck -q -v . --enable=all -DHAVE_OPENVZ
+	cppcheck -q -v . --enable=all
 
 dist-hook: $(top_distdir)/configure
 	@if test "x$$FORCE_MAKE_DIST" != x || \

@@ -158,15 +158,6 @@ To install on the local system run `make install`. By default `make install` ins
   * `--with-proc`:
     location of a Linux-compatible proc filesystem
     - default: */proc*
-  * `--enable-openvz`:
-    enable OpenVZ support
-    - default: *no*
-  * `--enable-vserver`:
-    enable VServer support
-    - default: *no*
-  * `--enable-ancient-vserver`:
-    enable ancient VServer support (implies `--enable-vserver`)
-    - default: *no*
   * `--enable-delayacct`:
     enable Linux delay accounting support
     - dependencies: *libnl-3-dev*(build-time) and *libnl-genl-3-dev*(build-time), at runtime *libnl-3* and *libnl-genl-3* are loaded via `dlopen(3)` if available and requested

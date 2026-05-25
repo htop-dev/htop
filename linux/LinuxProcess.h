@@ -19,8 +19,6 @@ in the source distribution for its full text.
 
 
 #define PROCESS_FLAG_LINUX_IOPRIO    0x00000100
-#define PROCESS_FLAG_LINUX_OPENVZ    0x00000200
-#define PROCESS_FLAG_LINUX_VSERVER   0x00000400
 #define PROCESS_FLAG_LINUX_CGROUP    0x00000800
 #define PROCESS_FLAG_LINUX_OOM       0x00001000
 #define PROCESS_FLAG_LINUX_SMAPS     0x00002000
@@ -84,13 +82,6 @@ typedef struct LinuxProcess_ {
    /* Storage data written (in bytes per second) */
    double io_rate_write_bps;
 
-   #ifdef HAVE_OPENVZ
-   char* ctid;
-   pid_t vpid;
-   #endif
-   #ifdef HAVE_VSERVER
-   unsigned int vxid;
-   #endif
    char* cgroup;
    char* cgroup_short;
    char* container_short;

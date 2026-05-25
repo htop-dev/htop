@@ -551,9 +551,6 @@ static bool LinuxProcessTable_readStatusFile(Process* process, openat_arg_t proc
 
    unsigned long ctxt = 0;
    process->isRunningInContainer = TRI_OFF;
-#ifdef HAVE_VSERVER
-   lp->vxid = 0;
-#endif
 
    FILE* statusfile = fopenat(procFd, "status", "r");
    if (!statusfile)
@@ -594,23 +591,6 @@ static bool LinuxProcessTable_readStatusFile(Process* process, openat_arg_t proc
          if (ok == 1) {
             ctxt += nvctxt;
          }
-
-#ifdef HAVE_VSERVER
-      } else if (String_startsWith(buffer, "VxID:")) {
-         int vxid;
-         int ok = sscanf(buffer, "VxID:\t%32d", &vxid);
-         if (ok == 1) {
-            lp->vxid = vxid;
-         }
-#ifdef HAVE_ANCIENT_VSERVER
-      } else if (String_startsWith(buffer, "s_context:")) {
-         int vxid;
-         int ok = sscanf(buffer, "s_context:\t%32d", &vxid);
-         if (ok == 1) {
-            lp->vxid = vxid;
-         }
-#endif /* HAVE_ANCIENT_VSERVER */
-#endif /* HAVE_VSERVER */
       }
    }
 
@@ -931,95 +911,6 @@ static bool LinuxProcessTable_readSmapsFile(LinuxProcess* process, openat_arg_t 
    fclose(fp);
    return true;
 }
-
-#ifdef HAVE_OPENVZ
-
-static void LinuxProcessTable_readOpenVZData(LinuxProcess* process, openat_arg_t procFd) {
-   if (access(PROCDIR "/vz", R_OK) != 0) {
-      free(process->ctid);
-      process->ctid = NULL;
-      process->vpid = Process_getPid(&process->super);
-      return;
-   }
-
-   FILE* file = fopenat(procFd, "status", "r");
-   if (!file) {
-      free(process->ctid);
-      process->ctid = NULL;
-      process->vpid = Process_getPid(&process->super);
-      return;
-   }
-
-   bool foundEnvID = false;
-   bool foundVPid = false;
-   char linebuf[256];
-   while (fgets(linebuf, sizeof(linebuf), file) != NULL) {
-      if (strchr(linebuf, '\n') == NULL) {
-         // Partial line, skip to end of this line
-         if (!skipEndOfLine(file)) {
-            break;
-         }
-      }
-
-      char* name_value_sep = strchr(linebuf, ':');
-      if (name_value_sep == NULL) {
-         continue;
-      }
-
-      int field;
-      if (0 == strncasecmp(linebuf, "envID", name_value_sep - linebuf)) {
-         field = 1;
-      } else if (0 == strncasecmp(linebuf, "VPid", name_value_sep - linebuf)) {
-         field = 2;
-      } else {
-         continue;
-      }
-
-      do {
-         name_value_sep++;
-      } while (*name_value_sep != '\0' && *name_value_sep <= 32);
-
-      char* value_end = name_value_sep;
-
-      while (*value_end > 32) {
-         value_end++;
-      }
-
-      if (name_value_sep == value_end) {
-         continue;
-      }
-
-      *value_end = '\0';
-
-      switch (field) {
-         case 1:
-            foundEnvID = true;
-            if (!String_eq(name_value_sep, process->ctid ? process->ctid : ""))
-               free_and_xStrdup(&process->ctid, name_value_sep);
-            break;
-         case 2:
-            if ((process->vpid = strtopid(name_value_sep)) != 0)
-               foundVPid = true;
-            break;
-         default:
-            //Sanity Check: Should never reach here, or the implementation is missing something!
-            assert(false && "OpenVZ handling: Unimplemented case for field handling reached.");
-      }
-   }
-
-   fclose(file);
-
-   if (!foundEnvID) {
-      free(process->ctid);
-      process->ctid = NULL;
-   }
-
-   if (!foundVPid) {
-      process->vpid = Process_getPid(&process->super);
-   }
-}
-
-#endif /* HAVE_OPENVZ */
 
 /*
  * Read /proc/<pid>/cgroup (thread-specific data)
@@ -1772,9 +1663,6 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
 
       if (ss->flags & PROCESS_FLAG_LINUX_CTXT
          || ((hideRunningInContainer || ss->flags & PROCESS_FLAG_LINUX_CONTAINER) && proc->isRunningInContainer == TRI_INITIAL)
-#ifdef HAVE_VSERVER
-         || ss->flags & PROCESS_FLAG_LINUX_VSERVER
-#endif
       ) {
          proc->isRunningInContainer = TRI_OFF;
          if (!LinuxProcessTable_readStatusFile(proc, procFd))
@@ -1782,12 +1670,6 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       }
 
       if (!preExisting) {
-
-         #ifdef HAVE_OPENVZ
-         if (ss->flags & PROCESS_FLAG_LINUX_OPENVZ) {
-            LinuxProcessTable_readOpenVZData(lp, procFd);
-         }
-         #endif
 
          if (proc->isKernelThread) {
             Process_updateCmdline(proc, NULL, 0, 0);
