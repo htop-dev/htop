@@ -107,6 +107,7 @@ typedef struct Settings_ {
    bool enableMouse;
    #endif
    int hideFunctionBar;  // 0 - off, 1 - on ESC until next input, 2 - permanently
+   bool decimalUnits;    // I/O rates: false = IEC binary (KiB/s, ...), true = SI decimal (KB/s, ...)
    #ifdef HAVE_LIBHWLOC
    bool topologyAffinity;
    #endif
