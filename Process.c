@@ -346,6 +346,29 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
       }
       if (matchLen) {
          cmdlineBasenameLen = exeBasenameLen;
+      } else if (this->cmdline) {
+         /* Strip /proc pseudo-paths from merged command */
+         #define PATH_PROC_EXE_SELF "/proc/self/exe"
+         #define PATH_PROC_EXE_SELF_LEN (sizeof(PATH_PROC_EXE_SELF)-1)
+         #define PATH_PROC_EXE_THREAD "/proc/thread-self/exe"
+         #define PATH_PROC_EXE_THREAD_LEN (sizeof(PATH_PROC_EXE_THREAD)-1)
+
+         const size_t cmdlineLen = strlen(this->cmdline);
+         const char sep_self = cmdlineLen >= PATH_PROC_EXE_SELF_LEN ? this->cmdline[PATH_PROC_EXE_SELF_LEN] : 0;
+         const char sep_thread = cmdlineLen >= PATH_PROC_EXE_THREAD_LEN ? this->cmdline[PATH_PROC_EXE_THREAD_LEN] : 0;
+
+         if (String_startsWith(this->cmdline, PATH_PROC_EXE_SELF) &&
+            (sep_self == '\0' || sep_self == ' ' || sep_self == '\n')) {
+            matchLen = PATH_PROC_EXE_SELF_LEN;
+         } else if (String_startsWith(this->cmdline, PATH_PROC_EXE_THREAD) &&
+            (sep_thread == '\0' || sep_thread == ' ' || sep_thread == '\n')) {
+            matchLen = PATH_PROC_EXE_THREAD_LEN;
+         }
+
+         #undef PATH_PROC_EXE_THREAD
+         #undef PATH_PROC_EXE_SELF_LEN
+         #undef PATH_PROC_EXE_SELF
+         #undef PATH_PROC_EXE_THREAD_LEN
       }
    }
 
