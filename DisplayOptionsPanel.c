@@ -318,6 +318,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) NumberItem_newByRef("Hide main function bar (0 - off, 1 - on ESC until next input, 2 - permanently)", &(settings->hideFunctionBar), 0, 0, 2));
    Panel_add(super, (Object*) NumberItem_newByRef("Keep columns visible (0 - off, number of leading columns kept in view)", &(settings->keepColumnsVisible), 0, 0, 100));
    Panel_add(super, (Object*) CheckItem_newByRef("Sticky follow", &(settings->stickyFollow)));
+   Panel_add(super, (Object*) CheckItem_newByRef("Display I/O rates in decimal SI units (KB/s, MB/s, GB/s) instead of binary IEC (KiB/s, MiB/s, GiB/s)", &(settings->decimalUnits)));
    #ifdef HAVE_LIBHWLOC
    Panel_add(super, (Object*) CheckItem_newByRef("Show topology when selecting affinity by default", &(settings->topologyAffinity)));
    #endif

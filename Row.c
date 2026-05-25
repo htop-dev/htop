@@ -492,7 +492,7 @@ void Row_printNanoseconds(RichString* str, unsigned long long totalNanoseconds, 
    Row_printTime(str, totalHundredths, coloring);
 }
 
-void Row_printRate(RichString* str, double rate, bool coloring) {
+void Row_printRate(RichString* str, double rate, bool coloring, bool decimal) {
    char buffer[16];
 
    int largeNumberColor = CRT_colors[LARGE_NUMBER];
@@ -510,10 +510,11 @@ void Row_printRate(RichString* str, double rate, bool coloring) {
       return;
    }
 
+   const double base = decimal ? ONE_DECIMAL_K : ONE_K;
    size_t i = 0;
    double scaled = rate;
-   while (scaled >= ONE_K && i < ARRAYSIZE(unitPrefixes)) {
-      scaled /= ONE_K;
+   while (scaled >= base && i < ARRAYSIZE(unitPrefixes)) {
+      scaled /= base;
       i++;
    }
 
