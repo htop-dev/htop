@@ -107,6 +107,7 @@ typedef struct LinuxProcess_ {
    unsigned long ctxt_diff;
    char* secattr;
    unsigned long long int last_mlrs_calctime;
+   unsigned long long int last_deleted_lib_calctime;
 
    /* Total GPU time used in nano seconds */
    unsigned long long int gpu_time;
