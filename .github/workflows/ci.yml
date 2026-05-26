@@ -2,6 +2,9 @@ name: CI
 
 on: [ push, pull_request ]
 
+permissions:
+  contents: read
+
 env:
   # Enable format attributes in ncurses headers
   # Enable fortified memory/string handling
