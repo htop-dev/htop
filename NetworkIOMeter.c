@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include "Platform.h"
 #include "RichString.h"
 #include "Row.h"
+#include "Settings.h"
 #include "XUtils.h"
 
 
@@ -34,6 +35,7 @@ static uint32_t cached_rxp_diff;
 static double cached_txb_diff;
 static char cached_txb_diff_str[6];
 static uint32_t cached_txp_diff;
+static const char* cached_unit_suffix = "iB/s";
 
 static void NetworkIOMeter_updateValues(Meter* this) {
    const Machine* host = this->host;
@@ -66,6 +68,7 @@ static void NetworkIOMeter_updateValues(Meter* this) {
       static uint64_t cached_txp_total;
 
       if (status != RATESTATUS_INIT) {
+         const bool decimal = host->settings->decimalUnits;
          uint64_t diff;
 
          if (data.bytesReceived > cached_rxb_total) {
@@ -75,7 +78,7 @@ static void NetworkIOMeter_updateValues(Meter* this) {
          } else {
             cached_rxb_diff = 0;
          }
-         Meter_humanUnit(cached_rxb_diff_str, cached_rxb_diff / ONE_K, sizeof(cached_rxb_diff_str));
+         cached_unit_suffix = Meter_ioRateUnit(cached_rxb_diff_str, sizeof(cached_rxb_diff_str), cached_rxb_diff, decimal);
 
          if (data.packetsReceived > cached_rxp_total) {
             diff = data.packetsReceived - cached_rxp_total;
@@ -92,7 +95,7 @@ static void NetworkIOMeter_updateValues(Meter* this) {
          } else {
             cached_txb_diff = 0;
          }
-         Meter_humanUnit(cached_txb_diff_str, cached_txb_diff / ONE_K, sizeof(cached_txb_diff_str));
+         Meter_ioRateUnit(cached_txb_diff_str, sizeof(cached_txb_diff_str), cached_txb_diff, decimal);
 
          if (data.packetsTransmitted > cached_txp_total) {
             diff = data.packetsTransmitted - cached_txp_total;
@@ -125,8 +128,8 @@ static void NetworkIOMeter_updateValues(Meter* this) {
       return;
    }
 
-   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "rx:%siB/s tx:%siB/s (%u/%upps)",
-      cached_rxb_diff_str, cached_txb_diff_str, cached_rxp_diff, cached_txp_diff);
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "rx:%s%s tx:%s%s (%u/%upps)",
+      cached_rxb_diff_str, cached_unit_suffix, cached_txb_diff_str, cached_unit_suffix, cached_rxp_diff, cached_txp_diff);
 }
 
 static void NetworkIOMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
@@ -148,11 +151,11 @@ static void NetworkIOMeter_display(ATTR_UNUSED const Object* cast, RichString* o
 
    RichString_writeAscii(out, CRT_colors[METER_TEXT], "rx: ");
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], cached_rxb_diff_str);
-   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], "iB/s");
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], cached_unit_suffix);
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " tx: ");
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], cached_txb_diff_str);
-   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], "iB/s");
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], cached_unit_suffix);
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " (");
    int len = xSnprintf(buffer, sizeof(buffer), "%u", (unsigned int)cached_rxp_diff);

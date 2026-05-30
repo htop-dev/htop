@@ -275,9 +275,9 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
    case RBYTES: Row_printBytes(str, lp->io_read_bytes, coloring); return;
    case WBYTES: Row_printBytes(str, lp->io_write_bytes, coloring); return;
    case CNCLWB: Row_printBytes(str, lp->io_cancelled_write_bytes, coloring); return;
-   case IO_READ_RATE:  Row_printRate(str, lp->io_rate_read_bps, coloring); return;
-   case IO_WRITE_RATE: Row_printRate(str, lp->io_rate_write_bps, coloring); return;
-   case IO_RATE: Row_printRate(str, LinuxProcess_totalIORate(lp), coloring); return;
+   case IO_READ_RATE:  Row_printRate(str, lp->io_rate_read_bps, coloring, host->settings->decimalUnits); return;
+   case IO_WRITE_RATE: Row_printRate(str, lp->io_rate_write_bps, coloring, host->settings->decimalUnits); return;
+   case IO_RATE: Row_printRate(str, LinuxProcess_totalIORate(lp), coloring, host->settings->decimalUnits); return;
    #ifdef HAVE_OPENVZ
    case CTID: xSnprintf(buffer, n, "%-8s ", lp->ctid ? lp->ctid : ""); break;
    case VPID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, lp->vpid); break;
