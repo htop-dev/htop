@@ -517,7 +517,10 @@ void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt) {
       dp->super.state = UNINTERRUPTIBLE_WAIT;
    }
 
-   vm_deallocate(mach_task_self(), (vm_address_t) thread_list, sizeof(thread_port_array_t) * thread_count);
+   for (mach_msg_type_number_t i = 0; i < thread_count; i++) {
+      mach_port_deallocate(mach_task_self(), thread_list[i]);
+   }
+   vm_deallocate(mach_task_self(), (vm_address_t) thread_list, sizeof(thread_act_t) * thread_count);
    mach_port_deallocate(mach_task_self(), task);
 }
 
