@@ -132,6 +132,10 @@ static void OpenRCMeter_display(ATTR_UNUSED const Object* cast, RichString* out,
    RichString_writeAscii(out, CRT_colors[METER_TEXT], "Runlevel: ");
    RichString_appendAscii(out, CRT_colors[METER_VALUE], ctx->runlevel ? ctx->runlevel : "N/A");
 
+   if (ctx->services_started == INVALID_VALUE && ctx->services_stopped == INVALID_VALUE) {
+      return;
+   }
+
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " (");
 
    if (ctx->services_started == INVALID_VALUE) {
