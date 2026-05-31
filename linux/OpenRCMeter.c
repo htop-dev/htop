@@ -24,12 +24,12 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "XUtils.h"
 
-#define INVALID_VALUE ((unsigned int)-1)
+#define INVALID_VALUE ((size_t)-1)
 
 typedef struct OpenRCMeterContext {
    char* runlevel;
-   unsigned int services_stopped;
-   unsigned int services_started;
+   size_t services_stopped;
+   size_t services_started;
 } OpenRCMeterContext_t;
 
 static OpenRCMeterContext_t ctx_system;
