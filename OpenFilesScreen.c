@@ -120,7 +120,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       close(fdpair[1]);
       int fdnull = open("/dev/null", O_WRONLY);
       if (fdnull < 0) {
-         exit(1);
+         _exit(1);
       }
 
       dup2(fdnull, STDERR_FILENO);
@@ -130,7 +130,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       // Use of NULL in variadic functions must have a pointer cast.
       // The NULL constant is not required by standard to have a pointer type.
       execlp("lsof", "lsof", "-P", "-o", "-p", buffer, "-F", (char*)NULL);
-      exit(127);
+      _exit(127);
    }
    close(fdpair[1]);
 

@@ -111,7 +111,7 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
          (void)! write(STDERR_FILENO, message, strlen(message));
       #endif
 
-      exit(127);
+      _exit(127);
    }
 
    FILE* fp = fdopen(fdpair[0], "r");

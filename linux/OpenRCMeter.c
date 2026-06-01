@@ -67,7 +67,7 @@ static int OpenRCMeter_execRcStatus(bool user, bool full, pid_t* childPid) {
       close(fdpair[1]);
       int fdnull = open("/dev/null", O_WRONLY);
       if (fdnull < 0)
-         exit(1);
+         _exit(1);
       dup2(fdnull, STDERR_FILENO);
       close(fdnull);
 
@@ -84,7 +84,7 @@ static int OpenRCMeter_execRcStatus(bool user, bool full, pid_t* childPid) {
             execlp("rc-status", "rc-status", "-C", "-r", (char*)NULL);
          }
       }
-      exit(127);
+      _exit(127);
    }
 
    *childPid = child;
