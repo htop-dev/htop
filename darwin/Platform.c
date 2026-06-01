@@ -124,11 +124,11 @@ enum {
 
 const MemoryClass Platform_memoryClasses[] = {
     [MEMORY_CLASS_WIRED] = { .label = "wired", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_1 }, // pages wired down to physical memory (kernel)
-   [MEMORY_CLASS_SPECULATIVE] = { .label = "speculative", .countsAsUsed = true, .countsAsCache = true, .color = MEMORY_2 }, // readahead optimization caches
+   [MEMORY_CLASS_SPECULATIVE] = { .label = "speculative", .countsAsUsed = false, .countsAsCache = true, .color = MEMORY_2 }, // readahead optimization caches
    [MEMORY_CLASS_ACTIVE] = { .label = "active", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_3 }, // userland pages actively being used
    [MEMORY_CLASS_PURGEABLE] = { .label = "purgeable", .countsAsUsed = false, .countsAsCache = true, .color = MEMORY_4 }, // userland pages voluntarily marked "discardable" by apps
    [MEMORY_CLASS_COMPRESSED] = { .label = "compressed", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_5 }, // userland pages being compressed (means memory pressure++)
-   [MEMORY_CLASS_INACTIVE] = { .label = "inactive", .countsAsUsed = true, .countsAsCache = true, .color = MEMORY_6 }, // pages no longer used; macOS counts them as "used" anyway...
+   [MEMORY_CLASS_INACTIVE] = { .label = "inactive", .countsAsUsed = false, .countsAsCache = true, .color = MEMORY_6 }, // pages no longer actively referenced
 };
 
 const unsigned int Platform_numberOfMemoryClasses = ARRAYSIZE(Platform_memoryClasses);
@@ -414,10 +414,10 @@ void Platform_setMemoryValues(Meter* mtr) {
 
 #ifdef HAVE_STRUCT_VM_STATISTICS64
    const struct vm_statistics64* vm = &dhost->vm_stats;
-   #ifdef HAVE_STRUCT_VM_STATISTICS64_EXTERNAL_PAGE_COUNT
-   const natural_t external_page_count = vm->external_page_count;
+   #ifdef HAVE_STRUCT_VM_STATISTICS64_INTERNAL_PAGE_COUNT
+   const natural_t internal_page_count = vm->internal_page_count;
    #else
-   const natural_t external_page_count = 0;
+   const natural_t internal_page_count = vm->active_count;
    #endif
    #ifdef HAVE_STRUCT_VM_STATISTICS64_COMPRESSOR_PAGE_COUNT
    const natural_t compressor_page_count = vm->compressor_page_count;
@@ -426,31 +426,26 @@ void Platform_setMemoryValues(Meter* mtr) {
    #endif
 #else
    const struct vm_statistics* vm = &dhost->vm_stats;
-   const natural_t external_page_count = 0;
+   const natural_t internal_page_count = vm->active_count;
    const natural_t compressor_page_count = 0;
 #endif // HAVE_STRUCT_VM_STATISTICS64
 
    mtr->total = dhost->host_info.max_mem / 1024;
    mtr->values[MEMORY_CLASS_WIRED]       = page_K * vm->wire_count;
 
-   /*
-    * Use saturatingSub() to prevent unsigned underflow: on macOS,
-    * external_page_count (file-backed pages) can exceed active_count,
-    * causing the result to wrap around to ~4 billion pages (~64 TB on
-    * 16K-page ARM64 systems).
-    */
    if (settings->showCachedMemory) {
       mtr->values[MEMORY_CLASS_SPECULATIVE] = page_K * vm->speculative_count;
-      mtr->values[MEMORY_CLASS_ACTIVE]      = page_K * saturatingSub(vm->active_count, (unsigned long long)vm->purgeable_count + external_page_count);
+      mtr->values[MEMORY_CLASS_ACTIVE]      = page_K * saturatingSub(internal_page_count, vm->purgeable_count);
       mtr->values[MEMORY_CLASS_PURGEABLE]   = page_K * vm->purgeable_count;
+      mtr->values[MEMORY_CLASS_INACTIVE]    = page_K * vm->inactive_count;
    }
    else {
       mtr->values[MEMORY_CLASS_SPECULATIVE] = 0;
-      mtr->values[MEMORY_CLASS_ACTIVE]      = page_K * saturatingSub((unsigned long long)vm->speculative_count + vm->active_count, external_page_count);
+      mtr->values[MEMORY_CLASS_ACTIVE]      = page_K * saturatingSub(internal_page_count, vm->purgeable_count);
       mtr->values[MEMORY_CLASS_PURGEABLE]   = 0;
+      mtr->values[MEMORY_CLASS_INACTIVE]    = 0;
    }
    mtr->values[MEMORY_CLASS_COMPRESSED]  = page_K * compressor_page_count;
-   mtr->values[MEMORY_CLASS_INACTIVE]    = page_K * vm->inactive_count; // for some reason macOS counts inactive pages in the "used" memory...
 }
 
 void Platform_setSwapValues(Meter* mtr) {
