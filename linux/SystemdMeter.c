@@ -255,7 +255,7 @@ static void updateViaExec(bool user) {
    close(fdpair[1]);
 
    int wstatus;
-   if (waitpid(child, &wstatus, 0) < 0 || !WIFEXITED(wstatus) || WEXITSTATUS(wstatus) != 0) {
+   if (xWaitpid(child, &wstatus, 0, false) < 0 || !WIFEXITED(wstatus) || WEXITSTATUS(wstatus) != 0) {
       close(fdpair[0]);
       return;
    }

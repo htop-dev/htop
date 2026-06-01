@@ -20,6 +20,7 @@ in the source distribution for its full text.
 #include <stdio.h>
 #include <stdlib.h> // IWYU pragma: keep
 #include <string.h> // IWYU pragma: keep
+#include <sys/types.h>
 
 #include "Macros.h"
 
@@ -122,6 +123,8 @@ void free_and_xStrdup(char** ptr, const char* str);
 
 ATTR_NONNULL ATTR_RETNONNULL ATTR_MALLOC ATTR_ACCESS3_R(1, 2)
 char* xStrndup(const char* str, size_t len);
+
+pid_t xWaitpid(pid_t pid, int* wstatus, int options, bool wait_for_exit);
 
 ATTR_NONNULL ATTR_ACCESS3_R(2, 3)
 ssize_t full_write(int fd, const void* buf, size_t count);

@@ -215,11 +215,10 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
    fclose(fp);
 
    int wstatus;
-   while (waitpid(child, &wstatus, 0) == -1)
-      if (errno != EINTR) {
-         pdata->error = 1;
-         return pdata;
-      }
+   if (xWaitpid(child, &wstatus, 0, false) < 0) {
+      pdata->error = 1;
+      return pdata;
+   }
 
    if (!WIFEXITED(wstatus)) {
       pdata->error = 1;

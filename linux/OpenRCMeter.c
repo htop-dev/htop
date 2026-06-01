@@ -112,7 +112,7 @@ static void OpenRCMeter_updateViaExec(bool user) {
    FILE* commandOutput = fdopen(fd, "r");
    if (!commandOutput) {
       close(fd);
-      waitpid(child, NULL, 0);
+      xWaitpid(child, NULL, 0, false);
       return;
    }
 
@@ -126,7 +126,7 @@ static void OpenRCMeter_updateViaExec(bool user) {
    fclose(commandOutput);
 
    int wstatus;
-   if (waitpid(child, &wstatus, 0) < 0 || !WIFEXITED(wstatus) || WEXITSTATUS(wstatus) != 0)
+   if (xWaitpid(child, &wstatus, 0, false) < 0 || !WIFEXITED(wstatus) || WEXITSTATUS(wstatus) != 0)
       return;
 
    fd = OpenRCMeter_execRcStatus(user, true, &child);
@@ -136,7 +136,7 @@ static void OpenRCMeter_updateViaExec(bool user) {
    commandOutput = fdopen(fd, "r");
    if (!commandOutput) {
       close(fd);
-      waitpid(child, NULL, 0);
+      xWaitpid(child, NULL, 0, false);
       return;
    }
 
@@ -165,7 +165,7 @@ static void OpenRCMeter_updateViaExec(bool user) {
 
    fclose(commandOutput);
 
-   if (waitpid(child, &wstatus, 0) < 0 || !WIFEXITED(wstatus) || WEXITSTATUS(wstatus) != 0) {
+   if (xWaitpid(child, &wstatus, 0, false) < 0 || !WIFEXITED(wstatus) || WEXITSTATUS(wstatus) != 0) {
       ctx->services_started = INVALID_VALUE;
       ctx->services_stopped = INVALID_VALUE;
    }

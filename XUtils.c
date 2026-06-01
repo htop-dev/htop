@@ -20,6 +20,8 @@ in the source distribution for its full text.
 #include <string.h>
 #include <unistd.h>
 
+#include <sys/wait.h>
+
 #include "CRT.h"
 #include "Macros.h"
 
@@ -314,6 +316,29 @@ char* xStrndup(const char* str, size_t len) {
       fail();
    }
    return data;
+}
+
+pid_t xWaitpid(pid_t pid, int* wstatus, int options, bool wait_for_exit) {
+   int status = 0;
+   pid_t ret;
+
+   do {
+      ret = waitpid(pid, &status, options);
+   } while (ret == -1 && errno == EINTR);
+
+   while (wait_for_exit && (ret == 0 || (ret > 0 && !WIFEXITED(status) && !WIFSIGNALED(status)))) {
+      if (options & WNOHANG)
+         options &= ~WNOHANG;
+
+      do {
+         ret = waitpid(pid, &status, options);
+      } while (ret == -1 && errno == EINTR);
+   }
+
+   if (wstatus)
+      *wstatus = status;
+
+   return ret;
 }
 
 ssize_t full_write(int fd, const void* buf, size_t count) {
