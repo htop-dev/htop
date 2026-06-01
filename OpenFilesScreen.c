@@ -46,6 +46,8 @@ typedef struct OpenFiles_FileData_ {
    struct OpenFiles_FileData_* next;
 } OpenFiles_FileData;
 
+static void OpenFiles_Data_clear(OpenFiles_Data* data);
+
 static size_t getIndexForType(char type) {
    switch (type) {
       case 'f':
@@ -216,6 +218,12 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
 
    int wstatus;
    if (xWaitpid(child, &wstatus, 0, false) < 0) {
+      while (pdata->files) {
+         OpenFiles_FileData* cur = pdata->files;
+         pdata->files = cur->next;
+         OpenFiles_Data_clear(&cur->data);
+         free(cur);
+      }
       pdata->error = 1;
       return pdata;
    }
