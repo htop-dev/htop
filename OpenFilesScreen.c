@@ -46,6 +46,8 @@ typedef struct OpenFiles_FileData_ {
    struct OpenFiles_FileData_* next;
 } OpenFiles_FileData;
 
+static void OpenFiles_Data_clear(OpenFiles_Data* data);
+
 static size_t getIndexForType(char type) {
    switch (type) {
       case 'f':
@@ -120,7 +122,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       close(fdpair[1]);
       int fdnull = open("/dev/null", O_WRONLY);
       if (fdnull < 0) {
-         exit(1);
+         _exit(1);
       }
 
       dup2(fdnull, STDERR_FILENO);
@@ -130,7 +132,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       // Use of NULL in variadic functions must have a pointer cast.
       // The NULL constant is not required by standard to have a pointer type.
       execlp("lsof", "lsof", "-P", "-o", "-p", buffer, "-F", (char*)NULL);
-      exit(127);
+      _exit(127);
    }
    close(fdpair[1]);
 
@@ -215,11 +217,16 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
    fclose(fp);
 
    int wstatus;
-   while (waitpid(child, &wstatus, 0) == -1)
-      if (errno != EINTR) {
-         pdata->error = 1;
-         return pdata;
+   if (xWaitpid(child, &wstatus, 0, false) < 0) {
+      while (pdata->files) {
+         OpenFiles_FileData* cur = pdata->files;
+         pdata->files = cur->next;
+         OpenFiles_Data_clear(&cur->data);
+         free(cur);
       }
+      pdata->error = 1;
+      return pdata;
+   }
 
    if (!WIFEXITED(wstatus)) {
       pdata->error = 1;

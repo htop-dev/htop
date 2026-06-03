@@ -49,9 +49,7 @@ void TraceScreen_delete(Object* cast) {
    TraceScreen* this = (TraceScreen*) cast;
    if (this->child > 0) {
       kill(this->child, SIGTERM);
-      while (waitpid(this->child, NULL, 0) == -1)
-         if (errno != EINTR)
-            break;
+      xWaitpid(this->child, NULL, 0, false);
    }
 
    if (this->strace) {
@@ -111,8 +109,10 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
          (void)! write(STDERR_FILENO, message, strlen(message));
       #endif
 
-      exit(127);
+      _exit(127);
    }
+
+   this->child = child;
 
    FILE* fp = fdopen(fdpair[0], "r");
    if (!fp)
@@ -120,7 +120,6 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
 
    close(fdpair[1]);
 
-   this->child = child;
    this->strace = fp;
    this->strace_alive = true;
 
@@ -177,8 +176,9 @@ static void TraceScreen_updateTrace(InfoScreen* super) {
          Panel_setSelected(this->super.display, Panel_size(this->super.display) - 1);
       }
    } else {
-      if (this->strace_alive && waitpid(this->child, NULL, WNOHANG) != 0)
+      if (this->strace_alive && xWaitpid(this->child, NULL, WNOHANG, false) != 0) {
          this->strace_alive = false;
+      }
    }
 }
 

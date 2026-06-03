@@ -234,7 +234,7 @@ static void updateViaExec(bool user) {
       close(fdpair[1]);
       int fdnull = open("/dev/null", O_WRONLY);
       if (fdnull < 0)
-         exit(1);
+         _exit(1);
       dup2(fdnull, STDERR_FILENO);
       close(fdnull);
       // Use of NULL in variadic functions must have a pointer cast.
@@ -250,12 +250,12 @@ static void updateViaExec(bool user) {
          "--property=NJobs",
          "--property=NInstalledJobs",
          (char*)NULL);
-      exit(127);
+      _exit(127);
    }
    close(fdpair[1]);
 
    int wstatus;
-   if (waitpid(child, &wstatus, 0) < 0 || !WIFEXITED(wstatus) || WEXITSTATUS(wstatus) != 0) {
+   if (xWaitpid(child, &wstatus, 0, false) < 0 || !WIFEXITED(wstatus) || WEXITSTATUS(wstatus) != 0) {
       close(fdpair[0]);
       return;
    }
