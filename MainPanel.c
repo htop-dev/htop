@@ -80,7 +80,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    ScreenSettings* ss = settings->ss;
 
    if ((ch == KEY_UP || ch == KEY_DOWN || ch == KEY_PPAGE || ch == KEY_NPAGE) &&
-       host->activeTable->following != -1) {
+       host->activeTable->following != -1 && !settings->stickyFollow) {
       host->activeTable->following = -1;
       Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
    }
