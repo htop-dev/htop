@@ -24,12 +24,12 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "XUtils.h"
 
-#define INVALID_VALUE ((unsigned int)-1)
+#define INVALID_VALUE ((size_t)-1)
 
 typedef struct OpenRCMeterContext {
    char* runlevel;
-   unsigned int services_stopped;
-   unsigned int services_started;
+   size_t services_stopped;
+   size_t services_started;
 } OpenRCMeterContext_t;
 
 static OpenRCMeterContext_t ctx_system;
@@ -42,21 +42,23 @@ static void OpenRCMeter_done(ATTR_UNUSED Meter* this) {
    ctx->runlevel = NULL;
 }
 
-static void updateViaExec(bool user) {
-   OpenRCMeterContext_t* ctx = user ? &ctx_user : &ctx_system;
-
-   if (Settings_isReadonly())
-      return;
+ATTR_NONNULL_N(3) ATTR_ACCESS2_W(3)
+static int OpenRCMeter_execRcStatus(bool user, bool full, pid_t* childPid) {
+   if (user) {
+      const char* xdg = getenv("XDG_RUNTIME_DIR");
+      if (!xdg || !*xdg)
+         return -1;
+   }
 
    int fdpair[2] = {-1, -1};
    if (pipe(fdpair) < 0)
-      return;
+      return -1;
 
    pid_t child = fork();
    if (child < 0) {
       close(fdpair[1]);
       close(fdpair[0]);
-      return;
+      return -1;
    }
 
    if (child == 0) {
@@ -68,48 +70,105 @@ static void updateViaExec(bool user) {
          exit(1);
       dup2(fdnull, STDERR_FILENO);
       close(fdnull);
+
       if (user) {
-         execlp("rc-status", "rc-status", "--user", "-a", (char*)NULL);
+         if (full) {
+            execlp("rc-status", "rc-status", "-C", "--user", "-f", "ini", "-a", (char*)NULL);
+         } else {
+            execlp("rc-status", "rc-status", "-C", "--user", "-r", (char*)NULL);
+         }
       } else {
-         execlp("rc-status", "rc-status", "-a", (char*)NULL);
+         if (full) {
+            execlp("rc-status", "rc-status", "-C", "-f", "ini", "-a", (char*)NULL);
+         } else {
+            execlp("rc-status", "rc-status", "-C", "-r", (char*)NULL);
+         }
       }
       exit(127);
    }
-   close(fdpair[1]);
 
-   int wstatus;
-   if (waitpid(child, &wstatus, 0) < 0 || !WIFEXITED(wstatus) || WEXITSTATUS(wstatus) != 0) {
-      close(fdpair[0]);
+   *childPid = child;
+
+   close(fdpair[1]);
+   return fdpair[0];
+}
+
+static void OpenRCMeter_updateViaExec(bool user) {
+   OpenRCMeterContext_t* ctx = user ? &ctx_user : &ctx_system;
+
+   ctx->services_started = INVALID_VALUE;
+   ctx->services_stopped = INVALID_VALUE;
+
+   if (Settings_isReadonly())
+      return;
+
+   char lineBuffer[1024];
+
+   pid_t child;
+   int fd = OpenRCMeter_execRcStatus(user, false, &child);
+   if (fd < 0)
+      return;
+
+   FILE* commandOutput = fdopen(fd, "r");
+   if (!commandOutput) {
+      close(fd);
+      waitpid(child, NULL, 0);
       return;
    }
 
-   FILE* commandOutput = fdopen(fdpair[0], "r");
+   if (fgets(lineBuffer, sizeof(lineBuffer), commandOutput)) {
+      char* newline = strchr(lineBuffer, '\n');
+      if (newline)
+         *newline = '\0';
+
+      free_and_xStrdup(&ctx->runlevel, lineBuffer);
+   }
+   fclose(commandOutput);
+
+   int wstatus;
+   if (waitpid(child, &wstatus, 0) < 0 || !WIFEXITED(wstatus) || WEXITSTATUS(wstatus) != 0)
+      return;
+
+   fd = OpenRCMeter_execRcStatus(user, true, &child);
+   if (fd < 0)
+      return;
+
+   commandOutput = fdopen(fd, "r");
    if (!commandOutput) {
-      close(fdpair[0]);
+      close(fd);
+      waitpid(child, NULL, 0);
       return;
    }
 
    ctx->services_started = 0;
    ctx->services_stopped = 0;
 
-   char lineBuffer[256];
    while (fgets(lineBuffer, sizeof(lineBuffer), commandOutput)) {
-      if (String_startsWith(lineBuffer, "Runlevel: ")) {
-         char* newline = strchr(lineBuffer + strlen("Runlevel: "), '\n');
-         if (newline) {
-            *newline = '\0';
-         }
-         free_and_xStrdup(&ctx->runlevel, lineBuffer + strlen("Runlevel: "));
-      } else {
-         if (strstr(lineBuffer, "[") && strstr(lineBuffer, "started") && strstr(lineBuffer, "]")) {
-            ctx->services_started++;
-         } else if (strstr(lineBuffer, "[") && strstr(lineBuffer, "stopped") && strstr(lineBuffer, "]")) {
-            ctx->services_stopped++;
-         }
+      char* equals = strchr(lineBuffer, '=');
+      if (!equals)
+         continue;
+
+      char* status = equals + 1;
+      while (*status == ' ' || *status == '\t')
+         status++;
+
+      char* newline = strchr(status, '\n');
+      if (newline)
+         *newline = '\0';
+
+      if (strstr(status, "started")) {
+         ctx->services_started++;
+      } else if (strstr(status, "stopped")) {
+         ctx->services_stopped++;
       }
    }
 
    fclose(commandOutput);
+
+   if (waitpid(child, &wstatus, 0) < 0 || !WIFEXITED(wstatus) || WEXITSTATUS(wstatus) != 0) {
+      ctx->services_started = INVALID_VALUE;
+      ctx->services_stopped = INVALID_VALUE;
+   }
 }
 
 static void OpenRCMeter_updateValues(Meter* this) {
@@ -121,7 +180,7 @@ static void OpenRCMeter_updateValues(Meter* this) {
    ctx->services_stopped = INVALID_VALUE;
    ctx->services_started = INVALID_VALUE;
 
-   updateViaExec(user);
+   OpenRCMeter_updateViaExec(user);
 
    xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%s", ctx->runlevel ? ctx->runlevel : "???");
 }
@@ -132,12 +191,16 @@ static void OpenRCMeter_display(ATTR_UNUSED const Object* cast, RichString* out,
    RichString_writeAscii(out, CRT_colors[METER_TEXT], "Runlevel: ");
    RichString_appendAscii(out, CRT_colors[METER_VALUE], ctx->runlevel ? ctx->runlevel : "N/A");
 
+   if (ctx->services_started == INVALID_VALUE && ctx->services_stopped == INVALID_VALUE) {
+      return;
+   }
+
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " (");
 
    if (ctx->services_started == INVALID_VALUE) {
       xSnprintf(buffer, sizeof(buffer), "?");
    } else {
-      xSnprintf(buffer, sizeof(buffer), "%u", ctx->services_started);
+      xSnprintf(buffer, sizeof(buffer), "%zu", ctx->services_started);
    }
    RichString_appendAscii(out, CRT_colors[METER_VALUE_OK], buffer);
 
@@ -146,7 +209,7 @@ static void OpenRCMeter_display(ATTR_UNUSED const Object* cast, RichString* out,
    if (ctx->services_stopped == INVALID_VALUE) {
       xSnprintf(buffer, sizeof(buffer), "?");
    } else {
-      xSnprintf(buffer, sizeof(buffer), "%u", ctx->services_stopped);
+      xSnprintf(buffer, sizeof(buffer), "%zu", ctx->services_stopped);
    }
    RichString_appendAscii(out, CRT_colors[METER_VALUE_ERROR], buffer);
 
