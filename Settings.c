@@ -473,6 +473,8 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
          this->showCPUSMTLabels = atoi(option[1]);
       } else if (String_eq(option[0], "show_cpu_usage")) {
          this->showCPUUsage = atoi(option[1]);
+      } else if (String_eq(option[0], "sticky_follow")) {
+         this->stickyFollow = atoi(option[1]);
       } else if (String_eq(option[0], "show_cpu_frequency")) {
          this->showCPUFrequency = atoi(option[1]);
       } else if (String_eq(option[0], "show_cached_memory")) {
@@ -713,6 +715,7 @@ int Settings_write(const Settings* this, bool onCrash) {
    printSettingInteger("cpu_count_from_one", this->countCPUsFromOne);
    printSettingInteger("show_cpu_smt_labels", this->showCPUSMTLabels);
    printSettingInteger("show_cpu_usage", this->showCPUUsage);
+   printSettingInteger("sticky_follow", this->stickyFollow);
    printSettingInteger("show_cpu_frequency", this->showCPUFrequency);
    #ifdef BUILD_WITH_CPU_TEMP
    printSettingInteger("show_cpu_temperature", this->showCPUTemperature);
@@ -820,6 +823,7 @@ Settings* Settings_new(const Machine* host, Hashtable* dynamicMeters, Hashtable*
    this->countCPUsFromOne = false;
    this->showCPUSMTLabels = false;
    this->showCPUUsage = true;
+   this->stickyFollow = true;
    this->showCPUFrequency = false;
    #ifdef BUILD_WITH_CPU_TEMP
    this->showCPUTemperature = false;

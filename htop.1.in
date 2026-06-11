@@ -272,9 +272,13 @@ Sort by time (top compatibility key).
 "Follow" process: if the sort order causes the currently selected process
 to move in the list, make the selection bar follow it. This is useful for
 monitoring a process: this way, you can keep a process always visible on
-screen. When a movement key is used, "follow" loses effect.
+screen. The behavior of the movement keys depends on the sticky follow setting.
 You can press Shift or Alt plus the Up and Down cursor keys to pan the view
 when following a process.
+When the sticky follow setting is enabled (the default), follow mode remains
+active until Shift+F is pressed again. If sticky follow is disabled, pressing
+movement keys like Up, Down, PgUp, and PgDown will end follow mode immediately,
+while Shift+Up and Shift+Down still pan without disabling follow.
 .TP
 .B K
 Hide kernel threads: prevent the threads belonging the kernel to be

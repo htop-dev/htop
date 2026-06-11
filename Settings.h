@@ -77,6 +77,7 @@ typedef struct Settings_ {
    bool countCPUsFromOne;
    bool detailedCPUTime;
    bool showCPUUsage;
+   bool stickyFollow;
    bool showCPUFrequency;
    bool showCPUSMTLabels;
    #ifdef BUILD_WITH_CPU_TEMP

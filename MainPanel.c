@@ -79,6 +79,12 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    Settings* settings = host->settings;
    ScreenSettings* ss = settings->ss;
 
+   if ((ch == KEY_UP || ch == KEY_DOWN || ch == KEY_PPAGE || ch == KEY_NPAGE) &&
+       host->activeTable->following != -1 && !settings->stickyFollow) {
+      host->activeTable->following = -1;
+      Panel_setSelectionColor(super, PANEL_SELECTION_FOCUS);
+   }
+
    if (EVENT_IS_HEADER_CLICK(ch)) {
       int x = EVENT_HEADER_CLICK_GET_X(ch);
       int hx = super->scrollH + x + 1;
