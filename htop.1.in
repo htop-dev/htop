@@ -277,7 +277,7 @@ You can press Shift or Alt plus the Up and Down cursor keys to pan the view
 when following a process.
 When the sticky follow setting is enabled (the default), follow mode remains
 active until Shift+F is pressed again. If sticky follow is disabled, pressing
-movement keys like Up, Down, PgUp, and PgDown will end follow mode immediately,
+movement keys like Up, Down, PgUp, and PgDn will end follow mode immediately,
 while Shift+Up and Shift+Down still pan without disabling follow.
 .TP
 .B K
