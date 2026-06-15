@@ -149,7 +149,9 @@ const ProcessClass FreeBSDProcess_class = {
       .matchesFilter = Process_rowMatchesFilter,
       .compareByParent = Process_compareByParent,
       .sortKeyString = Process_rowGetSortKey,
-      .writeField = FreeBSDProcess_rowWriteField
+      .writeField = FreeBSDProcess_rowWriteField,
+      .aggregateClear = Process_rowAggregateClear,
+      .aggregateAdd = Process_rowAggregateAdd
    },
    .compareByKey = FreeBSDProcess_compareByKey
 };

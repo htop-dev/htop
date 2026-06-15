@@ -106,7 +106,9 @@ const ProcessClass UnsupportedProcess_class = {
       .matchesFilter = Process_rowMatchesFilter,
       .compareByParent = Process_compareByParent,
       .sortKeyString = Process_rowGetSortKey,
-      .writeField = UnsupportedProcess_rowWriteField
+      .writeField = UnsupportedProcess_rowWriteField,
+      .aggregateClear = Process_rowAggregateClear,
+      .aggregateAdd = Process_rowAggregateAdd
    },
    .compareByKey = UnsupportedProcess_compareByKey
 };

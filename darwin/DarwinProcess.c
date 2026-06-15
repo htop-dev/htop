@@ -538,7 +538,9 @@ const ProcessClass DarwinProcess_class = {
       .matchesFilter = Process_rowMatchesFilter,
       .compareByParent = Process_compareByParent,
       .sortKeyString = Process_rowGetSortKey,
-      .writeField = DarwinProcess_rowWriteField
+      .writeField = DarwinProcess_rowWriteField,
+      .aggregateClear = Process_rowAggregateClear,
+      .aggregateAdd = Process_rowAggregateAdd
    },
    .compareByKey = DarwinProcess_compareByKey
 };

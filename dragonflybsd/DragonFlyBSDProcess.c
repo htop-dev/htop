@@ -115,7 +115,9 @@ const ProcessClass DragonFlyBSDProcess_class = {
       .matchesFilter = Process_rowMatchesFilter,
       .compareByParent = Process_compareByParent,
       .sortKeyString = Process_rowGetSortKey,
-      .writeField = DragonFlyBSDProcess_rowWriteField
+      .writeField = DragonFlyBSDProcess_rowWriteField,
+      .aggregateClear = Process_rowAggregateClear,
+      .aggregateAdd = Process_rowAggregateAdd
    },
    .compareByKey = DragonFlyBSDProcess_compareByKey
 };

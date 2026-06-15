@@ -272,7 +272,9 @@ const ProcessClass NetBSDProcess_class = {
       .matchesFilter = Process_rowMatchesFilter,
       .compareByParent = Process_compareByParent,
       .sortKeyString = Process_rowGetSortKey,
-      .writeField = NetBSDProcess_rowWriteField
+      .writeField = NetBSDProcess_rowWriteField,
+      .aggregateClear = Process_rowAggregateClear,
+      .aggregateAdd = Process_rowAggregateAdd
    },
    .compareByKey = NetBSDProcess_compareByKey
 };
