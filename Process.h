@@ -78,9 +78,25 @@ typedef struct ProcessMergedCommand_ {
    ProcessCmdlineHighlight highlights[8];      /* which portions of cmdline to highlight */
 } ProcessMergedCommand;
 
+/* Subtree totals of the additive fields common to all platforms. Populated
+ * during tree building when the "sum collapsed subtrees" setting is enabled,
+ * and displayed in place of the node's own values while it is collapsed. */
+typedef struct ProcessAggregate_ {
+   float percent_cpu;
+   float percent_mem;
+   long m_virt;
+   long m_resident;
+   unsigned long int minflt;
+   unsigned long int majflt;
+   unsigned long long int time;
+} ProcessAggregate;
+
 typedef struct Process_ {
    /* Super object for emulated OOP */
    Row super;
+
+   /* Subtree totals for collapsed tree nodes (see ProcessAggregate) */
+   ProcessAggregate aggregate;
 
    /* Process group identifier */
    int pgrp;
@@ -234,6 +250,15 @@ void Process_writeField(const Process* this, RichString* str, ProcessField field
 int Process_compare(const void* v1, const void* v2);
 int Process_compareByParent(const Row* r1, const Row* r2);
 void Process_delete(Object* cast);
+
+/* Row vtable hooks for subtree summation; platform classes may wrap these to
+ * additionally aggregate their own additive fields. */
+void Process_rowAggregateClear(Row* super);
+void Process_rowAggregateAdd(Row* super, const Row* child);
+
+/* Recolors the most recently appended span of `str` (from `start` to the
+ * current end) using the aggregate (summed value) color. */
+void Process_aggregateRecolor(RichString* str, size_t start);
 extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 #define Process_pidDigits Row_pidDigits
 #define Process_uidDigits Row_uidDigits

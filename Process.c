@@ -603,6 +603,10 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
    int attr = CRT_colors[DEFAULT_COLOR];
    size_t n = sizeof(buffer) - 1;
 
+   /* When the row is a collapsed tree node whose subtree is being summed,
+    * additive fields are rendered from the aggregate and tinted accordingly. */
+   const bool useAgg = super->aggregated;
+
    switch (field) {
    case COMM: {
       int baseattr = CRT_colors[PROCESS_BASENAME];
@@ -695,10 +699,30 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
       Row_printTime(str, /* convert to hundreds of a second */ dt / 10, coloring);
       return;
    }
-   case MAJFLT: Row_printCount(str, this->majflt, coloring); return;
-   case MINFLT: Row_printCount(str, this->minflt, coloring); return;
-   case M_RESIDENT: Row_printKBytes(str, this->m_resident, coloring); return;
-   case M_VIRT: Row_printKBytes(str, this->m_virt, coloring); return;
+   case MAJFLT: {
+      size_t start = RichString_size(str);
+      Row_printCount(str, useAgg ? this->aggregate.majflt : this->majflt, coloring);
+      if (useAgg) Process_aggregateRecolor(str, start);
+      return;
+   }
+   case MINFLT: {
+      size_t start = RichString_size(str);
+      Row_printCount(str, useAgg ? this->aggregate.minflt : this->minflt, coloring);
+      if (useAgg) Process_aggregateRecolor(str, start);
+      return;
+   }
+   case M_RESIDENT: {
+      size_t start = RichString_size(str);
+      Row_printKBytes(str, useAgg ? (unsigned long long)this->aggregate.m_resident : (unsigned long long)this->m_resident, coloring);
+      if (useAgg) Process_aggregateRecolor(str, start);
+      return;
+   }
+   case M_VIRT: {
+      size_t start = RichString_size(str);
+      Row_printKBytes(str, useAgg ? (unsigned long long)this->aggregate.m_virt : (unsigned long long)this->m_virt, coloring);
+      if (useAgg) Process_aggregateRecolor(str, start);
+      return;
+   }
    case NICE:
       if (this->nice == PROCESS_NICE_UNKNOWN) {
          xSnprintf(buffer, n, "N/A ");
@@ -716,13 +740,20 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
 
       xSnprintf(buffer, n, "%4ld ", this->nlwp);
       break;
-   case PERCENT_CPU: Row_printPercentage(this->percent_cpu, buffer, n, Row_fieldWidths[PERCENT_CPU], &attr); break;
+   case PERCENT_CPU:
+      Row_printPercentage(useAgg ? this->aggregate.percent_cpu : this->percent_cpu, buffer, n, Row_fieldWidths[PERCENT_CPU], &attr);
+      if (useAgg) attr = CRT_colors[PROCESS_SUM];
+      break;
    case PERCENT_NORM_CPU: {
-      float cpuPercentage = this->percent_cpu / host->activeCPUs;
+      float cpuPercentage = (useAgg ? this->aggregate.percent_cpu : this->percent_cpu) / host->activeCPUs;
       Row_printPercentage(cpuPercentage, buffer, n, Row_fieldWidths[PERCENT_CPU], &attr);
+      if (useAgg) attr = CRT_colors[PROCESS_SUM];
       break;
    }
-   case PERCENT_MEM: Row_printPercentage(this->percent_mem, buffer, n, 4, &attr); break;
+   case PERCENT_MEM:
+      Row_printPercentage(useAgg ? this->aggregate.percent_mem : this->percent_mem, buffer, n, 4, &attr);
+      if (useAgg) attr = CRT_colors[PROCESS_SUM];
+      break;
    case PGRP: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->pgrp); break;
    case PID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, Process_getPid(this)); break;
    case PPID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, Process_getParent(this)); break;
@@ -774,7 +805,12 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
       }
       break;
    case ST_UID: xSnprintf(buffer, n, "%*d ", Process_uidDigits, this->st_uid); break;
-   case TIME: Row_printTime(str, this->time, coloring); return;
+   case TIME: {
+      size_t start = RichString_size(str);
+      Row_printTime(str, useAgg ? this->aggregate.time : this->time, coloring);
+      if (useAgg) Process_aggregateRecolor(str, start);
+      return;
+   }
    case TGID:
       if (Process_getThreadGroup(this) == Process_getPid(this))
          attr = CRT_colors[PROCESS_SHADOW];
@@ -813,6 +849,46 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
    }
 
    RichString_appendAscii(str, attr, buffer);
+}
+
+void Process_aggregateRecolor(RichString* str, size_t start) {
+   size_t end = RichString_size(str);
+   if (end > start)
+      RichString_setAttrn(str, CRT_colors[PROCESS_SUM], start, end - start);
+}
+
+void Process_rowAggregateClear(Row* super) {
+   Process* this = (Process*) super;
+   this->aggregate.percent_cpu = this->percent_cpu;
+   this->aggregate.percent_mem = this->percent_mem;
+   this->aggregate.m_virt = this->m_virt;
+   this->aggregate.m_resident = this->m_resident;
+   this->aggregate.minflt = this->minflt;
+   this->aggregate.majflt = this->majflt;
+   this->aggregate.time = this->time;
+}
+
+void Process_rowAggregateAdd(Row* super, const Row* child) {
+   Process* this = (Process*) super;
+   const Process* cp = (const Process*) child;
+
+   // Threads share their process' resources, which are already counted in the
+   // process row; summing them would multiply memory and CPU. Skip them.
+   if (Process_isThread(cp))
+      return;
+
+   this->aggregate.percent_cpu += cp->aggregate.percent_cpu;
+   this->aggregate.percent_mem += cp->aggregate.percent_mem;
+   this->aggregate.m_virt += cp->aggregate.m_virt;
+   this->aggregate.m_resident += cp->aggregate.m_resident;
+   this->aggregate.minflt += cp->aggregate.minflt;
+   this->aggregate.majflt += cp->aggregate.majflt;
+   this->aggregate.time += cp->aggregate.time;
+
+   // A collapsed node will display this running total, which can be wider than
+   // any single process; grow the CPU% columns so the sum does not overflow.
+   if (!super->showChildren)
+      Process_updateCPUFieldWidths(this->aggregate.percent_cpu);
 }
 
 void Process_done(Process* this) {
@@ -1146,6 +1222,8 @@ const ProcessClass Process_class = {
       .matchesFilter = Process_rowMatchesFilter,
       .sortKeyString = Process_rowGetSortKey,
       .compareByParent = Process_compareByParent,
-      .writeField = Process_rowWriteField
+      .writeField = Process_rowWriteField,
+      .aggregateClear = Process_rowAggregateClear,
+      .aggregateAdd = Process_rowAggregateAdd
    },
 };
