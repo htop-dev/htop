@@ -32,8 +32,41 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_LINUX_GPU       0x00100000
 #define PROCESS_FLAG_LINUX_CONTAINER 0x00200000
 
+/* Subtree totals of the Linux-specific additive fields; populated alongside the
+ * common ProcessAggregate when the "sum collapsed subtrees" setting is on. */
+typedef struct LinuxProcessAggregate_ {
+   long m_share;
+   long m_priv;
+   long m_pss;
+   long m_swap;
+   long m_psswp;
+   long m_trs;
+   long m_drs;
+   long m_lrs;
+   unsigned long long int utime;
+   unsigned long long int stime;
+   unsigned long long io_rchar;
+   unsigned long long io_wchar;
+   unsigned long long io_syscr;
+   unsigned long long io_syscw;
+   unsigned long long io_read_bytes;
+   unsigned long long io_write_bytes;
+   unsigned long long io_cancelled_write_bytes;
+   double io_rate_read_bps;
+   double io_rate_write_bps;
+   #ifdef HAVE_DELAYACCT
+   float cpu_delay_percent;
+   float blkio_delay_percent;
+   float swapin_delay_percent;
+   #endif
+   unsigned long ctxt_diff;
+   unsigned long long int gpu_time;
+   float gpu_percent;
+} LinuxProcessAggregate;
+
 typedef struct LinuxProcess_ {
    Process super;
+   LinuxProcessAggregate aggregate;
    IOPriority ioPriority;
    unsigned long int cminflt;
    unsigned long int cmajflt;

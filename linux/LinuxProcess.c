@@ -232,6 +232,121 @@ static double LinuxProcess_totalIORate(const LinuxProcess* lp) {
    return totalRate;
 }
 
+/* Print helpers that optionally re-tint the just-written span as a subtree sum. */
+static void LinuxProcess_writeBytes(RichString* str, unsigned long long bytes, bool coloring, bool aggregated) {
+   size_t start = RichString_size(str);
+   Row_printBytes(str, bytes, coloring);
+   if (aggregated)
+      Process_aggregateRecolor(str, start);
+}
+
+static void LinuxProcess_writeKBytes(RichString* str, unsigned long long kbytes, bool coloring, bool aggregated) {
+   size_t start = RichString_size(str);
+   Row_printKBytes(str, kbytes, coloring);
+   if (aggregated)
+      Process_aggregateRecolor(str, start);
+}
+
+static void LinuxProcess_writeCount(RichString* str, unsigned long long count, bool coloring, bool aggregated) {
+   size_t start = RichString_size(str);
+   Row_printCount(str, count, coloring);
+   if (aggregated)
+      Process_aggregateRecolor(str, start);
+}
+
+static void LinuxProcess_writeTime(RichString* str, unsigned long long hundredths, bool coloring, bool aggregated) {
+   size_t start = RichString_size(str);
+   Row_printTime(str, hundredths, coloring);
+   if (aggregated)
+      Process_aggregateRecolor(str, start);
+}
+
+static void LinuxProcess_writeRate(RichString* str, double rate, bool coloring, bool aggregated) {
+   size_t start = RichString_size(str);
+   Row_printRate(str, rate, coloring);
+   if (aggregated)
+      Process_aggregateRecolor(str, start);
+}
+
+static void LinuxProcess_writeNanoseconds(RichString* str, unsigned long long nanoseconds, bool coloring, bool aggregated) {
+   size_t start = RichString_size(str);
+   Row_printNanoseconds(str, nanoseconds, coloring);
+   if (aggregated)
+      Process_aggregateRecolor(str, start);
+}
+
+static void LinuxProcess_rowAggregateClear(Row* super) {
+   LinuxProcess* lp = (LinuxProcess*) super;
+   LinuxProcessAggregate* a = &lp->aggregate;
+   a->m_share = lp->m_share;
+   a->m_priv = lp->m_priv;
+   a->m_pss = lp->m_pss;
+   a->m_swap = lp->m_swap;
+   a->m_psswp = lp->m_psswp;
+   a->m_trs = lp->m_trs;
+   a->m_drs = lp->m_drs;
+   a->m_lrs = lp->m_lrs;
+   a->utime = lp->utime;
+   a->stime = lp->stime;
+   a->io_rchar = lp->io_rchar;
+   a->io_wchar = lp->io_wchar;
+   a->io_syscr = lp->io_syscr;
+   a->io_syscw = lp->io_syscw;
+   a->io_read_bytes = lp->io_read_bytes;
+   a->io_write_bytes = lp->io_write_bytes;
+   a->io_cancelled_write_bytes = lp->io_cancelled_write_bytes;
+   a->io_rate_read_bps = isNonnegative(lp->io_rate_read_bps) ? lp->io_rate_read_bps : 0.0;
+   a->io_rate_write_bps = isNonnegative(lp->io_rate_write_bps) ? lp->io_rate_write_bps : 0.0;
+   #ifdef HAVE_DELAYACCT
+   a->cpu_delay_percent = isNonnegative(lp->cpu_delay_percent) ? lp->cpu_delay_percent : 0.0f;
+   a->blkio_delay_percent = isNonnegative(lp->blkio_delay_percent) ? lp->blkio_delay_percent : 0.0f;
+   a->swapin_delay_percent = isNonnegative(lp->swapin_delay_percent) ? lp->swapin_delay_percent : 0.0f;
+   #endif
+   a->ctxt_diff = lp->ctxt_diff;
+   a->gpu_time = lp->gpu_time;
+   a->gpu_percent = isNonnegative(lp->gpu_percent) ? lp->gpu_percent : 0.0f;
+
+   Process_rowAggregateClear(super);
+}
+
+static void LinuxProcess_rowAggregateAdd(Row* super, const Row* child) {
+   // Threads share their process' resources (see Process_rowAggregateAdd).
+   if (Process_isThread((const Process*) child))
+      return;
+
+   LinuxProcessAggregate* a = &((LinuxProcess*) super)->aggregate;
+   const LinuxProcessAggregate* c = &((const LinuxProcess*) child)->aggregate;
+   a->m_share += c->m_share;
+   a->m_priv += c->m_priv;
+   a->m_pss += c->m_pss;
+   a->m_swap += c->m_swap;
+   a->m_psswp += c->m_psswp;
+   a->m_trs += c->m_trs;
+   a->m_drs += c->m_drs;
+   a->m_lrs += c->m_lrs;
+   a->utime += c->utime;
+   a->stime += c->stime;
+   a->io_rchar += c->io_rchar;
+   a->io_wchar += c->io_wchar;
+   a->io_syscr += c->io_syscr;
+   a->io_syscw += c->io_syscw;
+   a->io_read_bytes += c->io_read_bytes;
+   a->io_write_bytes += c->io_write_bytes;
+   a->io_cancelled_write_bytes += c->io_cancelled_write_bytes;
+   a->io_rate_read_bps += c->io_rate_read_bps;
+   a->io_rate_write_bps += c->io_rate_write_bps;
+   #ifdef HAVE_DELAYACCT
+   a->cpu_delay_percent += c->cpu_delay_percent;
+   a->blkio_delay_percent += c->blkio_delay_percent;
+   a->swapin_delay_percent += c->swapin_delay_percent;
+   #endif
+   a->ctxt_diff += c->ctxt_diff;
+   a->gpu_time += c->gpu_time;
+   a->gpu_percent += c->gpu_percent;
+
+   Process_rowAggregateAdd(super, child);
+}
+
 static void LinuxProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
    const Process* this = (const Process*) super;
    const LinuxProcess* lp = (const LinuxProcess*) super;
@@ -243,41 +358,48 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
    int attr = CRT_colors[DEFAULT_COLOR];
    size_t n = sizeof(buffer) - 1;
 
+   /* Render additive fields from the subtree sum when this node is collapsed. */
+   const bool useAgg = super->aggregated;
+   #define LP_AGG(f_) (useAgg ? lp->aggregate.f_ : lp->f_)
+
    switch (field) {
    case CMINFLT: Row_printCount(str, lp->cminflt, coloring); return;
    case CMAJFLT: Row_printCount(str, lp->cmajflt, coloring); return;
-   case GPU_PERCENT: Row_printPercentage(lp->gpu_percent, buffer, n, 5, &attr); break;
-   case GPU_TIME: Row_printNanoseconds(str, lp->gpu_time, coloring); return;
-   case M_DRS: Row_printBytes(str, lp->m_drs * lhost->pageSize, coloring); return;
+   case GPU_PERCENT:
+      Row_printPercentage(LP_AGG(gpu_percent), buffer, n, 5, &attr);
+      if (useAgg) attr = CRT_colors[PROCESS_SUM];
+      break;
+   case GPU_TIME: LinuxProcess_writeNanoseconds(str, LP_AGG(gpu_time), coloring, useAgg); return;
+   case M_DRS: LinuxProcess_writeBytes(str, (unsigned long long)LP_AGG(m_drs) * lhost->pageSize, coloring, useAgg); return;
    case M_LRS:
-      if (lp->m_lrs) {
-         Row_printBytes(str, lp->m_lrs * lhost->pageSize, coloring);
+      if (LP_AGG(m_lrs)) {
+         LinuxProcess_writeBytes(str, (unsigned long long)LP_AGG(m_lrs) * lhost->pageSize, coloring, useAgg);
          return;
       }
 
       attr = CRT_colors[PROCESS_SHADOW];
       xSnprintf(buffer, n, "  N/A ");
       break;
-   case M_TRS: Row_printBytes(str, lp->m_trs * lhost->pageSize, coloring); return;
-   case M_SHARE: Row_printBytes(str, lp->m_share * lhost->pageSize, coloring); return;
-   case M_PRIV: Row_printKBytes(str, lp->m_priv, coloring); return;
-   case M_PSS: Row_printKBytes(str, lp->m_pss, coloring); return;
-   case M_SWAP: Row_printKBytes(str, lp->m_swap, coloring); return;
-   case M_PSSWP: Row_printKBytes(str, lp->m_psswp, coloring); return;
-   case UTIME: Row_printTime(str, lp->utime, coloring); return;
-   case STIME: Row_printTime(str, lp->stime, coloring); return;
+   case M_TRS: LinuxProcess_writeBytes(str, (unsigned long long)LP_AGG(m_trs) * lhost->pageSize, coloring, useAgg); return;
+   case M_SHARE: LinuxProcess_writeBytes(str, (unsigned long long)LP_AGG(m_share) * lhost->pageSize, coloring, useAgg); return;
+   case M_PRIV: LinuxProcess_writeKBytes(str, LP_AGG(m_priv), coloring, useAgg); return;
+   case M_PSS: LinuxProcess_writeKBytes(str, LP_AGG(m_pss), coloring, useAgg); return;
+   case M_SWAP: LinuxProcess_writeKBytes(str, LP_AGG(m_swap), coloring, useAgg); return;
+   case M_PSSWP: LinuxProcess_writeKBytes(str, LP_AGG(m_psswp), coloring, useAgg); return;
+   case UTIME: LinuxProcess_writeTime(str, LP_AGG(utime), coloring, useAgg); return;
+   case STIME: LinuxProcess_writeTime(str, LP_AGG(stime), coloring, useAgg); return;
    case CUTIME: Row_printTime(str, lp->cutime, coloring); return;
    case CSTIME: Row_printTime(str, lp->cstime, coloring); return;
-   case RCHAR:  Row_printBytes(str, lp->io_rchar, coloring); return;
-   case WCHAR:  Row_printBytes(str, lp->io_wchar, coloring); return;
-   case SYSCR:  Row_printCount(str, lp->io_syscr, coloring); return;
-   case SYSCW:  Row_printCount(str, lp->io_syscw, coloring); return;
-   case RBYTES: Row_printBytes(str, lp->io_read_bytes, coloring); return;
-   case WBYTES: Row_printBytes(str, lp->io_write_bytes, coloring); return;
-   case CNCLWB: Row_printBytes(str, lp->io_cancelled_write_bytes, coloring); return;
-   case IO_READ_RATE:  Row_printRate(str, lp->io_rate_read_bps, coloring); return;
-   case IO_WRITE_RATE: Row_printRate(str, lp->io_rate_write_bps, coloring); return;
-   case IO_RATE: Row_printRate(str, LinuxProcess_totalIORate(lp), coloring); return;
+   case RCHAR:  LinuxProcess_writeBytes(str, LP_AGG(io_rchar), coloring, useAgg); return;
+   case WCHAR:  LinuxProcess_writeBytes(str, LP_AGG(io_wchar), coloring, useAgg); return;
+   case SYSCR:  LinuxProcess_writeCount(str, LP_AGG(io_syscr), coloring, useAgg); return;
+   case SYSCW:  LinuxProcess_writeCount(str, LP_AGG(io_syscw), coloring, useAgg); return;
+   case RBYTES: LinuxProcess_writeBytes(str, LP_AGG(io_read_bytes), coloring, useAgg); return;
+   case WBYTES: LinuxProcess_writeBytes(str, LP_AGG(io_write_bytes), coloring, useAgg); return;
+   case CNCLWB: LinuxProcess_writeBytes(str, LP_AGG(io_cancelled_write_bytes), coloring, useAgg); return;
+   case IO_READ_RATE:  LinuxProcess_writeRate(str, useAgg ? lp->aggregate.io_rate_read_bps : lp->io_rate_read_bps, coloring, useAgg); return;
+   case IO_WRITE_RATE: LinuxProcess_writeRate(str, useAgg ? lp->aggregate.io_rate_write_bps : lp->io_rate_write_bps, coloring, useAgg); return;
+   case IO_RATE: LinuxProcess_writeRate(str, useAgg ? (lp->aggregate.io_rate_read_bps + lp->aggregate.io_rate_write_bps) : LinuxProcess_totalIORate(lp), coloring, useAgg); return;
    #ifdef HAVE_OPENVZ
    case CTID: xSnprintf(buffer, n, "%-8s ", lp->ctid ? lp->ctid : ""); break;
    case VPID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, lp->vpid); break;
@@ -324,15 +446,26 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
       break;
    }
    #ifdef HAVE_DELAYACCT
-   case PERCENT_CPU_DELAY: Row_printPercentage(lp->cpu_delay_percent, buffer, n, 5, &attr); break;
-   case PERCENT_IO_DELAY: Row_printPercentage(lp->blkio_delay_percent, buffer, n, 5, &attr); break;
-   case PERCENT_SWAP_DELAY: Row_printPercentage(lp->swapin_delay_percent, buffer, n, 5, &attr); break;
+   case PERCENT_CPU_DELAY:
+      Row_printPercentage(LP_AGG(cpu_delay_percent), buffer, n, 5, &attr);
+      if (useAgg) attr = CRT_colors[PROCESS_SUM];
+      break;
+   case PERCENT_IO_DELAY:
+      Row_printPercentage(LP_AGG(blkio_delay_percent), buffer, n, 5, &attr);
+      if (useAgg) attr = CRT_colors[PROCESS_SUM];
+      break;
+   case PERCENT_SWAP_DELAY:
+      Row_printPercentage(LP_AGG(swapin_delay_percent), buffer, n, 5, &attr);
+      if (useAgg) attr = CRT_colors[PROCESS_SUM];
+      break;
    #endif
    case CTXT:
-      if (lp->ctxt_diff > 1000) {
+      if (useAgg) {
+         attr = CRT_colors[PROCESS_SUM];
+      } else if (lp->ctxt_diff > 1000) {
          attr |= A_BOLD;
       }
-      xSnprintf(buffer, n, "%5lu ", lp->ctxt_diff);
+      xSnprintf(buffer, n, "%5lu ", LP_AGG(ctxt_diff));
       break;
    case SECATTR:
       snprintf(buffer, n, "%-*.*s ", Row_fieldWidths[SECATTR], Row_fieldWidths[SECATTR], lp->secattr ? lp->secattr : "N/A");
@@ -374,6 +507,8 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
       Process_writeField(this, str, field);
       return;
    }
+
+   #undef LP_AGG
 
    RichString_appendAscii(str, attr, buffer);
 }
@@ -492,7 +627,9 @@ const ProcessClass LinuxProcess_class = {
       .matchesFilter = Process_rowMatchesFilter,
       .compareByParent = Process_compareByParent,
       .sortKeyString = Process_rowGetSortKey,
-      .writeField = LinuxProcess_rowWriteField
+      .writeField = LinuxProcess_rowWriteField,
+      .aggregateClear = LinuxProcess_rowAggregateClear,
+      .aggregateAdd = LinuxProcess_rowAggregateAdd
    },
    .compareByKey = LinuxProcess_compareByKey
 };
