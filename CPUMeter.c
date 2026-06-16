@@ -185,10 +185,10 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
       len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_NICE]);
       RichString_appendAscii(out, CRT_colors[METER_TEXT], "low:");
       RichString_appendnAscii(out, CRT_colors[CPU_NICE_TEXT], buffer, len);
-      if (isNonnegative(this->values[CPU_METER_IRQ])) {
-         len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_IRQ]);
+      if (isNonnegative(this->values[CPU_METER_STEAL])) {
+         len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_STEAL]);
          RichString_appendAscii(out, CRT_colors[METER_TEXT], "vir:");
-         RichString_appendnAscii(out, CRT_colors[CPU_GUEST], buffer, len);
+         RichString_appendnAscii(out, CRT_colors[CPU_STEAL], buffer, len);
       }
    }
 
