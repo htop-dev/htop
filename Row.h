@@ -60,6 +60,10 @@ typedef struct Row_ {
    /* Whether to show children of this row in tree-mode */
    bool showChildren;
 
+   /* Whether this row displays aggregated (summed) values for its collapsed
+      subtree (tree-mode only, when the corresponding setting is enabled) */
+   bool aggregated;
+
    /* Whether the row was updated during the last scan */
    bool updated;
 
@@ -83,6 +87,8 @@ typedef bool (*Row_IsVisible)(const Row*, const struct Table_*);
 typedef bool (*Row_MatchesFilter)(const Row*, const struct Table_*);
 typedef const char* (*Row_SortKeyString)(Row*);
 typedef int (*Row_CompareByParent)(const Row*, const Row*);
+typedef void (*Row_AggregateClear)(Row*);
+typedef void (*Row_AggregateAdd)(Row*, const Row*);
 
 int Row_compare(const void* v1, const void* v2);
 
@@ -94,6 +100,8 @@ typedef struct RowClass_ {
    const Row_MatchesFilter matchesFilter;
    const Row_SortKeyString sortKeyString;
    const Row_CompareByParent compareByParent;
+   const Row_AggregateClear aggregateClear;
+   const Row_AggregateAdd aggregateAdd;
 } RowClass;
 
 #define As_Row(this_)  ((const RowClass*)((this_)->super.klass))
@@ -103,6 +111,11 @@ typedef struct RowClass_ {
 #define Row_matchesFilter(r_, t_)  (As_Row(r_)->matchesFilter ? (As_Row(r_)->matchesFilter(r_, t_)) : false)
 #define Row_sortKeyString(r_)  (As_Row(r_)->sortKeyString ? (As_Row(r_)->sortKeyString(r_)) : "")
 #define Row_compareByParent(r1_, r2_)  (As_Row(r1_)->compareByParent ? (As_Row(r1_)->compareByParent(r1_, r2_)) : Row_compareByParent_Base(r1_, r2_))
+
+/* Reset a row's aggregate to its own values; no-op if unsupported by the class */
+#define Row_aggregateClear(r_)  do { if (As_Row(r_)->aggregateClear) As_Row(r_)->aggregateClear(r_); } while (0)
+/* Add a child's subtree total into a row's aggregate; no-op if unsupported */
+#define Row_aggregateAdd(r_, c_)  do { if (As_Row(r_)->aggregateAdd) As_Row(r_)->aggregateAdd((r_), (c_)); } while (0)
 
 #define ONE_K 1024UL
 #define ONE_M (ONE_K * ONE_K)

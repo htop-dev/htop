@@ -305,6 +305,8 @@ const ProcessClass PCPProcess_class = {
       .compareByParent = Process_compareByParent,
       .sortKeyString = Process_rowGetSortKey,
       .writeField = PCPProcess_rowWriteField,
+      .aggregateClear = Process_rowAggregateClear,
+      .aggregateAdd = Process_rowAggregateAdd,
    },
    .compareByKey = PCPProcess_compareByKey,
 };

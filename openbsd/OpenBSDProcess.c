@@ -264,7 +264,9 @@ const ProcessClass OpenBSDProcess_class = {
       .matchesFilter = Process_rowMatchesFilter,
       .compareByParent = Process_compareByParent,
       .sortKeyString = Process_rowGetSortKey,
-      .writeField = OpenBSDProcess_rowWriteField
+      .writeField = OpenBSDProcess_rowWriteField,
+      .aggregateClear = Process_rowAggregateClear,
+      .aggregateAdd = Process_rowAggregateAdd
    },
    .compareByKey = OpenBSDProcess_compareByKey
 };

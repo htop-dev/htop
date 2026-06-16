@@ -36,6 +36,7 @@ void Row_init(Row* this, const Machine* host) {
    this->host = host;
    this->tag = false;
    this->showChildren = true;
+   this->aggregated = false;
    this->show = true;
    this->wasShown = false;
    this->updated = false;

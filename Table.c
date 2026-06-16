@@ -107,6 +107,14 @@ static void Table_buildTreeBranch(Table* this, int rowid, unsigned int level, in
    if (rowid == 0)
       return;
 
+   // When enabled, sum the additive fields of the whole subtree into this node,
+   // so a collapsed node can display its subtree totals.
+   const Settings* settings = this->host->settings;
+   const bool aggregating = settings->collapsedSubtreeSum && settings->ss->treeView;
+   Row* node = aggregating ? Table_findRow(this, rowid) : NULL;
+   if (node)
+      Row_aggregateClear(node);
+
    // The vector is sorted by parent, find the start of the range by bisection
    int vsize = Vector_size(this->rows);
    int l = 0;
@@ -142,6 +150,8 @@ static void Table_buildTreeBranch(Table* this, int rowid, unsigned int level, in
 
       int32_t nextIndent = indent | ((int32_t)1 << MINIMUM(level, sizeof(row->indent) * 8 - 2));
       Table_buildTreeBranch(this, row->id, level + 1, (i < lastShown) ? nextIndent : indent, row->show && row->showChildren);
+      if (node)
+         Row_aggregateAdd(node, row);
       if (i == lastShown)
          row->indent = -nextIndent;
       else
@@ -149,6 +159,10 @@ static void Table_buildTreeBranch(Table* this, int rowid, unsigned int level, in
 
       row->tree_depth = level + 1;
    }
+
+   // This node displays subtree totals only while it is collapsed and non-empty.
+   if (node)
+      node->aggregated = (l < r) && !node->showChildren;
 }
 
 static int compareRowByKnownParentThenNatural(const void* v1, const void* v2) {
@@ -165,6 +179,7 @@ static void Table_buildTree(Table* this) {
       Row* row = (Row*) Vector_get(this->rows, i);
       int parent = Row_getGroupOrParent(row);
       row->isRoot = false;
+      row->aggregated = false;
 
       if (row->id == parent) {
          row->isRoot = true;

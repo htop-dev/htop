@@ -105,6 +105,7 @@ typedef struct Settings_ {
    bool headerMargin;
    bool screenTabs;
    bool showCachedMemory;
+   bool collapsedSubtreeSum;
    #ifdef HAVE_GETMOUSE
    bool enableMouse;
    #endif

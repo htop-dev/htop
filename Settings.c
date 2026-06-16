@@ -479,6 +479,8 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
          this->showCPUFrequency = atoi(option[1]);
       } else if (String_eq(option[0], "show_cached_memory")) {
          this->showCachedMemory = atoi(option[1]);
+      } else if (String_eq(option[0], "tree_sum_collapsed_subtree")) {
+         this->collapsedSubtreeSum = atoi(option[1]);
       #ifdef BUILD_WITH_CPU_TEMP
       } else if (String_eq(option[0], "show_cpu_temperature")) {
          this->showCPUTemperature = atoi(option[1]);
@@ -722,6 +724,7 @@ int Settings_write(const Settings* this, bool onCrash) {
    printSettingInteger("degree_fahrenheit", this->degreeFahrenheit);
    #endif
    printSettingInteger("show_cached_memory", this->showCachedMemory);
+   printSettingInteger("tree_sum_collapsed_subtree", this->collapsedSubtreeSum);
    printSettingInteger("update_process_names", this->updateProcessNames);
    printSettingInteger("account_guest_in_cpu_meter", this->accountGuestInCPUMeter);
    printSettingInteger("color_scheme", this->colorScheme);
@@ -830,6 +833,7 @@ Settings* Settings_new(const Machine* host, Hashtable* dynamicMeters, Hashtable*
    this->degreeFahrenheit = false;
    #endif
    this->showCachedMemory = true;
+   this->collapsedSubtreeSum = false;
    this->updateProcessNames = false;
    this->showProgramPath = true;
    this->highlightThreads = true;
