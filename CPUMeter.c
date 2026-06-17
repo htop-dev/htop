@@ -252,15 +252,6 @@ static void AllCPUsMeter_getRange(const Meter* this, int* start, int* count) {
    }
 }
 
-static void AllCPUsMeter_updateValues(Meter* this) {
-   CPUMeterData* data = this->meterData;
-   Meter** meters = data->meters;
-   int start, count;
-   AllCPUsMeter_getRange(this, &start, &count);
-   for (int i = 0; i < count; i++)
-      Meter_updateValues(meters[i]);
-}
-
 static void CPUMeterCommonInit(Meter* this) {
    int start, count;
    AllCPUsMeter_getRange(this, &start, &count);
@@ -268,9 +259,28 @@ static void CPUMeterCommonInit(Meter* this) {
    CPUMeterData* data = this->meterData;
    if (!data) {
       data = xCalloc(1, sizeof(CPUMeterData));
-      data->cpus = this->host->existingCPUs;
-      data->meters = count ? xCalloc(count, sizeof(Meter*)) : NULL;
+      data->cpus = 0;   /* no meters allocated yet */
+      data->meters = NULL;
       this->meterData = data;
+   }
+
+   assert(count >= 0);
+   unsigned int prevCount = data->cpus;
+   if ((unsigned int)count != prevCount) {
+      /* free meters for CPUs that are no longer in range */
+      for (unsigned int i = (unsigned int)count; i < prevCount; i++)
+         Meter_delete((Object*)data->meters[i]);
+
+      if (count > 0) {
+         data->meters = xReallocArray(data->meters, (unsigned int)count, sizeof(Meter*));
+         /* zero-fill newly added entries */
+         if ((unsigned int)count > prevCount)
+            memset(data->meters + prevCount, 0, ((unsigned int)count - prevCount) * sizeof(Meter*));
+      } else {
+         free(data->meters);
+         data->meters = NULL;
+      }
+      data->cpus = (unsigned int)count;
    }
 
    Meter** meters = data->meters;
@@ -282,7 +292,22 @@ static void CPUMeterCommonInit(Meter* this) {
    }
 }
 
+static void AllCPUsMeter_updateValues(Meter* this) {
+   CPUMeterData* data = this->meterData;
+   int start, count;
+   AllCPUsMeter_getRange(this, &start, &count);
+   /* Reinit if the number of CPUs changed (e.g. hot-plug) */
+   if ((unsigned int)count != data->cpus)
+      CPUMeterCommonInit(this);
+   data = this->meterData;
+   Meter** meters = data->meters;
+   for (int i = 0; i < count; i++)
+      Meter_updateValues(meters[i]);
+}
+
 static void CPUMeterCommonUpdateMode(Meter* this, MeterModeId mode, int ncol) {
+   /* Reinit first in case the CPU count changed since last init */
+   CPUMeterCommonInit(this);
    CPUMeterData* data = this->meterData;
    Meter** meters = data->meters;
    this->mode = mode;
@@ -303,9 +328,7 @@ static void CPUMeterCommonUpdateMode(Meter* this, MeterModeId mode, int ncol) {
 static void AllCPUsMeter_done(Meter* this) {
    CPUMeterData* data = this->meterData;
    Meter** meters = data->meters;
-   int start, count;
-   AllCPUsMeter_getRange(this, &start, &count);
-   for (int i = 0; i < count; i++)
+   for (unsigned int i = 0; i < data->cpus; i++)
       Meter_delete((Object*)meters[i]);
    free(data->meters);
    free(data);
