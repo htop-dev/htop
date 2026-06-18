@@ -46,6 +46,7 @@ typedef struct LinuxProcess_ {
    long m_pss;
    long m_swap;
    long m_psswp;
+   long m_epss;
    long m_trs;
    long m_drs;
    long m_lrs;
