@@ -483,6 +483,11 @@ number of processes sharing it.
 The proportional swap share of this mapping, unlike M_SWAP this does not take
 into account swapped out page of underlying shmem objects.
 .TP
+.B M_EPSS (EPSS)
+The effective proportional set size of the process - the proportional set size
+plus the proportional swap share. Like M_PSSWP, the swap part does not take
+into account swapped out pages of underlying shmem objects.
+.TP
 .B ST_UID (UID)
 The user ID of the process owner.
 .TP

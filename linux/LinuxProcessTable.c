@@ -904,6 +904,7 @@ static bool LinuxProcessTable_readSmapsFile(LinuxProcess* process, openat_arg_t 
    process->m_pss   = 0;
    process->m_swap  = 0;
    process->m_psswp = 0;
+   process->m_epss  = 0;
 
    char buffer[256];
    while (fgets(buffer, sizeof(buffer), fp)) {
@@ -924,6 +925,8 @@ static bool LinuxProcessTable_readSmapsFile(LinuxProcess* process, openat_arg_t 
          process->m_psswp += strtol(buffer + 8, NULL, 10);
       }
    }
+
+   process->m_epss = process->m_pss + process->m_psswp;
 
    fclose(fp);
    return true;
@@ -1846,6 +1849,7 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
             lp->m_pss   = mainTask->m_pss;
             lp->m_swap  = mainTask->m_swap;
             lp->m_psswp = mainTask->m_psswp;
+            lp->m_epss  = mainTask->m_epss;
          }
       }
 

@@ -100,6 +100,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [M_PSS] = { .name = "M_PSS", .title = "  PSS ", .description = "proportional set size, same as M_RESIDENT but each page is divided by the number of processes sharing it", .flags = PROCESS_FLAG_LINUX_SMAPS, .defaultSortDesc = true, },
    [M_SWAP] = { .name = "M_SWAP", .title = " SWAP ", .description = "Size of the process's swapped pages", .flags = PROCESS_FLAG_LINUX_SMAPS, .defaultSortDesc = true, },
    [M_PSSWP] = { .name = "M_PSSWP", .title = " PSSWP ", .description = "shows proportional swap share of this mapping, unlike \"Swap\", this does not take into account swapped out page of underlying shmem objects", .flags = PROCESS_FLAG_LINUX_SMAPS, .defaultSortDesc = true, },
+   [M_EPSS] = { .name = "M_EPSS", .title = " EPSS ", .description = "effective proportional set size - sum of PSS and SwapPss, showing proportional total memory usage (swap part ignores swapped out shmem)", .flags = PROCESS_FLAG_LINUX_SMAPS, .defaultSortDesc = true, },
    [CTXT] = { .name = "CTXT", .title = " CTXT ", .description = "Context switches (incremental sum of voluntary_ctxt_switches and nonvoluntary_ctxt_switches)", .flags = PROCESS_FLAG_LINUX_CTXT, .defaultSortDesc = true, },
    [SECATTR] = { .name = "SECATTR", .title = "Security Attribute", .description = "Security attribute of the process (e.g. SELinux or AppArmor)", .flags = PROCESS_FLAG_LINUX_SECATTR, .autoWidth = true, },
    [PROC_COMM] = { .name = "COMM", .title = "COMM            ", .description = "comm string of the process from /proc/[pid]/comm", .flags = 0, },
@@ -264,6 +265,7 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
    case M_PSS: Row_printKBytes(str, lp->m_pss, coloring); return;
    case M_SWAP: Row_printKBytes(str, lp->m_swap, coloring); return;
    case M_PSSWP: Row_printKBytes(str, lp->m_psswp, coloring); return;
+   case M_EPSS: Row_printKBytes(str, lp->m_epss, coloring); return;
    case UTIME: Row_printTime(str, lp->utime, coloring); return;
    case STIME: Row_printTime(str, lp->stime, coloring); return;
    case CUTIME: Row_printTime(str, lp->cutime, coloring); return;
@@ -399,6 +401,8 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
       return SPACESHIP_NUMBER(p1->m_swap, p2->m_swap);
    case M_PSSWP:
       return SPACESHIP_NUMBER(p1->m_psswp, p2->m_psswp);
+   case M_EPSS:
+      return SPACESHIP_NUMBER(p1->m_epss, p2->m_epss);
    case UTIME:
       return SPACESHIP_NUMBER(p1->utime, p2->utime);
    case CUTIME:
