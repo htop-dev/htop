@@ -11,7 +11,7 @@ jobs:
   build-ubuntu-latest-minimal-gcc:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Install Dependencies
       run: |
         sudo apt-get update -q
@@ -35,7 +35,7 @@ jobs:
     env:
       CC: clang-22
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: install clang repo
       run: |
         ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
@@ -61,7 +61,7 @@ jobs:
       CFLAGS: -O3 -g -flto
       LDFLAGS: -O3 -g -flto -Wl,--as-needed
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Install Dependencies
       run: |
         sudo apt-get update -q
@@ -80,7 +80,7 @@ jobs:
     env:
       CC: clang-22
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: install clang repo
       run: |
         ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
@@ -106,7 +106,7 @@ jobs:
       CFLAGS: -O3 -g -flto
       LDFLAGS: -O3 -g -flto
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Install Dependencies
       run: |
         sudo apt-get update -q
@@ -124,7 +124,7 @@ jobs:
     # we want PCP v5.2.3+
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Install Dependencies
       run: |
         sudo apt-get update -q
@@ -140,7 +140,7 @@ jobs:
     # build as if we were on an unsupported platform
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Install Dependencies
       run: |
         sudo apt-get update -q
@@ -157,7 +157,7 @@ jobs:
     env:
       CC: clang-22
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: install clang repo
       run: |
         ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
@@ -185,7 +185,7 @@ jobs:
       TERM: xterm-color
       HTOPRC: .github/workflows/htoprc
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: install clang repo
       run: |
         ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
@@ -217,7 +217,7 @@ jobs:
     env:
       CC: clang
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Install Dependencies
       run: brew install automake pkg-config
     - name: Bootstrap
@@ -236,7 +236,7 @@ jobs:
       CFLAGS: -O3 -g -flto
       LDFLAGS: -O3 -g -flto
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Install Dependencies
       run: |
         pcp_version=7.0.3-1
@@ -255,7 +255,7 @@ jobs:
       runs-on: ubuntu-22.04
       timeout-minutes: 20
       steps:
-        - uses: actions/checkout@v6
+        - uses: actions/checkout@v7
           with:
             submodules: recursive
         - name: Compile
@@ -278,7 +278,7 @@ jobs:
       runs-on: ubuntu-22.04
       timeout-minutes: 20
       steps:
-        - uses: actions/checkout@v6
+        - uses: actions/checkout@v7
           with:
             submodules: recursive
         - name: Compile
@@ -299,7 +299,7 @@ jobs:
       runs-on: ubuntu-22.04
       timeout-minutes: 20
       steps:
-        - uses: actions/checkout@v6
+        - uses: actions/checkout@v7
           with:
             submodules: recursive
         - name: Compile
@@ -324,7 +324,7 @@ jobs:
       runs-on: ubuntu-22.04
       timeout-minutes: 20
       steps:
-        - uses: actions/checkout@v6
+        - uses: actions/checkout@v7
           with:
             submodules: recursive
         - name: Compile
@@ -359,7 +359,7 @@ jobs:
       runs-on: ubuntu-22.04
       timeout-minutes: 20
       steps:
-        - uses: actions/checkout@v6
+        - uses: actions/checkout@v7
           with:
             submodules: recursive
         - name: Compile
@@ -379,13 +379,13 @@ jobs:
   lint-whitespace:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: check-whitespaces
         run: git diff-tree --check $(git hash-object -t tree /dev/null) HEAD
 
   lint-pcp-config:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: check-pcp-style
         run: ./check-pcp-style.sh
