@@ -68,4 +68,4 @@ Icon=htop
 Exec=htop
 Terminal=true
 Categories=System;Monitor;ConsoleOnly;
-Keywords=system;process;task
+Keywords=system;process;task;resources;monitoring;performance;
