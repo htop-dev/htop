@@ -22,7 +22,6 @@ in the source distribution for its full text.
    M_DRS = 43,                   \
    M_LRS = 44,                   \
    M_DT = 45,                    \
-   CTID = 100,                   \
    RCHAR = 103,                  \
    WCHAR = 104,                  \
    SYSCR = 105,                  \

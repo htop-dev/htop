@@ -1510,52 +1510,6 @@ AC_DEFINE_UNQUOTED([PROCDIR], ["$with_proc"], [Path of proc filesystem.])
 
 
 AC_ARG_ENABLE(
-   [openvz],
-   [AS_HELP_STRING(
-      [--enable-openvz],
-      [enable OpenVZ support @<:@default=no@:>@]
-   )],
-   [],
-   [enable_openvz=no]
-)
-if test "x$enable_openvz" = xyes; then
-   AC_DEFINE([HAVE_OPENVZ], [1], [Define if openvz support enabled.])
-fi
-
-
-AC_ARG_ENABLE(
-   [vserver],
-   [AS_HELP_STRING(
-      [--enable-vserver],
-      [enable VServer support @<:@default=no@:>@]
-   )],
-   [],
-   [enable_vserver=no]
-)
-if test "x$enable_vserver" = xyes; then
-   AC_DEFINE([HAVE_VSERVER], [1], [Define if VServer support enabled.])
-fi
-
-
-AC_ARG_ENABLE(
-   [ancient_vserver],
-   [AS_HELP_STRING(
-      [--enable-ancient-vserver],
-      [enable ancient VServer support (implies --enable-vserver) @<:@default=no@:>@]
-   )],
-   [],
-   [enable_ancient_vserver=no]
-)
-if test "x$enable_ancient_vserver" = xyes; then
-   if test "x$enable_vserver" != xyes; then
-      enable_vserver=implied
-   fi
-   AC_DEFINE([HAVE_VSERVER], [1], [Define if VServer support enabled.])
-   AC_DEFINE([HAVE_ANCIENT_VSERVER], [1], [Define if ancient vserver support enabled.])
-fi
-
-
-AC_ARG_ENABLE(
    [capabilities],
    [AS_HELP_STRING(
       [--enable-capabilities],
@@ -1867,9 +1821,6 @@ AC_MSG_RESULT([
 
   platform:                  $my_htop_platform ($host_os)
   (Linux) proc directory:    $with_proc
-  (Linux) openvz:            $enable_openvz
-  (Linux) vserver:           $enable_vserver
-  (Linux) ancient vserver:   $enable_ancient_vserver
   (Linux) delay accounting:  $enable_delayacct
   (Linux) sensors:           $enable_sensors
   (Linux) capabilities:      $enable_capabilities

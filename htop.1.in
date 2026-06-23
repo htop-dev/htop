@@ -536,15 +536,6 @@ The number of Light-Weight Processes (=threads) in the process.
 .B TGID
 The thread group ID.
 .TP
-.B CTID
-OpenVZ container ID, a.k.a virtual environment ID.
-.TP
-.B VPID
-OpenVZ process ID.
-.TP
-.B VXID
-VServer process ID.
-.TP
 .B RCHAR (RD_CHAR)
 The number of bytes the process has read.
 .TP
