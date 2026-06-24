@@ -41,9 +41,11 @@ jobs:
     - uses: actions/checkout@v7
     - name: Install clang repo
       run: |
+        set -euo pipefail
+        mkdir -p /etc/apt/keyrings
         ubuntu_codename=$(LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release)
-        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" -y
+        wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/llvm.gpg > /dev/null
+        echo "deb [signed-by=/etc/apt/keyrings/llvm.gpg] http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" | sudo tee /etc/apt/sources.list.d/llvm.list
     - name: Install Dependencies
       run: |
         sudo apt-get update -q
@@ -86,9 +88,11 @@ jobs:
     - uses: actions/checkout@v7
     - name: Install clang repo
       run: |
+        set -euo pipefail
+        mkdir -p /etc/apt/keyrings
         ubuntu_codename=$(LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release)
-        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" -y
+        wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/llvm.gpg > /dev/null
+        echo "deb [signed-by=/etc/apt/keyrings/llvm.gpg] http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" | sudo tee /etc/apt/sources.list.d/llvm.list
     - name: Install Dependencies
       run: |
         sudo apt-get update -q
@@ -163,9 +167,11 @@ jobs:
     - uses: actions/checkout@v7
     - name: Install clang repo
       run: |
+        set -euo pipefail
+        mkdir -p /etc/apt/keyrings
         ubuntu_codename=$(LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release)
-        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" -y
+        wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/llvm.gpg > /dev/null
+        echo "deb [signed-by=/etc/apt/keyrings/llvm.gpg] http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" | sudo tee /etc/apt/sources.list.d/llvm.list
     - name: Install Dependencies
       run: |
         sudo apt-get update -q
@@ -191,9 +197,11 @@ jobs:
     - uses: actions/checkout@v7
     - name: Install clang repo
       run: |
+        set -euo pipefail
+        mkdir -p /etc/apt/keyrings
         ubuntu_codename=$(LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release)
-        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" -y
+        wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/llvm.gpg > /dev/null
+        echo "deb [signed-by=/etc/apt/keyrings/llvm.gpg] http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" | sudo tee /etc/apt/sources.list.d/llvm.list
     - name: Install LLVM Toolchain
       run: |
         sudo apt-get update -q
