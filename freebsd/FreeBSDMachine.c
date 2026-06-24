@@ -306,6 +306,7 @@ static void FreeBSDMachine_scanMemoryInfo(Machine* super) {
    FreeBSDMachine* this = (FreeBSDMachine*) super;
 
    // comment by Pierre-Marie Baty <pm@pmbaty.com>
+   // reviewed and expanded by Bruno Croci <bruno@croci.me>
    //
    // FreeBSD has the following memory classes:
    //    active:   userland pages currently mapped to physical memory (i.e. in use)
@@ -314,15 +315,10 @@ static void FreeBSDMachine_scanMemoryInfo(Machine* super) {
    //    wired:    kernel pages currently mapped to physical memory, cannot be paged out nor swapped
    //       buffers: subcategory of 'wired' corresponding to the filesystem caches
    //    free:     pages that haven't been allocated yet, or have been released
-   //
-   // With ZFS, the ARC area is NOT counted in the 'buffers' class, but is still counted in the 'wired'
-   // class. The ARC total must thus be subtracted from the 'wired' class AND added to the 'buffer' class,
-   // so that the result (ARC being shown in buffersMem) is consistent with what ZFS users would expect.
-   // This adjustment is done in Platform_setMemoryValues() in freebsd/Platform.c.
 
    u_long totalMem;
    u_int memActive, memWire, memInactive, memLaundry;
-   long buffersMem;
+   long cacheMem;
    size_t len;
 
    // total memory
@@ -360,13 +356,22 @@ static void FreeBSDMachine_scanMemoryInfo(Machine* super) {
    else
       this->laundryMem = 0;
 
-   // "buffers" pages (separate read, should be deducted from 'wired')
-   len = sizeof(buffersMem);
-   if ((sysctl(MIB_vfs_bufspace, 2, &(buffersMem), &len, NULL, 0) == 0) && (buffersMem > 0))
-      this->buffersMem = buffersMem / 1024;
+   // "cache" (considers main vfs buffer and ARC caches, should be deducted from 'wired')
+   len = sizeof(cacheMem);
+   if ((sysctl(MIB_vfs_bufspace, 2, &(cacheMem), &len, NULL, 0) == 0) && (cacheMem > 0))
+      this->cacheMem = cacheMem / 1024;
    else
-      this->buffersMem = 0;
-   this->wiredMem -= this->buffersMem; // subtract (NB: "buffers" can't be larger than "wired")
+      this->cacheMem = 0;
+
+   if (this->zfs.enabled) {
+      // ZFS does not shrink below the value of zfs_arc_min.
+      unsigned long long int shrinkableSize = 0;
+      if (this->zfs.size > this->zfs.min)
+         shrinkableSize = this->zfs.size - this->zfs.min;
+      this->cacheMem += shrinkableSize;
+   }
+
+   this->wiredMem -= this->cacheMem > this->wiredMem ? this->wiredMem : this->cacheMem; // subtract (NB: "cache" can't be larger than "wired")
 
    // NOTE: it is wrong in FreeBSD to represent the "shared" memory as a memory class by itself.
    // The only page classes exposed by the kernel are "active", "inactive", "wired", "laundry" and "free".

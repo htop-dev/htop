@@ -37,11 +37,10 @@ typedef struct FreeBSDMachine_ {
    int kernelFScale;
 
    memory_t wiredMem;
-   memory_t buffersMem;
    memory_t activeMem;
    memory_t laundryMem;
+   memory_t cacheMem;
    memory_t inactiveMem;
-   memory_t arcMem;
 
    ZfsArcStats zfs;
 
