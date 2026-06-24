@@ -271,10 +271,7 @@ static void CPUMeterCommonInit(Meter* this) {
          Meter_delete((Object*)data->meters[i]);
 
       if (count > 0) {
-         data->meters = xReallocArray(data->meters, count, sizeof(Meter*));
-         /* zero-fill newly added entries */
-         if (count > prevCount)
-            memset(data->meters + prevCount, 0, (count - prevCount) * sizeof(Meter*));
+         data->meters = xReallocArrayZero(data->meters, prevCount, count, sizeof(Meter*));
       } else {
          free(data->meters);
          data->meters = NULL;
@@ -354,13 +351,13 @@ static void CPUMeterCommonDraw(Meter* this, int x, int y, int w, unsigned int nc
    Meter** meters = data->meters;
    unsigned int start, count;
    AllCPUsMeter_getRange(this, &start, &count);
-   int colwidth = w / ncol;
-   int diff = w % ncol;
+   int colwidth = w / (int)ncol;
+   int diff = w % (int)ncol;
    unsigned int nrows = (count + ncol - 1) / ncol;
    for (unsigned int i = 0; i < count; i++) {
-      int col = i / nrows;
-      int d = col > diff ? diff : col; // dynamic spacer
-      int xpos = x + (col * colwidth) + d;
+      unsigned int col = i / nrows;
+      int d = (int)col > diff ? diff : (int)col; // dynamic spacer
+      int xpos = x + ((int)col * colwidth) + d;
       int ypos = y + ((i % nrows) * meters[0]->h);
       meters[i]->draw(meters[i], xpos, ypos, colwidth);
    }
