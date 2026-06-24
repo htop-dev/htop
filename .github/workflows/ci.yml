@@ -263,140 +263,140 @@ jobs:
       run: make -k
 
   build-dragonflybsd-latest-gcc:
-      runs-on: ubuntu-22.04
-      timeout-minutes: 20
-      steps:
-        - uses: actions/checkout@v7
-          with:
-            submodules: recursive
-        - name: Compile
-          uses: vmactions/dragonflybsd-vm@v1
-          with:
-            release: '6.4.2'
-            usesh: true
-            prepare: |
-              pkg install -y gmake autoconf automake ncurses git
-              git config --global --add safe.directory /home/runner/work/htop/htop
-            run: |
-              set -e
-              export LDFLAGS="-L/usr/local/lib"
-              export CFLAGS="-I/usr/local/include"
-              ./autogen.sh
-              ./configure --enable-unicode --enable-werror
-              gmake -k
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        submodules: recursive
+    - name: Compile
+      uses: vmactions/dragonflybsd-vm@v1
+      with:
+        release: '6.4.2'
+        usesh: true
+        prepare: |
+          pkg install -y gmake autoconf automake ncurses git
+          git config --global --add safe.directory /home/runner/work/htop/htop
+        run: |
+          set -e
+          export LDFLAGS="-L/usr/local/lib"
+          export CFLAGS="-I/usr/local/include"
+          ./autogen.sh
+          ./configure --enable-unicode --enable-werror
+          gmake -k
 
   build-freebsd-latest-clang:
-      runs-on: ubuntu-22.04
-      timeout-minutes: 20
-      steps:
-        - uses: actions/checkout@v7
-          with:
-            submodules: recursive
-        - name: Compile
-          uses: vmactions/freebsd-vm@v1
-          with:
-            release: '15.0'
-            usesh: true
-            prepare: |
-              pkg install -y gmake autoconf automake pkgconf git libunwind gnulibiberty
-              git config --global --add safe.directory /home/runner/work/htop/htop
-            run: |
-              set -e
-              ./autogen.sh
-              ./configure --enable-unicode --enable-werror --enable-backtrace --enable-demangling
-              gmake -k
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        submodules: recursive
+    - name: Compile
+      uses: vmactions/freebsd-vm@v1
+      with:
+        release: '15.0'
+        usesh: true
+        prepare: |
+          pkg install -y gmake autoconf automake pkgconf git libunwind gnulibiberty
+          git config --global --add safe.directory /home/runner/work/htop/htop
+        run: |
+          set -e
+          ./autogen.sh
+          ./configure --enable-unicode --enable-werror --enable-backtrace --enable-demangling
+          gmake -k
 
   build-netbsd-latest-gcc:
-      runs-on: ubuntu-22.04
-      timeout-minutes: 20
-      steps:
-        - uses: actions/checkout@v7
-          with:
-            submodules: recursive
-        - name: Compile
-          uses: vmactions/netbsd-vm@v1
-          with:
-            release: '10.1'
-            usesh: true
-            prepare: |
-              PATH="/usr/pkg/sbin:/usr/pkg/bin:$PATH"
-              PKG_PATH="https://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/amd64/10.1/All/"
-              export PATH PKG_PATH
-              /usr/sbin/pkg_add pkgin
-              pkgin -y install autoconf automake libtool ncurses pkg-config gmake git
-              git config --global --add safe.directory /home/runner/work/htop/htop
-            run: |
-              set -e
-              ./autogen.sh
-              ./configure --enable-unicode --enable-werror
-              gmake -k
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        submodules: recursive
+    - name: Compile
+      uses: vmactions/netbsd-vm@v1
+      with:
+        release: '10.1'
+        usesh: true
+        prepare: |
+          PATH="/usr/pkg/sbin:/usr/pkg/bin:$PATH"
+          PKG_PATH="https://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/amd64/10.1/All/"
+          export PATH PKG_PATH
+          /usr/sbin/pkg_add pkgin
+          pkgin -y install autoconf automake libtool ncurses pkg-config gmake git
+          git config --global --add safe.directory /home/runner/work/htop/htop
+        run: |
+          set -e
+          ./autogen.sh
+          ./configure --enable-unicode --enable-werror
+          gmake -k
 
   build-openbsd-latest-clang:
-      runs-on: ubuntu-22.04
-      timeout-minutes: 20
-      steps:
-        - uses: actions/checkout@v7
-          with:
-            submodules: recursive
-        - name: Compile
-          uses: vmactions/openbsd-vm@v1
-          with:
-            release: '7.8'
-            usesh: true
-            prepare: |
-              pkg_add gmake git
-              git config --global --add safe.directory /home/runner/work/htop/htop
-            run: |
-              set -e
-              autoconf_version_full=$(pkg_info -Q autoconf |
-                LC_ALL=C sed 's/^autoconf-\([0-9]*\.[0-9]*\)\(p[.0-9]*\)\{0,1\}$/\1\2/p; d' |
-                LC_ALL=C sort -n -r -t . -k 1,1 -k 2,2 |
-                sed '1 q')
-              automake_version_full=$(pkg_info -Q automake |
-                LC_ALL=C sed 's/^automake-\([0-9]*\.[0-9]*\)\(\.[0-9]*\)\{0,1\}\(p[0-9]*\)\{0,1\}$/\1\2\3/p; d' |
-                LC_ALL=C sort -n -r -t . -k 1,1 -k 2,2 -k 3,3 |
-                sed '1 q')
-              pkg_add -v autoconf-${autoconf_version_full} automake-${automake_version_full}
-              export AUTOCONF_VERSION=$(echo ${autoconf_version_full} |
-                LC_ALL=C sed 's/^\([0-9]*\.[0-9]*\).*$/\1/')
-              # Must not include the third version field in $AUTOMAKE_VERSION
-              export AUTOMAKE_VERSION=$(echo ${automake_version_full} |
-                LC_ALL=C sed 's/^\([0-9]*\.[0-9]*\).*$/\1/')
-              ./autogen.sh
-              ./configure --enable-unicode --enable-werror
-              gmake -k
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        submodules: recursive
+    - name: Compile
+      uses: vmactions/openbsd-vm@v1
+      with:
+        release: '7.8'
+        usesh: true
+        prepare: |
+          pkg_add gmake git
+          git config --global --add safe.directory /home/runner/work/htop/htop
+        run: |
+          set -e
+          autoconf_version_full=$(pkg_info -Q autoconf |
+            LC_ALL=C sed 's/^autoconf-\([0-9]*\.[0-9]*\)\(p[.0-9]*\)\{0,1\}$/\1\2/p; d' |
+            LC_ALL=C sort -n -r -t . -k 1,1 -k 2,2 |
+            sed '1 q')
+          automake_version_full=$(pkg_info -Q automake |
+            LC_ALL=C sed 's/^automake-\([0-9]*\.[0-9]*\)\(\.[0-9]*\)\{0,1\}\(p[0-9]*\)\{0,1\}$/\1\2\3/p; d' |
+            LC_ALL=C sort -n -r -t . -k 1,1 -k 2,2 -k 3,3 |
+            sed '1 q')
+          pkg_add -v autoconf-${autoconf_version_full} automake-${automake_version_full}
+          export AUTOCONF_VERSION=$(echo ${autoconf_version_full} |
+            LC_ALL=C sed 's/^\([0-9]*\.[0-9]*\).*$/\1/')
+          # Must not include the third version field in $AUTOMAKE_VERSION
+          export AUTOMAKE_VERSION=$(echo ${automake_version_full} |
+            LC_ALL=C sed 's/^\([0-9]*\.[0-9]*\).*$/\1/')
+          ./autogen.sh
+          ./configure --enable-unicode --enable-werror
+          gmake -k
 
   build-solaris-latest-gcc:
-      runs-on: ubuntu-22.04
-      timeout-minutes: 20
-      steps:
-        - uses: actions/checkout@v7
-          with:
-            submodules: recursive
-        - name: Compile
-          uses: vmactions/solaris-vm@v1
-          with:
-            release: '11.4'
-            usesh: true
-            prepare: |
-              pkg install gnu-make autoconf automake ncurses git gcc
-              git config --global --add safe.directory /home/runner/work/htop/htop
-            run: |
-              set -e
-              ./autogen.sh
-              ./configure --enable-unicode --enable-werror
-              gmake -k
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        submodules: recursive
+    - name: Compile
+      uses: vmactions/solaris-vm@v1
+      with:
+        release: '11.4'
+        usesh: true
+        prepare: |
+          pkg install gnu-make autoconf automake ncurses git gcc
+          git config --global --add safe.directory /home/runner/work/htop/htop
+        run: |
+          set -e
+          ./autogen.sh
+          ./configure --enable-unicode --enable-werror
+          gmake -k
 
   lint-whitespace:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - name: Check whitespaces
-        run: git diff-tree --check $(git hash-object -t tree /dev/null) HEAD
+    - uses: actions/checkout@v7
+    - name: Check whitespaces
+      run: git diff-tree --check $(git hash-object -t tree /dev/null) HEAD
 
   lint-pcp-config:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - name: Check PCP style
-        run: ./check-pcp-style.sh
+    - uses: actions/checkout@v7
+    - name: Check PCP style
+      run: ./check-pcp-style.sh
