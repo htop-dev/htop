@@ -39,7 +39,7 @@ jobs:
       CC: clang-22
     steps:
     - uses: actions/checkout@v7
-    - name: install clang repo
+    - name: Install clang repo
       run: |
         ubuntu_codename=$(LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release)
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
@@ -84,7 +84,7 @@ jobs:
       CC: clang-22
     steps:
     - uses: actions/checkout@v7
-    - name: install clang repo
+    - name: Install clang repo
       run: |
         ubuntu_codename=$(LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release)
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
@@ -161,7 +161,7 @@ jobs:
       CC: clang-22
     steps:
     - uses: actions/checkout@v7
-    - name: install clang repo
+    - name: Install clang repo
       run: |
         ubuntu_codename=$(LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release)
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
@@ -189,7 +189,7 @@ jobs:
       HTOPRC: .github/workflows/htoprc
     steps:
     - uses: actions/checkout@v7
-    - name: install clang repo
+    - name: Install clang repo
       run: |
         ubuntu_codename=$(LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release)
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
@@ -383,12 +383,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: check-whitespaces
+      - name: Check whitespaces
         run: git diff-tree --check $(git hash-object -t tree /dev/null) HEAD
 
   lint-pcp-config:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: check-pcp-style
+      - name: Check PCP style
         run: ./check-pcp-style.sh
