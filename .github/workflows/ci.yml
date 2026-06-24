@@ -41,7 +41,7 @@ jobs:
     - uses: actions/checkout@v7
     - name: install clang repo
       run: |
-        ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
+        ubuntu_codename=$(LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release)
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
         sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" -y
     - name: Install Dependencies
@@ -86,7 +86,7 @@ jobs:
     - uses: actions/checkout@v7
     - name: install clang repo
       run: |
-        ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
+        ubuntu_codename=$(LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release)
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
         sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" -y
     - name: Install Dependencies
@@ -151,7 +151,7 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --host=`uname -m`-none --enable-werror --enable-unicode || ( cat config.log; exit 1; )
+      run: ./configure --host=$(uname -m)-none --enable-werror --enable-unicode || ( cat config.log; exit 1; )
     - name: Build
       run: make -k
 
@@ -163,7 +163,7 @@ jobs:
     - uses: actions/checkout@v7
     - name: install clang repo
       run: |
-        ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
+        ubuntu_codename=$(LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release)
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
         sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" -y
     - name: Install Dependencies
@@ -191,7 +191,7 @@ jobs:
     - uses: actions/checkout@v7
     - name: install clang repo
       run: |
-        ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
+        ubuntu_codename=$(LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release)
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
         sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" -y
     - name: Install LLVM Toolchain
