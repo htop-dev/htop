@@ -9,12 +9,13 @@ in the source distribution for its full text.
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 
 /* XUtils' allocation-failure path references CRT_done(); this test links XUtils.o
-   but never triggers OOM, so a no-op stub satisfies the linker without pulling in
-   CRT and the whole TUI. */
+   and Compat.o but never triggers OOM, so a no-op stub satisfies the linker without
+   pulling in CRT and the whole TUI. */
 void CRT_done(void);
 void CRT_done(void) { }
 
@@ -87,12 +88,55 @@ static void test_parseMountinfo(void) {
    CHECK(CGroupMem_parseMountinfo(none, buf, sizeof(buf)) == false);
 }
 
+static void writeFile(const char* dir, const char* name, const char* body) {
+   char path[1024];
+   snprintf(path, sizeof(path), "%s/%s", dir, name);
+   FILE* fp = fopen(path, "w");
+   if (fp) {
+      fputs(body, fp);
+      fclose(fp);
+   }
+}
+
+static void test_readNode(void) {
+   char dir[] = "/tmp/cgmtestXXXXXX";
+   if (!mkdtemp(dir)) {
+      CHECK(0 && "mkdtemp failed");
+      return;
+   }
+
+   writeFile(dir, "memory.max", "4294967296\n");        /* 4 GiB */
+   writeFile(dir, "memory.current", "2202009600\n");    /* ~2.05 GiB */
+   writeFile(dir, "memory.stat", "anon 1048576\nfile 524288000\n");
+   writeFile(dir, "memory.swap.max", "1073741824\n");   /* 1 GiB */
+   writeFile(dir, "memory.swap.current", "10485760\n"); /* 10 MiB */
+
+   CGroupMemData data = {0};
+   /* host has 64 GiB → limit (4 GiB) < host → active */
+   CGroupMem_readNode(dir, 64ULL * 1024 * 1024, &data);
+   CHECK(data.active == true);
+   CHECK(data.limit == 4194304ULL);
+   CHECK(data.current == 2150400ULL);
+   CHECK(data.file == 512000ULL);
+   CHECK(data.swapActive == true);
+   CHECK(data.swapLimit == 1048576ULL);
+   CHECK(data.swapCurrent == 10240ULL);
+
+   /* unlimited memory.max → inactive; swap must not flip to cgroup mode either */
+   writeFile(dir, "memory.max", "max\n");
+   CGroupMemData data2 = {0};
+   CGroupMem_readNode(dir, 64ULL * 1024 * 1024, &data2);
+   CHECK(data2.active == false);
+   CHECK(data2.swapActive == false);
+}
+
 int main(void) {
    test_parseLimit();
    test_parseUsage();
    test_parseStat();
    test_parseSelfCgroup();
    test_parseMountinfo();
+   test_readNode();
 
    if (failures) {
       fprintf(stderr, "%d/%d checks FAILED\n", failures, checks);

@@ -30,6 +30,7 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "UsersTable.h"
 
+#include "linux/CGroupMem.h"
 #include "linux/Compat.h"
 #include "linux/Platform.h" // needed for GNU/hurd to get PATH_MAX  // IWYU pragma: keep
 
@@ -216,6 +217,9 @@ static void LinuxMachine_scanMemoryInfo(LinuxMachine* this) {
    host->cachedSwap = swapCacheMem;
    this->zswap.usedZswapComp = zswapCompMem;
    this->zswap.usedZswapOrig = zswapOrigMem;
+
+   /* host->totalMem is in kB; CGroupMem works in kB. */
+   CGroupMem_scan(host->totalMem, &this->cgroupMem);
 }
 
 static void LinuxMachine_scanHugePages(LinuxMachine* this) {

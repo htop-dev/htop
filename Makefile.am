@@ -531,7 +531,7 @@ cppcheck:
 
 check_PROGRAMS = linux/CGroupMemTest
 TESTS = $(check_PROGRAMS)
-linux_CGroupMemTest_SOURCES = linux/CGroupMemTest.c linux/CGroupMem.c linux/CGroupMem.h XUtils.c
+linux_CGroupMemTest_SOURCES = linux/CGroupMemTest.c linux/CGroupMem.c linux/CGroupMem.h XUtils.c linux/Compat.c
 linux_CGroupMemTest_CPPFLAGS = $(AM_CPPFLAGS) -D_DEFAULT_SOURCE
 
 dist-hook: $(top_distdir)/configure
