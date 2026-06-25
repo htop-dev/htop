@@ -49,6 +49,7 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "linux/Compat.h"
+#include "linux/ContainerMeter.h"
 #include "linux/IOPriority.h"
 #include "linux/IOPriorityPanel.h"
 #include "linux/LinuxMachine.h"
@@ -236,6 +237,8 @@ const MeterClass* const Platform_meterTypes[] = {
    &LoadMeter_class,
    &MemoryMeter_class,
    &SwapMeter_class,
+   &ContainerMemoryMeter_class,
+   &ContainerSwapMeter_class,
    &MemorySwapMeter_class,
    &SysArchMeter_class,
    &HugePageMeter_class,
@@ -494,6 +497,48 @@ void Platform_setSwapValues(Meter* this) {
       }
       this->values[SWAP_METER_FRONTSWAP] += lhost->zswap.usedZswapOrig;
    }
+}
+
+void Platform_setCGroupMemoryValues(Meter* this) {
+   const Machine* host = this->host;
+   const LinuxMachine* lhost = (const LinuxMachine*) host;
+
+   if (!lhost->cgroupMem.active) {
+      /* No cgroup v2 limit detected: fall back to the classic host numbers. */
+      Platform_setMemoryValues(this);
+      return;
+   }
+
+   /* cgroup v2 mode: total = limit; used = current - file (anon+kernel); cache = file. */
+   uint64_t limit = lhost->cgroupMem.limit;
+   uint64_t current = lhost->cgroupMem.current;
+   uint64_t file = lhost->cgroupMem.file;
+   uint64_t used = (current > file) ? (current - file) : 0;
+
+   this->total = limit;
+   this->values[MEMORY_CLASS_USED]       = used;
+   this->values[MEMORY_CLASS_SHARED]     = 0;
+   this->values[MEMORY_CLASS_COMPRESSED] = 0;
+   this->values[MEMORY_CLASS_BUFFERS]    = 0;
+   this->values[MEMORY_CLASS_CACHE]      = file;
+   this->values[MEMORY_CLASS_AVAILABLE]  = (limit > current) ? (limit - current) : 0;
+}
+
+void Platform_setCGroupSwapValues(Meter* this) {
+   const Machine* host = this->host;
+   const LinuxMachine* lhost = (const LinuxMachine*) host;
+
+   if (!lhost->cgroupMem.swapActive) {
+      /* No cgroup v2 swap limit detected: fall back to the classic host numbers. */
+      Platform_setSwapValues(this);
+      return;
+   }
+
+   /* cgroup v2 swap: total = memory.swap.max (may be 0 = disabled -> empty bar). */
+   this->total = lhost->cgroupMem.swapLimit;
+   this->values[SWAP_METER_USED] = lhost->cgroupMem.swapCurrent;
+   this->values[SWAP_METER_CACHE] = NAN;       /* not represented per-cgroup */
+   this->values[SWAP_METER_FRONTSWAP] = NAN;
 }
 
 void Platform_setZramValues(Meter* this) {

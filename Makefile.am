@@ -191,6 +191,7 @@ linux_platform_headers = \
 	linux/CGroupMem.h \
 	linux/CGroupUtils.h \
 	linux/Compat.h \
+	linux/ContainerMeter.h \
 	linux/GPU.h \
 	linux/HugePageMeter.h \
 	linux/IOPriority.h \
@@ -220,6 +221,7 @@ linux_platform_sources = \
 	linux/CGroupMem.c \
 	linux/CGroupUtils.c \
 	linux/Compat.c \
+	linux/ContainerMeter.c \
 	linux/GPU.c \
 	linux/HugePageMeter.c \
 	linux/IOPriorityPanel.c \
