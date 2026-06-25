@@ -188,6 +188,7 @@ linux_platform_headers = \
 	generic/gettime.h \
 	generic/hostname.h \
 	generic/uname.h \
+	linux/CGroupMem.h \
 	linux/CGroupUtils.h \
 	linux/Compat.h \
 	linux/GPU.h \
@@ -216,6 +217,7 @@ linux_platform_sources = \
 	generic/gettime.c \
 	generic/hostname.c \
 	generic/uname.c \
+	linux/CGroupMem.c \
 	linux/CGroupUtils.c \
 	linux/Compat.c \
 	linux/GPU.c \
@@ -526,6 +528,11 @@ coverage:
 
 cppcheck:
 	cppcheck -q -v . --enable=all -DHAVE_OPENVZ
+
+check_PROGRAMS = linux/CGroupMemTest
+TESTS = $(check_PROGRAMS)
+linux_CGroupMemTest_SOURCES = linux/CGroupMemTest.c linux/CGroupMem.c linux/CGroupMem.h XUtils.c
+linux_CGroupMemTest_CPPFLAGS = $(AM_CPPFLAGS) -D_DEFAULT_SOURCE
 
 dist-hook: $(top_distdir)/configure
 	@if test "x$$FORCE_MAKE_DIST" != x || \
