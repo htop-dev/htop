@@ -830,6 +830,9 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
 
    Machine_init(super, usersTable, userId);
 
+   // Platform_init() has already probed containerization by this point
+   super->containerized = Running_containerized;
+
    // Initialize page size
    long pageSize = sysconf(_SC_PAGESIZE);
    if (pageSize <= 0)
