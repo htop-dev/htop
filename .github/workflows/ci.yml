@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
     - name: Install Dependencies
       run: |
         sudo apt-get update -q
@@ -39,11 +41,15 @@ jobs:
       CC: clang-22
     steps:
     - uses: actions/checkout@v7
-    - name: install clang repo
+      with:
+        persist-credentials: false
+    - name: Install clang repo
       run: |
-        ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
-        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" -y
+        set -euo pipefail
+        mkdir -p /etc/apt/keyrings
+        ubuntu_codename=$(LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release)
+        wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/llvm.gpg > /dev/null
+        echo "deb [signed-by=/etc/apt/keyrings/llvm.gpg] http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" | sudo tee /etc/apt/sources.list.d/llvm.list
     - name: Install Dependencies
       run: |
         sudo apt-get update -q
@@ -65,6 +71,8 @@ jobs:
       LDFLAGS: -O3 -g -flto -Wl,--as-needed
     steps:
     - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
     - name: Install Dependencies
       run: |
         sudo apt-get update -q
@@ -84,11 +92,15 @@ jobs:
       CC: clang-22
     steps:
     - uses: actions/checkout@v7
-    - name: install clang repo
+      with:
+        persist-credentials: false
+    - name: Install clang repo
       run: |
-        ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
-        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" -y
+        set -euo pipefail
+        mkdir -p /etc/apt/keyrings
+        ubuntu_codename=$(LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release)
+        wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/llvm.gpg > /dev/null
+        echo "deb [signed-by=/etc/apt/keyrings/llvm.gpg] http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" | sudo tee /etc/apt/sources.list.d/llvm.list
     - name: Install Dependencies
       run: |
         sudo apt-get update -q
@@ -110,6 +122,8 @@ jobs:
       LDFLAGS: -O3 -g -flto
     steps:
     - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
     - name: Install Dependencies
       run: |
         sudo apt-get update -q
@@ -128,6 +142,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
     - name: Install Dependencies
       run: |
         sudo apt-get update -q
@@ -144,6 +160,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
     - name: Install Dependencies
       run: |
         sudo apt-get update -q
@@ -151,7 +169,7 @@ jobs:
     - name: Bootstrap
       run: ./autogen.sh
     - name: Configure
-      run: ./configure --host=`uname -m`-none --enable-werror --enable-unicode || ( cat config.log; exit 1; )
+      run: ./configure --host=$(uname -m)-none --enable-werror --enable-unicode || ( cat config.log; exit 1; )
     - name: Build
       run: make -k
 
@@ -161,11 +179,15 @@ jobs:
       CC: clang-22
     steps:
     - uses: actions/checkout@v7
-    - name: install clang repo
+      with:
+        persist-credentials: false
+    - name: Install clang repo
       run: |
-        ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
-        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" -y
+        set -euo pipefail
+        mkdir -p /etc/apt/keyrings
+        ubuntu_codename=$(LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release)
+        wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/llvm.gpg > /dev/null
+        echo "deb [signed-by=/etc/apt/keyrings/llvm.gpg] http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" | sudo tee /etc/apt/sources.list.d/llvm.list
     - name: Install Dependencies
       run: |
         sudo apt-get update -q
@@ -189,11 +211,15 @@ jobs:
       HTOPRC: .github/workflows/htoprc
     steps:
     - uses: actions/checkout@v7
-    - name: install clang repo
+      with:
+        persist-credentials: false
+    - name: Install clang repo
       run: |
-        ubuntu_codename=`LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release`
-        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" -y
+        set -euo pipefail
+        mkdir -p /etc/apt/keyrings
+        ubuntu_codename=$(LC_ALL=C sed 's/^ *UBUNTU_CODENAME *= *\([a-z]*\).*$/\1/p; d' /etc/os-release)
+        wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/llvm.gpg > /dev/null
+        echo "deb [signed-by=/etc/apt/keyrings/llvm.gpg] http://apt.llvm.org/${ubuntu_codename}/ llvm-toolchain-${ubuntu_codename}-22 main" | sudo tee /etc/apt/sources.list.d/llvm.list
     - name: Install LLVM Toolchain
       run: |
         sudo apt-get update -q
@@ -221,6 +247,8 @@ jobs:
       CC: clang
     steps:
     - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
     - name: Install Dependencies
       run: brew install automake pkg-config
     - name: Bootstrap
@@ -240,6 +268,8 @@ jobs:
       LDFLAGS: -O3 -g -flto
     steps:
     - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
     - name: Install Dependencies
       run: |
         pcp_version=7.0.3-1
@@ -255,140 +285,149 @@ jobs:
       run: make -k
 
   build-dragonflybsd-latest-gcc:
-      runs-on: ubuntu-22.04
-      timeout-minutes: 20
-      steps:
-        - uses: actions/checkout@v7
-          with:
-            submodules: recursive
-        - name: Compile
-          uses: vmactions/dragonflybsd-vm@v1
-          with:
-            release: '6.4.2'
-            usesh: true
-            prepare: |
-              pkg install -y gmake autoconf automake ncurses git
-              git config --global --add safe.directory /home/runner/work/htop/htop
-            run: |
-              set -e
-              export LDFLAGS="-L/usr/local/lib"
-              export CFLAGS="-I/usr/local/include"
-              ./autogen.sh
-              ./configure --enable-unicode --enable-werror
-              gmake -k
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+        submodules: recursive
+    - name: Compile
+      uses: vmactions/dragonflybsd-vm@v1
+      with:
+        release: '6.4.2'
+        usesh: true
+        prepare: |
+          pkg install -y gmake autoconf automake ncurses git
+          git config --global --add safe.directory /home/runner/work/htop/htop
+        run: |
+          set -e
+          export LDFLAGS="-L/usr/local/lib"
+          export CFLAGS="-I/usr/local/include"
+          ./autogen.sh
+          ./configure --enable-unicode --enable-werror
+          gmake -k
 
   build-freebsd-latest-clang:
-      runs-on: ubuntu-22.04
-      timeout-minutes: 20
-      steps:
-        - uses: actions/checkout@v7
-          with:
-            submodules: recursive
-        - name: Compile
-          uses: vmactions/freebsd-vm@v1
-          with:
-            release: '15.0'
-            usesh: true
-            prepare: |
-              pkg install -y gmake autoconf automake pkgconf git libunwind gnulibiberty
-              git config --global --add safe.directory /home/runner/work/htop/htop
-            run: |
-              set -e
-              ./autogen.sh
-              ./configure --enable-unicode --enable-werror --enable-backtrace --enable-demangling
-              gmake -k
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+        submodules: recursive
+    - name: Compile
+      uses: vmactions/freebsd-vm@v1
+      with:
+        release: '15.0'
+        usesh: true
+        prepare: |
+          pkg install -y gmake autoconf automake pkgconf git libunwind gnulibiberty
+          git config --global --add safe.directory /home/runner/work/htop/htop
+        run: |
+          set -e
+          ./autogen.sh
+          ./configure --enable-unicode --enable-werror --enable-backtrace --enable-demangling
+          gmake -k
 
   build-netbsd-latest-gcc:
-      runs-on: ubuntu-22.04
-      timeout-minutes: 20
-      steps:
-        - uses: actions/checkout@v7
-          with:
-            submodules: recursive
-        - name: Compile
-          uses: vmactions/netbsd-vm@v1
-          with:
-            release: '10.1'
-            usesh: true
-            prepare: |
-              PATH="/usr/pkg/sbin:/usr/pkg/bin:$PATH"
-              PKG_PATH="https://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/amd64/10.1/All/"
-              export PATH PKG_PATH
-              /usr/sbin/pkg_add pkgin
-              pkgin -y install autoconf automake libtool ncurses pkg-config gmake git
-              git config --global --add safe.directory /home/runner/work/htop/htop
-            run: |
-              set -e
-              ./autogen.sh
-              ./configure --enable-unicode --enable-werror
-              gmake -k
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+        submodules: recursive
+    - name: Compile
+      uses: vmactions/netbsd-vm@v1
+      with:
+        release: '10.1'
+        usesh: true
+        prepare: |
+          PATH="/usr/pkg/sbin:/usr/pkg/bin:$PATH"
+          PKG_PATH="https://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/amd64/10.1/All/"
+          export PATH PKG_PATH
+          /usr/sbin/pkg_add pkgin
+          pkgin -y install autoconf automake libtool ncurses pkg-config gmake git
+          git config --global --add safe.directory /home/runner/work/htop/htop
+        run: |
+          set -e
+          ./autogen.sh
+          ./configure --enable-unicode --enable-werror
+          gmake -k
 
   build-openbsd-latest-clang:
-      runs-on: ubuntu-22.04
-      timeout-minutes: 20
-      steps:
-        - uses: actions/checkout@v7
-          with:
-            submodules: recursive
-        - name: Compile
-          uses: vmactions/openbsd-vm@v1
-          with:
-            release: '7.8'
-            usesh: true
-            prepare: |
-              pkg_add gmake git
-              git config --global --add safe.directory /home/runner/work/htop/htop
-            run: |
-              set -e
-              autoconf_version_full=$(pkg_info -Q autoconf |
-                LC_ALL=C sed 's/^autoconf-\([0-9]*\.[0-9]*\)\(p[.0-9]*\)\{0,1\}$/\1\2/p; d' |
-                LC_ALL=C sort -n -r -t . -k 1,1 -k 2,2 |
-                sed '1 q')
-              automake_version_full=$(pkg_info -Q automake |
-                LC_ALL=C sed 's/^automake-\([0-9]*\.[0-9]*\)\(\.[0-9]*\)\{0,1\}\(p[0-9]*\)\{0,1\}$/\1\2\3/p; d' |
-                LC_ALL=C sort -n -r -t . -k 1,1 -k 2,2 -k 3,3 |
-                sed '1 q')
-              pkg_add -v autoconf-${autoconf_version_full} automake-${automake_version_full}
-              export AUTOCONF_VERSION=$(echo ${autoconf_version_full} |
-                LC_ALL=C sed 's/^\([0-9]*\.[0-9]*\).*$/\1/')
-              # Must not include the third version field in $AUTOMAKE_VERSION
-              export AUTOMAKE_VERSION=$(echo ${automake_version_full} |
-                LC_ALL=C sed 's/^\([0-9]*\.[0-9]*\).*$/\1/')
-              ./autogen.sh
-              ./configure --enable-unicode --enable-werror
-              gmake -k
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+        submodules: recursive
+    - name: Compile
+      uses: vmactions/openbsd-vm@v1
+      with:
+        release: '7.8'
+        usesh: true
+        prepare: |
+          pkg_add gmake git
+          git config --global --add safe.directory /home/runner/work/htop/htop
+        run: |
+          set -e
+          autoconf_version_full=$(pkg_info -Q autoconf |
+            LC_ALL=C sed 's/^autoconf-\([0-9]*\.[0-9]*\)\(p[.0-9]*\)\{0,1\}$/\1\2/p; d' |
+            LC_ALL=C sort -n -r -t . -k 1,1 -k 2,2 |
+            sed '1 q')
+          automake_version_full=$(pkg_info -Q automake |
+            LC_ALL=C sed 's/^automake-\([0-9]*\.[0-9]*\)\(\.[0-9]*\)\{0,1\}\(p[0-9]*\)\{0,1\}$/\1\2\3/p; d' |
+            LC_ALL=C sort -n -r -t . -k 1,1 -k 2,2 -k 3,3 |
+            sed '1 q')
+          pkg_add -v autoconf-${autoconf_version_full} automake-${automake_version_full}
+          export AUTOCONF_VERSION=$(echo ${autoconf_version_full} |
+            LC_ALL=C sed 's/^\([0-9]*\.[0-9]*\).*$/\1/')
+          # Must not include the third version field in $AUTOMAKE_VERSION
+          export AUTOMAKE_VERSION=$(echo ${automake_version_full} |
+            LC_ALL=C sed 's/^\([0-9]*\.[0-9]*\).*$/\1/')
+          ./autogen.sh
+          ./configure --enable-unicode --enable-werror
+          gmake -k
 
   build-solaris-latest-gcc:
-      runs-on: ubuntu-22.04
-      timeout-minutes: 20
-      steps:
-        - uses: actions/checkout@v7
-          with:
-            submodules: recursive
-        - name: Compile
-          uses: vmactions/solaris-vm@v1
-          with:
-            release: '11.4'
-            usesh: true
-            prepare: |
-              pkg install gnu-make autoconf automake ncurses git gcc
-              git config --global --add safe.directory /home/runner/work/htop/htop
-            run: |
-              set -e
-              ./autogen.sh
-              ./configure --enable-unicode --enable-werror
-              gmake -k
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+        submodules: recursive
+    - name: Compile
+      uses: vmactions/solaris-vm@v1
+      with:
+        release: '11.4'
+        usesh: true
+        prepare: |
+          pkg install gnu-make autoconf automake ncurses git gcc
+          git config --global --add safe.directory /home/runner/work/htop/htop
+        run: |
+          set -e
+          ./autogen.sh
+          ./configure --enable-unicode --enable-werror
+          gmake -k
 
   lint-whitespace:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - name: check-whitespaces
-        run: git diff-tree --check $(git hash-object -t tree /dev/null) HEAD
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+    - name: Check whitespaces
+      run: git diff-tree --check $(git hash-object -t tree /dev/null) HEAD
 
   lint-pcp-config:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - name: check-pcp-style
-        run: ./check-pcp-style.sh
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+    - name: Check PCP style
+      run: ./check-pcp-style.sh
