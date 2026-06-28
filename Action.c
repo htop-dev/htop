@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "Action.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <pwd.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -675,9 +676,13 @@ static Htop_Reaction actionStrace(State* st) {
 
    TraceScreen* ts = TraceScreen_new(p);
    bool ok = TraceScreen_forkTracer(ts);
-   if (ok) {
-      InfoScreen_run((InfoScreen*)ts);
+   if (!ok) {
+      char errmsg[256];
+      int saved_errno = errno;
+      snprintf(errmsg, sizeof(errmsg), "Failed to start tracer: %s", strerror(saved_errno));
+      InfoScreen_addLine(&ts->super, errmsg);
    }
+   InfoScreen_run((InfoScreen*)ts);
    TraceScreen_delete((Object*)ts);
    clear();
    CRT_enableDelay();
