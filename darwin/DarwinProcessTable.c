@@ -72,6 +72,8 @@ void ProcessTable_delete(Object* cast) {
 void ProcessTable_goThroughEntries(ProcessTable* super) {
    const Machine* host = super->super.host;
    const DarwinMachine* dhost = (const DarwinMachine*) host;
+   const Settings* settings = host->settings;
+   const ScreenSettings* ss = settings->ss;
    DarwinProcessTable* dpt = (DarwinProcessTable*) super;
    bool preExisting = true;
    struct kinfo_proc* ps;
@@ -122,11 +124,23 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
          DarwinProcess_scanThreads(proc, dpt);
       }
 
+      // Reset GPU time/percent
+      if (ss->flags & PROCESS_FLAG_GPU) {
+         proc->gpu_time_last = proc->gpu_time;
+         proc->gpu_time = 0;
+         proc->gpu_percent = 0.0F;
+      }
+
       super->totalTasks += 1;
 
       if (!preExisting) {
          ProcessTable_add(super, &proc->super);
       }
+   }
+
+   // Get GPU usage info for processes if requested
+   if (ss->flags & PROCESS_FLAG_GPU) {
+      Platform_setGPUProcesses(dpt);
    }
 
    free(ps);
