@@ -234,6 +234,9 @@ static const char* Platform_metricNames[] = {
    [PCP_MEM_ZSWAPPED] = "mem.util.zswapped",
    [PCP_VFS_FILES_COUNT] = "vfs.files.count",
    [PCP_VFS_FILES_MAX] = "vfs.files.max",
+   [PCP_DENKI_POWER_NOW] = "denki.bat.power_now",
+   [PCP_DENKI_ENERGY_NOW] = "denki.bat.energy_now",
+   [PCP_DENKI_ENERGY_FULL] = "denki.bat.capacity",
 
    [PCP_PROC_PID] = "proc.psinfo.pid",
    [PCP_PROC_PPID] = "proc.psinfo.ppid",
@@ -863,9 +866,52 @@ void Platform_getFileDescriptors(double* used, double* max) {
       *max = value.l;
 }
 
-void Platform_getBattery(double* level, ACPresence* isOnAC) {
-   *level = NAN;
-   *isOnAC = AC_ERROR;
+void Platform_getBattery(BatteryInfo* info) {
+   info->ac = AC_ERROR;
+   info->percent = NAN;
+   info->powerCurr = NAN;
+   info->energyCurr = NAN;
+   info->energyFull = NAN;
+
+   if (Metric_desc(PCP_DENKI_ENERGY_NOW) == NULL)
+      return;
+
+   int i, count = Metric_instanceCount(PCP_DENKI_ENERGY_NOW);
+   if (count < 1) {
+      info->ac = AC_PRESENT;
+      return;
+   }
+
+   pmAtomValue* batteryEnergyCurr = xCalloc(count, sizeof(pmAtomValue));
+   pmAtomValue* batteryEnergyFull = xCalloc(count, sizeof(pmAtomValue));
+   if (Metric_values(PCP_DENKI_ENERGY_NOW, batteryEnergyCurr, count, PM_TYPE_DOUBLE) &&
+       Metric_values(PCP_DENKI_ENERGY_FULL, batteryEnergyFull, count, PM_TYPE_DOUBLE)) {
+      info->energyCurr = 0.0;
+      info->energyFull = 0.0;
+      for (i = 0; i < count; i++) {
+         info->energyCurr += CLAMP(batteryEnergyCurr[i].d, 0, batteryEnergyFull[i].d);
+         info->energyFull += isNonnegative(batteryEnergyFull[i].d) ? batteryEnergyFull[i].d : 0;
+      }
+
+      if (info->energyFull > 0) {
+         info->percent = CLAMP((info->energyCurr / info->energyFull) * 100.0, 0.0, 100.0);
+      }
+   }
+   free(batteryEnergyCurr);
+   free(batteryEnergyFull);
+
+   pmAtomValue* batteryPowerCurr = xCalloc(count, sizeof(pmAtomValue));
+   if (Metric_values(PCP_DENKI_POWER_NOW, batteryPowerCurr, count, PM_TYPE_DOUBLE)) {
+      info->powerCurr = 0.0;
+      for (i = 0; i < count; i++) {
+         info->powerCurr += batteryPowerCurr[i].d;
+      }
+   }
+   free(batteryPowerCurr);
+
+   if (info->powerCurr < 0) {
+      info->ac = AC_ABSENT;
+   }
 }
 
 const char* Platform_getFailedState(void) {
