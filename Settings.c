@@ -166,9 +166,14 @@ static void Settings_defaultMeters(Settings* this, const Machine* host) {
       this->hColumns[0].names[0] = xStrdup("AllCPUs");
       this->hColumns[0].modes[0] = BAR_METERMODE;
    }
-   this->hColumns[0].names[1] = xStrdup("Memory");
+   // When containerized, default to the cgroup-aware meters so the limits
+   // imposed on the container are visible. The "Container*" meters fall back
+   // to the host figures when no cgroup limit is in effect.
+   // host->containerized is always false off Linux, so the literal meter
+   // names below are only ever used on a platform that registers them.
+   this->hColumns[0].names[1] = xStrdup(host->containerized ? "ContainerMemory" : "Memory");
    this->hColumns[0].modes[1] = BAR_METERMODE;
-   this->hColumns[0].names[2] = xStrdup("Swap");
+   this->hColumns[0].names[2] = xStrdup(host->containerized ? "ContainerSwap" : "Swap");
    this->hColumns[0].modes[2] = BAR_METERMODE;
    this->hColumns[1].names[r] = xStrdup("Tasks");
    this->hColumns[1].modes[r++] = TEXT_METERMODE;
