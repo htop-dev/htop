@@ -123,6 +123,7 @@ static size_t matchCmdlinePrefixWithExeSuffix(const char* cmdline, size_t* cmdli
     * component of the cmdline relative path, and retry the procedure. */
    size_t cmdlineBaseOffset = *cmdlineBasenameStart;
    bool delimFound = true; /* if valid basename delimiter found */
+   *cmdlineBasenameStart = 0;
    do {
       /* match basename */
       size_t matchLen = exeBaseLen + cmdlineBaseOffset;
