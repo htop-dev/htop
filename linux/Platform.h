@@ -94,6 +94,8 @@ bool Platform_getNetworkIO(NetworkIOData* data);
 
 void Platform_getBattery(double* percent, ACPresence* isOnAC);
 
+int Platform_getThinkpadFan(void);
+
 static inline void Platform_getHostname(char* buffer, size_t size) {
    Generic_hostname(buffer, size);
 }
