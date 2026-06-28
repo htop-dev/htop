@@ -30,6 +30,7 @@ void UsersTable_delete(UsersTable* this) {
 }
 
 char* UsersTable_getRef(UsersTable* this, unsigned int uid) {
+#if !defined(BUILD_STATIC) || !defined(__GLIBC__)
    char* name = Hashtable_get(this->users, uid);
    if (name == NULL) {
       const struct passwd* userData = getpwuid(uid);
@@ -44,6 +45,11 @@ char* UsersTable_getRef(UsersTable* this, unsigned int uid) {
       return NULL;
    }
    return name;
+#else
+   (void)this;
+   (void)uid;
+   return NULL;
+#endif
 }
 
 inline void UsersTable_foreach(UsersTable* this, Hashtable_PairFunction f, void* userData) {
