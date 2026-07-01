@@ -674,10 +674,8 @@ static Htop_Reaction actionStrace(State* st) {
    assert(Object_isA((const Object*) p, (const ObjectClass*) &Process_class));
 
    TraceScreen* ts = TraceScreen_new(p);
-   bool ok = TraceScreen_forkTracer(ts);
-   if (ok) {
-      InfoScreen_run((InfoScreen*)ts);
-   }
+   TraceScreen_forkTracer(ts);
+   InfoScreen_run((InfoScreen*)ts);
    TraceScreen_delete((Object*)ts);
    clear();
    CRT_enableDelay();

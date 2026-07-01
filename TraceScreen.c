@@ -60,6 +60,16 @@ void TraceScreen_delete(Object* cast) {
    free(InfoScreen_done((InfoScreen*)this));
 }
 
+static void TraceScreen_scan(InfoScreen* super) {
+   TraceScreen* this = (TraceScreen*) super;
+   if (!this->strace_alive) {
+      char* err = NULL;
+      xAsprintf(&err, "%s", strerror(errno));
+      InfoScreen_addLine(super, err);
+      free(err);
+   }
+}
+
 static void TraceScreen_draw(InfoScreen* this) {
    InfoScreen_drawTitled(this, "Trace of process %d - %s", Process_getPid(this->process), Process_getCommand(this->process));
 }
@@ -209,6 +219,7 @@ const InfoScreenClass TraceScreen_class = {
       .extends = Class(Object),
       .delete = TraceScreen_delete
    },
+   .scan = TraceScreen_scan,
    .draw = TraceScreen_draw,
    .onErr = TraceScreen_updateTrace,
    .onKey = TraceScreen_onKey,
