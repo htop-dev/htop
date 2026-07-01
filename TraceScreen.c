@@ -135,10 +135,13 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
 
    return true;
 
-err:
+err: {
+   int saved_errno = errno;
    close(fdpair[1]);
    close(fdpair[0]);
+   errno = saved_errno;
    return false;
+}
 }
 
 static void TraceScreen_updateTrace(InfoScreen* super) {
