@@ -277,19 +277,19 @@ static void updateViaExec(bool user) {
          free_and_xStrdup(&ctx->systemState, lineBuffer + strlen("SystemState="));
       } else if (String_startsWith(lineBuffer, "NFailedUnits=")) {
          unsigned long value = strtoul(lineBuffer + strlen("NFailedUnits="), &endptr, 10);
-         if (value <= UINT_MAX && *endptr == '\0')
+         if (value <= UINT_MAX && (*endptr == '\n' || *endptr == '\0'))
             ctx->nFailedUnits = (unsigned int) value;
       } else if (String_startsWith(lineBuffer, "NNames=")) {
          unsigned long value = strtoul(lineBuffer + strlen("NNames="), &endptr, 10);
-         if (value <= UINT_MAX && *endptr == '\0')
+         if (value <= UINT_MAX && (*endptr == '\n' || *endptr == '\0'))
             ctx->nNames = (unsigned int) value;
       } else if (String_startsWith(lineBuffer, "NJobs=")) {
          unsigned long value = strtoul(lineBuffer + strlen("NJobs="), &endptr, 10);
-         if (value <= UINT_MAX && *endptr == '\0')
+         if (value <= UINT_MAX && (*endptr == '\n' || *endptr == '\0'))
             ctx->nJobs = (unsigned int) value;
       } else if (String_startsWith(lineBuffer, "NInstalledJobs=")) {
          unsigned long value = strtoul(lineBuffer + strlen("NInstalledJobs="), &endptr, 10);
-         if (value <= UINT_MAX && *endptr == '\0')
+         if (value <= UINT_MAX && (*endptr == '\n' || *endptr == '\0'))
             ctx->nInstalledJobs = (unsigned int) value;
       }
    }
