@@ -35,7 +35,8 @@ Vector* Vector_new(const ObjectClass* type, bool owner, int size) {
 
 void Vector_delete(Vector* this) {
    if (this->owner) {
-      for (int i = 0; i < this->items; i++) {
+      const int n = this->items;
+      for (int i = 0; i < n; i++) {
          if (this->array[i]) {
             Object_delete(this->array[i]);
          }
@@ -82,7 +83,8 @@ int Vector_size(const Vector* this) {
 void Vector_prune(Vector* this) {
    assert(Vector_isConsistent(this));
    if (this->owner) {
-      for (int i = 0; i < this->items; i++) {
+      const int n = this->items;
+      for (int i = 0; i < n; i++) {
          if (this->array[i]) {
             Object_delete(this->array[i]);
          }
@@ -354,7 +356,8 @@ int Vector_indexOf(const Vector* this, const void* search_, Object_Compare compa
    assert(Object_isA(search, this->type));
    assert(compare);
    assert(Vector_isConsistent(this));
-   for (int i = 0; i < this->items; i++) {
+   const int n = this->items;
+   for (int i = 0; i < n; i++) {
       const Object* o = this->array[i];
       assert(o);
       if (compare(search, o) == 0) {

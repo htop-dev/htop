@@ -79,8 +79,9 @@ void ScreenManager_insert(ScreenManager* this, Panel* item, int size, int idx) {
    }
    Panel_resize(item, size, height);
    Panel_move(item, lastX, this->y1 + header_height(this));
-   if ((size_t)idx < this->panelCount) {
-      for (int i =  idx + 1; (size_t)i <= this->panelCount; i++) {
+   const int n = this->panelCount;
+   if (idx < n) {
+      for (int i =  idx + 1; i <= n; i++) {
          Panel* p = (Panel*) Vector_get(this->panels, i);
          Panel_move(p, p->x + size, p->y);
       }
@@ -91,12 +92,13 @@ void ScreenManager_insert(ScreenManager* this, Panel* item, int size, int idx) {
 }
 
 Panel* ScreenManager_remove(ScreenManager* this, int idx) {
-   assert((size_t)idx < this->panelCount);
+   assert(idx < this->panelCount);
    int w = ((Panel*) Vector_get(this->panels, idx))->w;
    Panel* panel = (Panel*) Vector_remove(this->panels, idx);
    this->panelCount--;
-   if ((size_t)idx < this->panelCount) {
-      for (size_t i = idx; i < this->panelCount; i++) {
+   const int n = this->panelCount;
+   if (idx < n) {
+      for (int i = idx; i < n; i++) {
          Panel* p = (Panel*) Vector_get(this->panels, i);
          Panel_move(p, p->x - w, p->y);
       }
@@ -295,7 +297,8 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
                      ch = KEY_MOUSE_BAR_CLICK;
                   }
                } else {
-                  for (size_t i = 0; i < this->panelCount; i++) {
+                  const size_t n = this->panelCount;
+                  for (size_t i = 0; i < n; i++) {
                      Panel* panel = (Panel*) Vector_get(this->panels, i);
                      if (mevent.x >= panel->x && mevent.x <= panel->x + panel->w) {
                         if (mevent.y == panel->y) {

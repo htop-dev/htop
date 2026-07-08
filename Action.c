@@ -137,7 +137,8 @@ bool Action_setUserOnly(const char* userName, uid_t* userId) {
 static void tagAllChildren(Panel* panel, Row* parent) {
    parent->tag = true;
    int parent_id = parent->id;
-   for (int i = 0; i < Panel_size(panel); i++) {
+   const int n = Panel_size(panel);
+   for (int i = 0; i < n; i++) {
       Row* row = (Row*) Panel_get(panel, i);
       if (!row->tag && Row_isChildOf(row, parent_id)) {
          tagAllChildren(panel, row);
@@ -160,7 +161,8 @@ static bool collapseIntoParent(Panel* panel) {
       return false;
 
    int parent_id = Row_getGroupOrParent(r);
-   for (int i = 0; i < Panel_size(panel); i++) {
+   const int n = Panel_size(panel);
+   for (int i = 0; i < n; i++) {
       Row* row = (Row*) Panel_get(panel, i);
       if (row->id == parent_id) {
          row->showChildren = false;
@@ -197,10 +199,11 @@ static Htop_Reaction actionSetSortColumn(State* st) {
    Settings* settings = host->settings;
    const RowField* fields = settings->ss->fields;
    Hashtable* dynamicColumns = settings->dynamicColumns;
+   const ProcessField activeSortKey = ScreenSettings_getActiveSortKey(settings->ss);
    for (int i = 0; fields[i]; i++) {
       char* name = NULL;
       if (fields[i] >= ROW_DYNAMIC_FIELDS) {
-         DynamicColumn* column = Hashtable_get(dynamicColumns, fields[i]);
+         const DynamicColumn* column = Hashtable_get(dynamicColumns, fields[i]);
          if (!column)
             continue;
          name = xStrdup(column->caption ? column->caption : column->name);
@@ -208,7 +211,7 @@ static Htop_Reaction actionSetSortColumn(State* st) {
          name = String_trim(Process_fields[fields[i]].name);
       }
       Panel_add(sortPanel, (Object*) ListItem_new(name, fields[i]));
-      if (fields[i] == ScreenSettings_getActiveSortKey(settings->ss))
+      if (fields[i] == activeSortKey)
          Panel_setSelected(sortPanel, i);
 
       free(name);
@@ -641,9 +644,11 @@ static Htop_Reaction actionBacktrace(State *st) {
 
    Vector* processes = Vector_new(Class(Process), false, VECTOR_DEFAULT_SIZE);
    if (selectedProcess && !Process_isUserlandThread(selectedProcess)) {
-      for (int i = 0; i < Vector_size(allProcesses); i++) {
-         Process* process = (Process *)Vector_get(allProcesses, i);
-         if (process && Process_getThreadGroup(process) == Process_getThreadGroup(selectedProcess)) {
+      const int thgid = Process_getThreadGroup(selectedProcess);
+      const int pvecsize = Vector_size(allProcesses);
+      for (int i = 0; i < pvecsize; i++) {
+         Process* process = (Process*)Vector_get(allProcesses, i);
+         if (process && Process_getThreadGroup(process) == thgid) {
             Vector_add(processes, process);
          }
       }
@@ -819,8 +824,9 @@ static Htop_Reaction actionHelp(State* st) {
    // [                                            ^    5      ]
    // [class1/class2/class3/.../classN               used/total]
    int barTxtLen = 0;
+   const bool showCachedMemory = st->host->settings->showCachedMemory;
    for (unsigned int i = 0; i < Platform_numberOfMemoryClasses; i++) {
-      if (!st->host->settings->showCachedMemory && Platform_memoryClasses[i].countsAsCache)
+      if (!showCachedMemory && Platform_memoryClasses[i].countsAsCache)
          continue; // skip reclaimable cache memory classes if "show cached memory" is not ticked
       if (!Platform_memoryClasses[i].countsAsUsed && !Platform_memoryClasses[i].countsAsCache)
          continue; // skip available memory class (special case for the Linux platform)
@@ -914,8 +920,10 @@ static Htop_Reaction actionHelp(State* st) {
 }
 
 static Htop_Reaction actionUntagAll(State* st) {
-   for (int i = 0; i < Panel_size((Panel*)st->mainPanel); i++) {
-      Row* row = (Row*) Panel_get((Panel*)st->mainPanel, i);
+   Panel* panel = (Panel*)st->mainPanel;
+   const int n = Panel_size(panel);
+   for (int i = 0; i < n; i++) {
+      Row* row = (Row*) Panel_get(panel, i);
       row->tag = false;
    }
    return HTOP_REFRESH;
