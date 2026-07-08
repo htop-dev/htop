@@ -34,7 +34,8 @@ Panel* SignalsPanel_new(int preSelectedSignal) {
    #if (defined(SIGRTMIN) && defined(SIGRTMAX))
    if (SIGRTMAX - SIGRTMIN <= 100) {
       static char buf[16];
-      for (int sig = SIGRTMIN; sig <= SIGRTMAX; i++, sig++) {
+      int sig = SIGRTMIN;
+      for (; sig <= SIGRTMAX; i++, sig++) {
          int n = sig - SIGRTMIN;
          xSnprintf(buf, sizeof(buf), "%2d SIGRTMIN%-+3d", sig, n);
          if (n == 0) {

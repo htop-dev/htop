@@ -187,7 +187,7 @@ static void ScreenNamesPanel_delete(Object* object) {
    Panel* super = &this->super;
 
    /* do not delete screen settings still in use */
-   int n = Panel_size(super);
+   const int n = Panel_size(super);
    for (int i = 0; i < n; i++) {
       ScreenNameListItem* item = (ScreenNameListItem*) Panel_get(super, i);
       item->ss = NULL;
