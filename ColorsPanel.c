@@ -63,7 +63,7 @@ static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch) {
          assert(mark >= 0);
          assert(mark < LAST_COLORSCHEME);
 
-         for (int i = 0; ColorSchemeNames[i] != NULL; i++)
+         for (int i = 0; i < LAST_COLORSCHEME; i++)
             CheckItem_set((CheckItem*)Panel_get(super, i), false);
          CheckItem_set((CheckItem*)Panel_get(super, mark), true);
 
@@ -101,7 +101,7 @@ ColorsPanel* ColorsPanel_new(Settings* settings) {
    assert(ARRAYSIZE(ColorSchemeNames) == LAST_COLORSCHEME + 1);
 
    Panel_setHeader(super, "Colors");
-   for (int i = 0; ColorSchemeNames[i] != NULL; i++) {
+   for (int i = 0; i < LAST_COLORSCHEME; i++) {
       Panel_add(super, (Object*) CheckItem_newByVal(ColorSchemeNames[i], false));
    }
    CheckItem_set((CheckItem*)Panel_get(super, (int)CRT_colorScheme), true);
