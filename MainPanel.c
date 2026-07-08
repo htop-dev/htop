@@ -38,7 +38,8 @@ void MainPanel_updateLabels(MainPanel* this, bool list, bool filter) {
 static void MainPanel_idSearch(MainPanel* this, int ch) {
    Panel* super = &this->super;
    pid_t id = ch - 48 + this->idSearch;
-   for (int i = 0; i < Panel_size(super); i++) {
+   const int n = Panel_size(super);
+   for (int i = 0; i < n; i++) {
       const Row* row = (const Row*) Panel_get(super, i);
       if (row && row->id == id) {
          Panel_setSelected(super, i);
@@ -181,7 +182,8 @@ bool MainPanel_foreachRow(MainPanel* this, MainPanel_foreachRowFn fn, Arg arg, b
    Panel* super = &this->super;
    bool ok = true;
    bool anyTagged = false;
-   for (int i = 0; i < Panel_size(super); i++) {
+   const int n = Panel_size(super);
+   for (int i = 0; i < n; i++) {
       Row* row = (Row*) Panel_get(super, i);
       if (row->tag) {
          ok &= fn(row, arg);

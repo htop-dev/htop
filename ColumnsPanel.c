@@ -36,7 +36,8 @@ static void ColumnsPanel_delete(Object* object) {
 
 static void ColumnsPanel_cancelMoving(ColumnsPanel* this) {
    Panel* super = &this->super;
-   for (int i = 0; i < Panel_size(super); i++) {
+   const int n = Panel_size(super);
+   for (int i = 0; i < n; i++) {
       ListItem* item = (ListItem*) Panel_get(super, i);
       if (item)
          item->moving = false;

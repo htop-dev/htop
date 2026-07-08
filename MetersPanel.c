@@ -53,7 +53,8 @@ void MetersPanel_setMoving(MetersPanel* this, bool moving) {
    this->moving = moving;
    if (!moving) {
       /* Reset all items' moving flags when canceling move mode */
-      for (int i = 0; i < Panel_size(super); i++) {
+      const int n = Panel_size(super);
+      for (int i = 0; i < n; i++) {
          ListItem* item = (ListItem*) Panel_get(super, i);
          if (item)
             item->moving = false;
@@ -223,7 +224,8 @@ MetersPanel* MetersPanel_new(Settings* settings, const char* header, Vector* met
    this->rightNeighbor = NULL;
    this->leftNeighbor = NULL;
    Panel_setHeader(super, header);
-   for (int i = 0; i < Vector_size(meters); i++) {
+   const int n = Vector_size(meters);
+   for (int i = 0; i < n; i++) {
       const Meter* meter = (const Meter*) Vector_get(meters, i);
       Panel_add(super, (Object*) Meter_toListItem(meter, false));
    }
