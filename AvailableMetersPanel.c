@@ -101,9 +101,10 @@ const PanelClass AvailableMetersPanel_class = {
 
 // Handle (&CPUMeter_class) entries in the AvailableMetersPanel
 static void AvailableMetersPanel_addCPUMeters(Panel* super, const MeterClass* type, const Machine* host) {
-   if (host->existingCPUs > 1) {
+   const unsigned int existing_cpus = host->existingCPUs;
+   if (existing_cpus > 1) {
       Panel_add(super, (Object*) ListItem_new("CPU average", 0));
-      for (unsigned int i = 1; i <= host->existingCPUs; i++) {
+      for (unsigned int i = 1; i <= existing_cpus; i++) {
          char buffer[50];
          xSnprintf(buffer, sizeof(buffer), "%s %d", type->uiName, Settings_cpuId(host->settings, i - 1));
          Panel_add(super, (Object*) ListItem_new(buffer, i));

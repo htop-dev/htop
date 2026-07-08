@@ -168,7 +168,8 @@ static void AffinityPanel_updateTopo(AffinityPanel* this, MaskItem* item) {
    if (item->sub_tree == 2)
       return;
 
-   for (int i = 0; i < Vector_size(item->children); i++)
+   const int n = Vector_size(item->children);
+   for (int i = 0; i < n; i++)
       AffinityPanel_updateTopo(this, (MaskItem*) Vector_get(item->children, i));
 }
 
@@ -186,7 +187,8 @@ static void AffinityPanel_update(AffinityPanel* this, bool keepSelected) {
    if (this->topoView) {
       AffinityPanel_updateTopo(this, this->topoRoot);
    } else {
-      for (int i = 0; i < Vector_size(this->cpuids); i++) {
+      const int n = Vector_size(this->cpuids);
+      for (int i = 0; i < n; i++) {
          AffinityPanel_updateItem(this, (MaskItem*) Vector_get(this->cpuids, i));
       }
    }
@@ -404,7 +406,9 @@ Panel* AffinityPanel_new(Machine* host, const Affinity* affinity, int* width) {
    Panel_setHeader(super, "Use CPUs:");
 
    unsigned int curCpu = 0;
-   for (unsigned int i = 0; i < host->existingCPUs; i++) {
+   const unsigned int used_affinity = affinity->used;
+   const unsigned int existing_cpus = host->existingCPUs;
+   for (unsigned int i = 0; i < existing_cpus; i++) {
       if (!Machine_isCPUonline(host, i))
          continue;
 
@@ -416,7 +420,7 @@ Panel* AffinityPanel_new(Machine* host, const Affinity* affinity, int* width) {
       }
 
       bool isSet = false;
-      if (curCpu < affinity->used && affinity->cpus[curCpu] == i) {
+      if (curCpu < used_affinity && affinity->cpus[curCpu] == i) {
          #ifdef HAVE_LIBHWLOC
          hwloc_bitmap_set(this->workCpuset, i);
          #endif
@@ -442,7 +446,7 @@ Panel* AffinityPanel_new(Machine* host, const Affinity* affinity, int* width) {
 }
 
 Affinity* AffinityPanel_getAffinity(Panel* super, Machine* host) {
-   const AffinityPanel* this = (AffinityPanel*) super;
+   const AffinityPanel* this = (const AffinityPanel*) super;
    Affinity* affinity = Affinity_new(host);
 
    #ifdef HAVE_LIBHWLOC
@@ -451,7 +455,8 @@ Affinity* AffinityPanel_getAffinity(Panel* super, Machine* host) {
       Affinity_add(affinity, (unsigned)i);
    hwloc_bitmap_foreach_end();
    #else
-   for (int i = 0; i < Vector_size(this->cpuids); i++) {
+   const int n = Vector_size(this->cpuids);
+   for (int i = 0; i < n; i++) {
       const MaskItem* item = (const MaskItem*)Vector_get(this->cpuids, i);
       if (item->value) {
          Affinity_add(affinity, item->cpu);
