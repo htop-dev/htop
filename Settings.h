@@ -58,6 +58,7 @@ typedef struct ScreenSettings_ {
 typedef struct Settings_ {
    char* filename;
    char* initialFilename;
+   char* historyFilename;
    bool writeConfig; /* whether to write the current settings on exit */
    int config_version;
    HeaderLayout hLayout;

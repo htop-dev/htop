@@ -51,6 +51,7 @@ static void Settings_deleteScreens(Settings* this) {
 void Settings_delete(Settings* this) {
    free(this->filename);
    free(this->initialFilename);
+   free(this->historyFilename);
    Settings_deleteColumns(this);
    Settings_deleteScreens(this);
    free(this);
@@ -871,8 +872,34 @@ Settings* Settings_new(const Machine* host, Hashtable* dynamicMeters, Hashtable*
       }
       (void) mkdir(configDir, 0700);
       (void) mkdir(htopDir, 0700);
-      free(htopDir);
       free(configDir);
+
+      /* Compute XDG state dir for the history file */
+      const char* xdgStateHome = getenv("XDG_STATE_HOME");
+      char* htopStateDir;
+      if (xdgStateHome && xdgStateHome[0] == '/') {
+         (void) mkdir(xdgStateHome, 0700);
+         htopStateDir = String_cat(xdgStateHome, "/htop");
+      } else {
+         char* localDir = String_cat(home, "/.local");
+         (void) mkdir(localDir, 0700);
+         free(localDir);
+         char* stateDir = String_cat(home, "/.local/state");
+         (void) mkdir(stateDir, 0700);
+         free(stateDir);
+         htopStateDir = String_cat(home, "/.local/state/htop");
+      }
+      (void) mkdir(htopStateDir, 0700);
+      this->historyFilename = String_cat(htopStateDir, "/htop_history");
+      free(htopStateDir);
+
+      /* One-time migration: move history from config dir to state dir */
+      char* oldHistory = String_cat(htopDir, "/htop_history");
+      struct stat st;
+      if (stat(this->historyFilename, &st) != 0 && stat(oldHistory, &st) == 0)
+         rename(oldHistory, this->historyFilename);
+      free(oldHistory);
+      free(htopDir);
 
       legacyDotfile = String_cat(home, "/.htoprc");
    }

@@ -472,19 +472,8 @@ int CommandLine_run(int argc, char** argv) {
    if (flags.commFilter)
       setCommFilter(&state, &(flags.commFilter));
 
-   /* Set up shared search/filter history, stored next to the config file */
-   const char* rcPath = settings->filename;
-   const char* lastSlash = strrchr(rcPath, '/');
-   char historyPath[PATH_MAX];
-   if (lastSlash) {
-      int dirLen = (int)(lastSlash - rcPath + 1);
-      xSnprintf(historyPath, sizeof(historyPath), "%.*s" "htop_history", dirLen, rcPath);
-   } else {
-   /* no history file saved unless we have a sane rcPath */
-      historyPath[0] = '\0';
-   }
-
-   IncSet_setHistoryFile(panel->inc, historyPath);
+   /* Set up shared search/filter history in XDG state directory */
+   IncSet_setHistoryFile(panel->inc, settings->historyFilename);
 
    ScreenManager* scr = ScreenManager_new(header, host, &state, true);
    ScreenManager_add(scr, (Panel*) panel, -1);
