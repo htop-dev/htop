@@ -234,7 +234,8 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
 }
 
 static void AllCPUsMeter_getRange(const Meter* this, int* start, int* count) {
-   unsigned int cpus = this->host->existingCPUs;
+   const CPUMeterData* data = this->meterData;
+   unsigned int cpus = data ? data->cpus : this->host->existingCPUs;
    switch (Meter_name(this)[0]) {
       default:
       case 'A': // All
