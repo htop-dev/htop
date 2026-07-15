@@ -292,7 +292,7 @@ static bool LinuxMachine_isZramBlockName(const char* name) {
 
 static void LinuxMachine_scanZramDevice(openat_arg_t blockDirFd, const char* name, memory_t* totalZram, memory_t* usedZramComp, memory_t* usedZramOrig) {
 #ifdef HAVE_OPENAT
-   int zramDirFd = Compat_openat(blockDirFd, name, O_DIRECTORY | O_PATH | O_NOFOLLOW);
+   int zramDirFd = Compat_openat(blockDirFd, name, O_DIRECTORY | O_PATH);
    if (zramDirFd < 0)
       return;
 #else
