@@ -126,21 +126,27 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
    return true;
 
 err:
-   close(fdpair[1]);
-   close(fdpair[0]);
+   {
+      int saved_errno = errno;
+      close(fdpair[1]);
+      close(fdpair[0]);
+      errno = saved_errno;
+   }
    return false;
 }
 
 static void TraceScreen_updateTrace(InfoScreen* super) {
    TraceScreen* this = (TraceScreen*) super;
 
-   int fd_strace = fileno(this->strace);
+   int fd_strace = -1;
+   if (this->strace) {
+      fd_strace = fileno(this->strace);
+   }
 
    fd_set fds;
    FD_ZERO(&fds);
    FD_SET(STDIN_FILENO, &fds);
-   if (this->strace_alive) {
-      assert(fd_strace != -1);
+   if (this->strace_alive && fd_strace >= 0) {
       FD_SET(fd_strace, &fds);
    }
 
@@ -149,7 +155,7 @@ static void TraceScreen_updateTrace(InfoScreen* super) {
 
    char buffer[1025];
    size_t nread = 0;
-   if (ready > 0 && FD_ISSET(fd_strace, &fds))
+   if (fd_strace >= 0 && ready > 0 && FD_ISSET(fd_strace, &fds))
       nread = fread(buffer, 1, sizeof(buffer) - 1, this->strace);
 
    if (nread && this->tracing) {
