@@ -679,6 +679,7 @@ static Htop_Reaction actionStrace(State* st) {
    if (!ok) {
       char errmsg[256];
       int saved_errno = errno;
+      // Using snprintf instead of xSnprintf as the latter is meant to fail and crash htop on error
       snprintf(errmsg, sizeof(errmsg), "Failed to start tracer: %s", strerror(saved_errno));
       InfoScreen_addLine(&ts->super, errmsg);
    }
