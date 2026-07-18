@@ -111,7 +111,7 @@ static bool Scheduling_setPolicy(Process* p, Arg arg) {
 
    #ifdef SCHED_RESET_ON_FORK
    if (reset_on_fork)
-      policy &= SCHED_RESET_ON_FORK;
+      policy |= SCHED_RESET_ON_FORK;
    #endif
 
    int r = sched_setscheduler(Process_getPid(p), policy, &param);
