@@ -331,6 +331,7 @@ jobs:
           gmake -k
 
   build-netbsd-latest-gcc:
+    if: false # disabled 260718 as the NetBSD cdn is distributing broken files making this job fail
     runs-on: ubuntu-22.04
     timeout-minutes: 20
     steps:
