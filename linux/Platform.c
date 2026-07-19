@@ -58,6 +58,7 @@ in the source distribution for its full text.
 #include "linux/SystemdMeter.h"
 #include "linux/ZramMeter.h"
 #include "linux/ZramStats.h"
+#include "linux/ZswapMeter.h"
 #include "linux/ZswapStats.h"
 #include "zfs/ZfsArcMeter.h"
 #include "zfs/ZfsArcStats.h"
@@ -266,6 +267,8 @@ const MeterClass* const Platform_meterTypes[] = {
    &ZfsArcMeter_class,
    &ZfsCompressedArcMeter_class,
    &ZramMeter_class,
+   &ZswapMeter_class,
+   &ZswapStatsMeter_class,
    &DiskIORateMeter_class,
    &DiskIOTimeMeter_class,
    &DiskIOMeter_class,

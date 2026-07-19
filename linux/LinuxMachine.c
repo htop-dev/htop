@@ -141,6 +141,8 @@ static void LinuxMachine_scanMemoryInfo(LinuxMachine* this) {
    memory_t sreclaimableMem = 0;
    memory_t zswapCompMem = 0;
    memory_t zswapOrigMem = 0;
+   bool zswapCompAvailable = false;
+   bool zswapOrigAvailable = false;
 
    FILE* file = fopen(PROCMEMINFOFILE, "r");
    if (!file)
@@ -153,6 +155,15 @@ static void LinuxMachine_scanMemoryInfo(LinuxMachine* this) {
          if (String_startsWith(buffer, label)) {                             \
             memory_t parsed_;                                                \
             if (sscanf(buffer + strlen(label), "%llu kB", &parsed_) == 1) {  \
+               (variable) = parsed_;                                         \
+            }                                                                \
+            break;                                                           \
+         } else (void) 0 /* Require a ";" after the macro use. */
+      #define tryReadFlag(label, variable, flag)                             \
+         if (String_startsWith(buffer, label)) {                             \
+            memory_t parsed_;                                                \
+            (flag) = sscanf(buffer + strlen(label), "%llu kB", &parsed_) == 1; \
+            if (flag) {                                                       \
                (variable) = parsed_;                                         \
             }                                                                \
             break;                                                           \
@@ -186,11 +197,12 @@ static void LinuxMachine_scanMemoryInfo(LinuxMachine* this) {
             }
             break;
          case 'Z':
-            tryRead("Zswap:", zswapCompMem);
-            tryRead("Zswapped:", zswapOrigMem);
+            tryReadFlag("Zswap:", zswapCompMem, zswapCompAvailable);
+            tryReadFlag("Zswapped:", zswapOrigMem, zswapOrigAvailable);
             break;
       }
 
+      #undef tryReadFlag
       #undef tryRead
    }
 
@@ -214,8 +226,35 @@ static void LinuxMachine_scanMemoryInfo(LinuxMachine* this) {
    host->totalSwap = swapTotalMem;
    host->usedSwap = swapTotalMem - swapFreeMem - swapCacheMem;
    host->cachedSwap = swapCacheMem;
+   this->zswap.available = zswapCompAvailable && zswapOrigAvailable;
    this->zswap.usedZswapComp = zswapCompMem;
    this->zswap.usedZswapOrig = zswapOrigMem;
+}
+
+static void LinuxMachine_scanZswapInfo(LinuxMachine* this) {
+   ZswapStats* zswap = &this->zswap;
+
+   zswap->enabled = false;
+   zswap->hasPoolLimit = false;
+   zswap->totalZswapPool = 0;
+
+   if (!zswap->available)
+      return;
+
+   /* If the parameter is unavailable, counters from /proc/meminfo imply enabled. */
+   char buffer[16];
+   ssize_t enabledRead = Compat_readfile("/sys/module/zswap/parameters/enabled", buffer, sizeof(buffer));
+   zswap->enabled = enabledRead <= 0 || (buffer[0] != 'N' && buffer[0] != 'n');
+
+   if (!zswap->enabled)
+      return;
+
+   ssize_t limitRead = Compat_readfile("/sys/module/zswap/parameters/max_pool_percent", buffer, sizeof(buffer));
+   unsigned int maxPoolPercent;
+   if (limitRead > 0 && sscanf(buffer, "%u", &maxPoolPercent) == 1 && maxPoolPercent <= 100) {
+      zswap->hasPoolLimit = true;
+      zswap->totalZswapPool = this->super.totalMem * maxPoolPercent / 100;
+   }
 }
 
 static void LinuxMachine_scanHugePages(LinuxMachine* this) {
@@ -801,6 +840,7 @@ void Machine_scan(Machine* super) {
    LinuxMachine* this = (LinuxMachine*) super;
 
    LinuxMachine_scanMemoryInfo(this);
+   LinuxMachine_scanZswapInfo(this);
    LinuxMachine_scanHugePages(this);
    LinuxMachine_scanZfsArcstats(this);
    LinuxMachine_scanZramInfo(this);

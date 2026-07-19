@@ -206,6 +206,7 @@ linux_platform_headers = \
 	linux/SystemdMeter.h \
 	linux/ZramMeter.h \
 	linux/ZramStats.h \
+	linux/ZswapMeter.h \
 	linux/ZswapStats.h \
 	zfs/ZfsArcMeter.h \
 	zfs/ZfsArcStats.h \
@@ -231,6 +232,7 @@ linux_platform_sources = \
 	linux/SELinuxMeter.c \
 	linux/SystemdMeter.c \
 	linux/ZramMeter.c \
+	linux/ZswapMeter.c \
 	zfs/ZfsArcMeter.c \
 	zfs/ZfsCompressedArcMeter.c
 
