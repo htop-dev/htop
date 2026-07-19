@@ -76,6 +76,27 @@ static void NumberItem_display(const Object* cast, RichString* out) {
    RichString_appendWide(out, CRT_colors[CHECK_TEXT], this->super.text);
 }
 
+static void StringItem_display(const Object* cast, RichString* out) {
+   const StringItem* this = (const StringItem*)cast;
+   int labelAttr = CRT_colors[CHECK_TEXT];
+   int boxAttr   = CRT_colors[CHECK_BOX];
+   int valAttr   = this->valid ? CRT_colors[CHECK_MARK] : CRT_colors[FAILED_READ];
+
+   RichString_writeAscii(out, boxAttr, "[");
+   if (this->editing) {
+      RichString_appendAscii(out, valAttr, this->editor.buffer);
+   } else {
+      const char* val = (this->ref && *this->ref) ? *this->ref : NULL;
+      if (val) {
+         RichString_appendAscii(out, valAttr, val);
+      } else {
+         RichString_appendAscii(out, CRT_colors[PROCESS_SHADOW], "(empty)");
+      }
+   }
+   RichString_appendAscii(out, boxAttr, "]  ");
+   RichString_appendWide(out, labelAttr, this->super.text);
+}
+
 const OptionItemClass OptionItem_class = {
    .super = {
       .extends = Class(Object),
@@ -110,6 +131,15 @@ const OptionItemClass NumberItem_class = {
       .display = NumberItem_display
    },
    .kind = OPTION_ITEM_NUMBER
+};
+
+const OptionItemClass StringItem_class = {
+   .super = {
+      .extends = Class(OptionItem),
+      .delete = OptionItem_delete,
+      .display = StringItem_display
+   },
+   .kind = OPTION_ITEM_STRING
 };
 
 TextItem* TextItem_new(const char* text) {
@@ -322,4 +352,41 @@ void NumberItem_deleteChar(NumberItem* this) {
       this->editLen--;
       this->editBuffer[this->editLen] = '\0';
    }
+}
+StringItem* StringItem_newByRef(const char* text, char** ref, bool (*validate)(const char* text)) {
+   StringItem* this = AllocThis(StringItem);
+   this->super.text = xStrdup(text);
+   this->ref = ref;
+   this->editing = false;
+   this->valid = true;
+   this->validate = validate;
+   LineEditor_init(&this->editor);
+   if (ref && *ref)
+      LineEditor_setText(&this->editor, *ref);
+   return this;
+}
+
+void StringItem_startEditing(StringItem* this) {
+   this->editing = true;
+   LineEditor_setText(&this->editor, (this->ref && *this->ref) ? *this->ref : "");
+}
+
+void StringItem_cancelEditing(StringItem* this) {
+   this->editing = false;
+   LineEditor_setText(&this->editor, (this->ref && *this->ref) ? *this->ref : "");
+}
+
+bool StringItem_applyEditing(StringItem* this) {
+   this->editing = false;
+   const char* text = this->editor.buffer;
+   if (this->validate && !this->validate(text)) {
+      this->valid = false;
+      return false;
+   }
+   this->valid = true;
+   if (this->ref) {
+      free(*this->ref);
+      *this->ref = (*text != '\0') ? xStrdup(text) : NULL;
+   }
+   return true;
 }
