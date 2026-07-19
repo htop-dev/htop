@@ -617,7 +617,7 @@ Currently unsupported (always displays '-').
 .SH "EXTERNAL LIBRARIES"
 While
 .B htop
-depends on most of the libraries it uses at build time there are two
+depends on most of the libraries it uses at build time there are three
 noteworthy exceptions to this rule. These exceptions both relate to
 data displayed in meters displayed in the header of
 .B htop
@@ -654,6 +654,26 @@ Summary: build time dependency on
 .B libsensors(3)
 C header files, optional runtime dependency on
 .B libsensors(3)
+via dynamic loading.
+.TP
+.B libnl-3 / libnl-genl-3
+The bindings for libnl-3 and libnl-genl-3 (Netlink socket libraries) are
+used to collect delay accounting data when the delay accounting columns
+(e.g. PERCENT_CPU_DELAY, PERCENT_IO_DELAY, PERCENT_SWAP_DELAY) are enabled.
+Support for these columns must be compiled in with the
+.B \-\-enable-delayacct
+configure flag.
+
+Summary: build time dependency on
+.B libnl-3
+and
+.B libnl-genl-3
+C header files (when built with
+.BR \-\-enable-delayacct ),
+optional runtime dependency on
+.B libnl-3-200
+and
+.B libnl-genl-3-200
 via dynamic loading.
 .SH "CONFIG FILES"
 By default
