@@ -98,6 +98,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
    int selected = Panel_getSelectedIndex(super);
    HandlerResult result = IGNORED;
    bool sideMove = false;
+   bool modified = false;
 
    switch (ch) {
       case 0x0a:
@@ -136,8 +137,11 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
       case KEY_F(7):
       case '[':
       case '-':
-         Vector_moveUp(this->meters, selected);
-         Panel_moveSelectedUp(super);
+         if (selected > 0) {
+            Vector_moveUp(this->meters, selected);
+            Panel_moveSelectedUp(super);
+            modified = true;
+         }
          result = HANDLED;
          break;
       case KEY_DOWN:
@@ -147,8 +151,11 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
       case KEY_F(8):
       case ']':
       case '+':
-         Vector_moveDown(this->meters, selected);
-         Panel_moveSelectedDown(super);
+         if (selected + 1 < Vector_size(this->meters)) {
+            Vector_moveDown(this->meters, selected);
+            Panel_moveSelectedDown(super);
+            modified = true;
+         }
          result = HANDLED;
          break;
       case KEY_F(6):
@@ -178,6 +185,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
             Panel_remove(super, selected);
          }
          MetersPanel_setMoving(this, false);
+         modified = true;
          result = HANDLED;
          break;
       case EVENT_PANEL_LOST_FOCUS:
@@ -189,6 +197,10 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
 
    if (result == HANDLED || sideMove) {
       Header* header = this->scr->header;
+      if (modified || sideMove) {
+         Header_collapseLayout(header);
+         header->metersCopied = false;
+      }
       this->settings->changed = true;
       this->settings->lastUpdate++;
       Header_calculateHeight(header);
