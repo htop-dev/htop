@@ -218,7 +218,10 @@ m4_version_prereq(
 
 # Optional Section
 
-AC_CHECK_HEADERS([execinfo.h])
+AC_CHECK_HEADERS([ \
+   execinfo.h \
+   stdbit.h \
+])
 
 if test "$my_htop_platform" = darwin; then
    AC_CHECK_HEADERS([mach/mach_time.h])
@@ -361,6 +364,57 @@ AC_LINK_IFELSE(
    AC_MSG_RESULT(yes),
    AC_MSG_RESULT(no)
 )
+
+AC_MSG_CHECKING(for __builtin_clz)
+AC_LINK_IFELSE(
+   [AC_LANG_PROGRAM(
+      [],
+      [[
+         /* Supported in GCC 3.4 or later */
+         return __builtin_clz(-1U); /* Should be 0 (exit success) */
+      ]]
+   )],
+   AC_DEFINE([HAVE_BUILTIN_CLZ], 1, [Define to 1 if the compiler supports '__builtin_clz' function.])
+   AC_MSG_RESULT(yes),
+   AC_MSG_RESULT(no)
+)
+
+AC_MSG_CHECKING(for __builtin_popcount)
+AC_LINK_IFELSE(
+   [AC_LANG_PROGRAM(
+      [],
+      [[
+         /* Supported in GCC 3.4 or later */
+         return __builtin_popcount(0U); /* Should be 0 (exit success) */
+      ]]
+   )],
+   AC_DEFINE([HAVE_BUILTIN_POPCOUNT], 1, [Define to 1 if the compiler supports '__builtin_popcount' function.])
+   AC_MSG_RESULT(yes),
+   AC_MSG_RESULT(no)
+)
+
+AC_MSG_CHECKING(for stdc_bit_floor)
+AC_LINK_IFELSE(
+   [AC_LANG_PROGRAM(
+      [[
+#include <stdbit.h>
+      ]], [[
+         /* Check for both type-generic and type-specific versions.
+            htop uses the type-specific version.
+            Return value should be 0 (exit success) */
+         return stdc_bit_floor(0U) || stdc_bit_floor_ui(0U);
+      ]]
+   )],
+   AC_DEFINE([HAVE_STDC_BIT_FLOOR], 1, [Define to 1 if stdc_bit_floor functions are supported.])
+   AC_MSG_RESULT(yes),
+   AC_MSG_RESULT(no)
+)
+
+case "$host_cpu" in
+   arm*|aarch64*)
+      AC_CHECK_HEADERS([arm_neon.h])
+      ;;
+esac
 
 # ----------------------------------------------------------------------
 
