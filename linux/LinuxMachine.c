@@ -30,6 +30,7 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "UsersTable.h"
 
+#include "linux/CGroupMem.h"
 #include "linux/Compat.h"
 #include "linux/Platform.h" // needed for GNU/hurd to get PATH_MAX  // IWYU pragma: keep
 
@@ -229,6 +230,9 @@ static void LinuxMachine_scanMemoryInfo(LinuxMachine* this) {
    this->zswap.available = zswapCompAvailable && zswapOrigAvailable;
    this->zswap.usedZswapComp = zswapCompMem;
    this->zswap.usedZswapOrig = zswapOrigMem;
+
+   /* host->totalMem is in kB; CGroupMem works in kB. */
+   CGroupMem_scan(host->totalMem, &this->cgroupMem);
 }
 
 static void LinuxMachine_scanZswapInfo(LinuxMachine* this) {
@@ -865,6 +869,9 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    Machine* super = &this->super;
 
    Machine_init(super, usersTable, userId);
+
+   // Platform_init() has already probed containerization by this point
+   super->containerized = Running_containerized;
 
    // Initialize page size
    long pageSize = sysconf(_SC_PAGESIZE);
