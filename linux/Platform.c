@@ -56,6 +56,7 @@ in the source distribution for its full text.
 #include "linux/OpenRCMeter.h"
 #include "linux/SELinuxMeter.h"
 #include "linux/SystemdMeter.h"
+#include "linux/ThinkpadFan.h"
 #include "linux/ZramMeter.h"
 #include "linux/ZramStats.h"
 #include "linux/ZswapMeter.h"
@@ -280,6 +281,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &OpenRCUserMeter_class,
    &FileDescriptorMeter_class,
    &GPUMeter_class,
+   &ThinkpadFanMeter_class,
    NULL
 };
 
@@ -992,6 +994,24 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
    Platform_Battery_cachePercent = *percent;
    Platform_Battery_cacheIsOnAC = *isOnAC;
    Platform_Battery_cacheTime = now;
+}
+
+int Platform_getThinkpadFan(void) {
+   char fandata[256];
+   ssize_t fanread = Compat_readfile(PROCDIR "/acpi/ibm/fan", fandata, sizeof(fandata));
+   if (fanread < 1)
+      return -1;
+
+   const char* speed = strstr(fandata, "speed:");
+   if (!speed)
+      return -1;
+
+   int rpm;
+   int n = sscanf(speed, "speed: %d", &rpm);
+   if (n != 1)
+      return -1;
+
+   return rpm;
 }
 
 void Platform_longOptionsUsage(const char* name)

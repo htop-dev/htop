@@ -204,6 +204,7 @@ linux_platform_headers = \
 	linux/ProcessField.h \
 	linux/SELinuxMeter.h \
 	linux/SystemdMeter.h \
+	linux/ThinkpadFan.h \
 	linux/ZramMeter.h \
 	linux/ZramStats.h \
 	linux/ZswapMeter.h \
@@ -231,6 +232,7 @@ linux_platform_sources = \
 	linux/PressureStallMeter.c \
 	linux/SELinuxMeter.c \
 	linux/SystemdMeter.c \
+	linux/ThinkpadFan.c \
 	linux/ZramMeter.c \
 	linux/ZswapMeter.c \
 	zfs/ZfsArcMeter.c \
