@@ -121,6 +121,8 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
          reaction |= HTOP_KEEP_FOLLOWING;
          if (confirmedSearch)
             reaction |= HTOP_REFRESH;
+      } else {
+         host->activeTable->following = -1;
       }
       result = HANDLED;
    } else if (ch == 27) {
