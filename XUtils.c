@@ -108,7 +108,7 @@ void* xReallocArrayZero(void* ptr, size_t prevmemb, size_t newmemb, size_t size)
 
 inline bool String_contains_i(const char* s1, const char* s2, bool multi) {
    // we have a multi-string search term, handle as special case for performance reasons
-   if (multi && strstr(s2, "|")) {
+   if (multi && strchr(s2, '|')) {
       size_t nNeedles;
       char** needles = String_split(s2, '|', &nNeedles);
       for (size_t i = 0; i < nNeedles; i++) {
