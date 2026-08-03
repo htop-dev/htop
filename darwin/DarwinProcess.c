@@ -478,6 +478,11 @@ void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt) {
       tprocess->st_uid           = proc->st_uid;
       tprocess->user             = proc->user;
 
+      if (tprocess->starttime_ctime == 0) {
+         tprocess->starttime_ctime = proc->starttime_ctime;
+         Process_fillStarttimeBuffer(tprocess);
+      }
+
 #ifdef HAVE_THREAD_EXTENDED_INFO_DATA_T
       thread_extended_info_data_t extended_info;
       mach_msg_type_number_t extended_info_count = THREAD_EXTENDED_INFO_COUNT;
