@@ -168,7 +168,8 @@ static void AffinityPanel_updateTopo(AffinityPanel* this, MaskItem* item) {
    if (item->sub_tree == 2)
       return;
 
-   for (int i = 0; i < Vector_size(item->children); i++)
+   const int size = Vector_size(item->children);
+   for (int i = 0; i < size; i++)
       AffinityPanel_updateTopo(this, (MaskItem*) Vector_get(item->children, i));
 }
 
@@ -186,7 +187,8 @@ static void AffinityPanel_update(AffinityPanel* this, bool keepSelected) {
    if (this->topoView) {
       AffinityPanel_updateTopo(this, this->topoRoot);
    } else {
-      for (int i = 0; i < Vector_size(this->cpuids); i++) {
+      const int size = Vector_size(this->cpuids);
+      for (int i = 0; i < size; i++) {
          AffinityPanel_updateItem(this, (MaskItem*) Vector_get(this->cpuids, i));
       }
    }
@@ -451,7 +453,8 @@ Affinity* AffinityPanel_getAffinity(Panel* super, Machine* host) {
       Affinity_add(affinity, (unsigned)i);
    hwloc_bitmap_foreach_end();
    #else
-   for (int i = 0; i < Vector_size(this->cpuids); i++) {
+   const int size = Vector_size(this->cpuids);
+   for (int i = 0; i < size; i++) {
       const MaskItem* item = (const MaskItem*)Vector_get(this->cpuids, i);
       if (item->value) {
          Affinity_add(affinity, item->cpu);

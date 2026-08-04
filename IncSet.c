@@ -99,7 +99,8 @@ static void updateWeakPanel(IncSet* this, Panel* panel, Vector* lines) {
    if (this->filtering) {
       int n = 0;
       const char* incFilter = LineEditor_getText(&this->modes[INC_FILTER].editor);
-      for (int i = 0; i < Vector_size(lines); i++) {
+      const int size = Vector_size(lines);
+      for (int i = 0; i < size; i++) {
          ListItem* line = (ListItem*)Vector_get(lines, i);
          if (String_contains_i(line->value, incFilter, true)) {
             Panel_add(panel, (Object*)line);
@@ -111,7 +112,8 @@ static void updateWeakPanel(IncSet* this, Panel* panel, Vector* lines) {
          }
       }
    } else {
-      for (int i = 0; i < Vector_size(lines); i++) {
+      const int size = Vector_size(lines);
+      for (int i = 0; i < size; i++) {
          Object* line = Vector_get(lines, i);
          Panel_add(panel, line);
          if (selected == line) {

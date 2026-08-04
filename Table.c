@@ -399,7 +399,8 @@ void Table_printHeader(const Settings* settings, RichString* header) {
 
 // set flags on an existing rows before refreshing table
 void Table_prepareEntries(Table* this) {
-   for (int i = 0; i < Vector_size(this->rows); i++) {
+   const int size = Vector_size(this->rows);
+   for (int i = 0; i < size; i++) {
       Row* row = (struct Row_*) Vector_get(this->rows, i);
       row->updated = false;
       row->wasShown = row->show;

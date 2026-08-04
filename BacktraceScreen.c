@@ -128,7 +128,8 @@ static void BacktracePanel_makePrintingHelper(const BacktracePanel* this, Backtr
 
    printingHelper->hasDemangledNames = false;
 
-   for (int i = 0; i < Vector_size(lines); i++) {
+   const int size = Vector_size(lines);
+   for (int i = 0; i < size; i++) {
       const BacktracePanelRow* row = (const BacktracePanelRow*)Vector_get(lines, i);
       if (row->type != BACKTRACE_PANEL_ROW_DATA_FRAME) {
          continue;
@@ -169,7 +170,8 @@ static void BacktracePanel_populateFrames(BacktracePanel* this) {
    char* error = NULL;
 
    Vector* data = Vector_new(Class(BacktraceFrameData), false, VECTOR_DEFAULT_SIZE);
-   for (int i = 0; i < Vector_size(this->processes); i++) {
+   const int size = Vector_size(this->processes);
+   for (int i = 0; i < size; i++) {
       const Process* process = (Process*)Vector_get(this->processes, i);
       BacktracePanel_makeBacktrace(data, Process_getPid(process), &error);
 

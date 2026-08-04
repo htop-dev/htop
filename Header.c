@@ -182,7 +182,8 @@ Meter* Header_addMeterByClass(Header* this, const MeterClass* type, unsigned int
 
 void Header_reinit(Header* this) {
    Header_forEachColumn(this, col) {
-      for (int i = 0; i < Vector_size(this->columns[col]); i++) {
+      const int size = Vector_size(this->columns[col]);
+      for (int i = 0; i < size; i++) {
          Meter* meter = (Meter*) Vector_get(this->columns[col], i);
          if (Meter_initFn(meter)) {
             Meter_init(meter);
@@ -284,7 +285,8 @@ int Header_calculateHeight(Header* this) {
    Header_forEachColumn(this, col) {
       const Vector* meters = this->columns[col];
       int height = pad;
-      for (int i = 0; i < Vector_size(meters); i++) {
+      const int size = Vector_size(meters);
+      for (int i = 0; i < size; i++) {
          Meter* meter = (Meter*) Vector_get(meters, i);
          meter->columnWidthCount = calcColumnWidthCount(this, meter, pad, col, height);
          height += meter->h;
