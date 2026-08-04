@@ -181,7 +181,8 @@ static void BacktracePanel_populateFrames(BacktracePanel* this) {
       Panel_add((Panel*)this, (Object*)header);
 
       if (!error) {
-         for (int j = 0; j < Vector_size(data); j++) {
+         const int vsize = Vector_size(data);
+         for (int j = 0; j < vsize; j++) {
             BacktracePanelRow* row = BacktracePanelRow_new(this);
             row->process = process;
             row->type = BACKTRACE_PANEL_ROW_DATA_FRAME;

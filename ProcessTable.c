@@ -65,10 +65,11 @@ static void ProcessTable_cleanupEntries(Table* super) {
 
    // Lowest index of the row that is soft-removed. Used to speed up
    // compaction.
+   const int size = Vector_size(super->rows);
    int dirtyIndex = Vector_size(super->rows);
 
    // Finish process table update, culling any exit'd processes
-   for (int i = Vector_size(super->rows) - 1; i >= 0; i--) {
+   for (int i = size - 1; i >= 0; i--) {
       Process* p = (Process*) Vector_get(super->rows, i);
 
       // tidy up Process state after refreshing the ProcessTable table
