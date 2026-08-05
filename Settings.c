@@ -519,10 +519,14 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
          Settings_readMeterModes(this, option[1], 1);
          didReadMeters = true;
       } else if (String_startsWith(option[0], "column_meters_")) {
-         Settings_readMeters(this, option[1], atoi(option[0] + strlen("column_meters_")));
+         long idx = strtol(option[0] + strlen("column_meters_"), NULL, 10);
+         if (idx >= 0)
+            Settings_readMeters(this, option[1], (size_t)idx);
          didReadMeters = true;
       } else if (String_startsWith(option[0], "column_meter_modes_")) {
-         Settings_readMeterModes(this, option[1], atoi(option[0] + strlen("column_meter_modes_")));
+         long idx = strtol(option[0] + strlen("column_meter_modes_"), NULL, 10);
+         if (idx >= 0)
+            Settings_readMeterModes(this, option[1], (size_t)idx);
          didReadMeters = true;
       } else if (String_eq(option[0], "hide_function_bar")) {
          this->hideFunctionBar = atoi(option[1]);
