@@ -530,7 +530,7 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
       } else if (String_eq(option[0], "topology_affinity")) {
          this->topologyAffinity = !!atoi(option[1]);
       #endif
-      } else if (strncmp(option[0], "screen:", 7) == 0) {
+      } else if (String_startsWith(option[0], "screen:")) {
          screen = Settings_newScreen(this, &(const ScreenDefaults) { .name = option[0] + 7, .columns = option[1] });
       } else if (String_eq(option[0], ".sort_key")) {
          if (screen) {
