@@ -396,13 +396,15 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
       } else if (String_eq(option[0], "sort_key") && this->config_version <= 2) {
          // old (no screen) naming also supported for backwards compatibility
          // This "+1" is for compatibility with the older enum format.
+         int key = toFieldIndex(this->dynamicColumns, option[1]);
          screen = Settings_defaultScreens(this);
-         screen->sortKey = atoi(option[1]) + 1;
+         screen->sortKey = key > 0 ? key : PID;
       } else if (String_eq(option[0], "tree_sort_key") && this->config_version <= 2) {
          // old (no screen) naming also supported for backwards compatibility
          // This "+1" is for compatibility with the older enum format.
+         int key = toFieldIndex(this->dynamicColumns, option[1]);
          screen = Settings_defaultScreens(this);
-         screen->treeSortKey = atoi(option[1]) + 1;
+         screen->treeSortKey = key > 0 ? key : PID;
       } else if (String_eq(option[0], "sort_direction") && this->config_version <= 2) {
          // old (no screen) naming also supported for backwards compatibility
          screen = Settings_defaultScreens(this);
