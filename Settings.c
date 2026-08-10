@@ -33,11 +33,16 @@ in the source distribution for its full text.
 
 
 static void Settings_deleteColumns(Settings* this) {
+   if (!this->hColumns)
+      return;
+
    for (size_t i = 0; i < HeaderLayout_getColumns(this->hLayout); i++) {
       String_freeArray(this->hColumns[i].names);
       free(this->hColumns[i].modes);
    }
+
    free(this->hColumns);
+   this->hColumns = NULL;
 }
 
 static void Settings_deleteScreens(Settings* this) {
@@ -506,7 +511,7 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
          this->hLayout = isdigit((unsigned char)option[1][0]) ? ((HeaderLayout) atoi(option[1])) : HeaderLayout_fromName(option[1]);
          if (this->hLayout < 0 || this->hLayout >= LAST_HEADER_LAYOUT)
             this->hLayout = HF_TWO_50_50;
-         free(this->hColumns);
+         Settings_deleteColumns(this);
          this->hColumns = xCalloc(HeaderLayout_getColumns(this->hLayout), sizeof(MeterColumnSetting));
       } else if (String_eq(option[0], "left_meters")) {
          Settings_readMeters(this, option[1], 0);
