@@ -614,6 +614,69 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
       String_freeArray(option);
    }
    fclose(fp);
+
+   if (this->hColumns) {
+      const size_t colCount = HeaderLayout_getColumns(this->hLayout);
+      bool anyValidColumn = false;
+
+      for (size_t column = 0; column < colCount; column++) {
+         MeterColumnSetting* setting = &this->hColumns[column];
+         bool invalid = false;
+
+         if (!setting->len) {
+            if ((setting->names && setting->names[0]) || setting->modes)
+               invalid = true;
+         } else if (!setting->names || !setting->modes) {
+            invalid = true;
+         } else {
+            size_t nameCount = 0;
+            while (setting->names[nameCount])
+               nameCount++;
+
+            if (nameCount != setting->len)
+               invalid = true;
+
+            for (size_t i = 0; !invalid && i < setting->len; i++)
+               if (!setting->names[i])
+                  invalid = true;
+         }
+
+         if (invalid) {
+            String_freeArray(setting->names);
+            setting->names = NULL;
+            free(setting->modes);
+            setting->modes = NULL;
+            setting->len = 0;
+            continue;
+         }
+
+         if (setting->len)
+            anyValidColumn = true;
+      }
+
+      if (!anyValidColumn)
+         didReadMeters = false;
+   }
+
+   if (this->hideFunctionBar < 0 || this->hideFunctionBar > 2)
+      this->hideFunctionBar = 0;
+
+   for (unsigned int i = 0; i < this->nScreens; i++) {
+      ScreenSettings* ss = this->screens[i];
+      if (!ss)
+         continue;
+      if (ss->sortKey <= 0 || ss->sortKey >= LAST_PROCESSFIELD)
+         ss->sortKey = PID;
+      if (ss->treeSortKey <= 0 || ss->treeSortKey >= LAST_PROCESSFIELD)
+         ss->treeSortKey = PID;
+      if (ss->direction != -1 && ss->direction != 1)
+         ss->direction = (Process_fields[ss->sortKey].defaultSortDesc) ? -1 : 1;
+      if (ss->treeDirection != -1 && ss->treeDirection != 1)
+         ss->treeDirection = (Process_fields[ss->treeSortKey].defaultSortDesc) ? -1 : 1;
+      if (ss->stableTreeView < 0 || ss->stableTreeView > 2)
+         ss->stableTreeView = 0;
+   }
+
    if (!didReadMeters || !Settings_validateMeters(this))
       Settings_defaultMeters(this, host);
    if (!this->nScreens)
