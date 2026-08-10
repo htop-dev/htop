@@ -46,11 +46,14 @@ static void Settings_deleteColumns(Settings* this) {
 }
 
 static void Settings_deleteScreens(Settings* this) {
-   if (this->screens) {
-      for (size_t i = 0; this->screens[i]; i++)
-         ScreenSettings_delete(this->screens[i]);
-      free(this->screens);
-   }
+   if (!this->screens)
+      return;
+
+   for (size_t i = 0; this->screens[i]; i++)
+      ScreenSettings_delete(this->screens[i]);
+
+   free(this->screens);
+   this->screens = NULL;
 }
 
 void Settings_delete(Settings* this) {
