@@ -877,12 +877,13 @@ static void Platform_Battery_getSysData(double* percent, ACPresence* isOnAC) {
       } else {
          char buffer[32];
          ssize_t ret = Compat_readfileat(entryFd, "type", buffer, sizeof(buffer));
-         if (ret <= 0)
+         if (ret <= 0 || (size_t)ret > sizeof(buffer))
             goto next;
 
-         /* drop optional trailing newlines */
-         for (char* buf = &buffer[(size_t)ret - 1]; *buf == '\n'; buf--)
-            *buf = '\0';
+         /* truncate on non-printable characters */
+         for (size_t idx = 0; idx < (size_t)ret; idx++)
+            if (buffer[idx] <= ' ')
+               buffer[idx] = 0;
 
          if (String_eq(buffer, "Battery"))
             type = BAT;
