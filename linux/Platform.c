@@ -1090,7 +1090,7 @@ static int dropCapabilities(enum CapMode mode) {
       if (!CAP_IS_SUPPORTED(keepcaps[i]))
          continue;
 
-      cap_flag_value_t current;
+      cap_flag_value_t current = CAP_CLEAR;
       if (cap_get_flag(currCaps, keepcaps[i], CAP_PERMITTED, &current) < 0) {
          fprintf(stderr, "Error: cannot get current value of capability %d: %s\n", keepcaps[i], strerror(errno));
          cap_free(currCaps);
