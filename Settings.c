@@ -33,19 +33,27 @@ in the source distribution for its full text.
 
 
 static void Settings_deleteColumns(Settings* this) {
+   if (!this->hColumns)
+      return;
+
    for (size_t i = 0; i < HeaderLayout_getColumns(this->hLayout); i++) {
       String_freeArray(this->hColumns[i].names);
       free(this->hColumns[i].modes);
    }
+
    free(this->hColumns);
+   this->hColumns = NULL;
 }
 
 static void Settings_deleteScreens(Settings* this) {
-   if (this->screens) {
-      for (size_t i = 0; this->screens[i]; i++)
-         ScreenSettings_delete(this->screens[i]);
-      free(this->screens);
-   }
+   if (!this->screens)
+      return;
+
+   for (size_t i = 0; this->screens[i]; i++)
+      ScreenSettings_delete(this->screens[i]);
+
+   free(this->screens);
+   this->screens = NULL;
 }
 
 void Settings_delete(Settings* this) {
@@ -64,11 +72,28 @@ static char** Settings_splitLineToIDs(const char* line) {
 }
 
 static void Settings_readMeters(Settings* this, const char* line, size_t column) {
-   column = MINIMUM(column, HeaderLayout_getColumns(this->hLayout) - 1);
-   this->hColumns[column].names = Settings_splitLineToIDs(line);
+   const size_t maxColumn = HeaderLayout_getColumns(this->hLayout);
+   if (column >= maxColumn)
+      return;
+
+   MeterColumnSetting* mcs = &this->hColumns[column];
+
+   if (mcs->names)
+      String_freeArray(mcs->names);
+
+   mcs->names = Settings_splitLineToIDs(line);
 }
 
 static void Settings_readMeterModes(Settings* this, const char* line, size_t column) {
+   const size_t maxColumn = HeaderLayout_getColumns(this->hLayout);
+   if (column >= maxColumn)
+      return;
+
+   MeterColumnSetting* mcs = &this->hColumns[column];
+
+   if (mcs->modes)
+      free(mcs->modes);
+
    char** ids = Settings_splitLineToIDs(line);
 
    size_t len = 0;
@@ -76,13 +101,13 @@ static void Settings_readMeterModes(Settings* this, const char* line, size_t col
       len++;
    }
 
-   column = MINIMUM(column, HeaderLayout_getColumns(this->hLayout) - 1);
-   this->hColumns[column].len = len;
-   MeterModeId* modes = len ? xCalloc(len, sizeof(MeterModeId)) : NULL;
+   mcs->modes = len ? xCalloc(len, sizeof(MeterModeId)) : NULL;
+
    for (size_t i = 0; i < len; i++) {
-      modes[i] = (MeterModeId) atoi(ids[i]);
+      mcs->modes[i] = (MeterModeId) atoi(ids[i]);
    }
-   this->hColumns[column].modes = modes;
+
+   mcs->len = len;
 
    String_freeArray(ids);
 }
@@ -97,21 +122,27 @@ static bool Settings_validateMeters(Settings* this) {
       const MeterModeId* modes = this->hColumns[column].modes;
       const size_t len = this->hColumns[column].len;
 
-      if (!len)
+      if (!len) {
+         if ((names && names[0]) || modes)
+            return false;
          continue;
+      }
 
       if (!names || !modes)
          return false;
 
-      anyMeter |= !!len;
+      anyMeter = true;
 
-      // Check for each mode there is an entry with a non-NULL name
+      size_t nameCount = 0;
+      while (names[nameCount])
+         nameCount++;
+
+      if (nameCount != len)
+         return false;
+
       for (size_t meterIdx = 0; meterIdx < len; meterIdx++)
          if (!names[meterIdx])
             return false;
-
-      if (names[len])
-         return false;
    }
 
    return anyMeter;
@@ -396,13 +427,15 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
       } else if (String_eq(option[0], "sort_key") && this->config_version <= 2) {
          // old (no screen) naming also supported for backwards compatibility
          // This "+1" is for compatibility with the older enum format.
+         int key = toFieldIndex(this->dynamicColumns, option[1]);
          screen = Settings_defaultScreens(this);
-         screen->sortKey = atoi(option[1]) + 1;
+         screen->sortKey = key > 0 ? key : PID;
       } else if (String_eq(option[0], "tree_sort_key") && this->config_version <= 2) {
          // old (no screen) naming also supported for backwards compatibility
          // This "+1" is for compatibility with the older enum format.
+         int key = toFieldIndex(this->dynamicColumns, option[1]);
          screen = Settings_defaultScreens(this);
-         screen->treeSortKey = atoi(option[1]) + 1;
+         screen->treeSortKey = key > 0 ? key : PID;
       } else if (String_eq(option[0], "sort_direction") && this->config_version <= 2) {
          // old (no screen) naming also supported for backwards compatibility
          screen = Settings_defaultScreens(this);
@@ -504,7 +537,7 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
          this->hLayout = isdigit((unsigned char)option[1][0]) ? ((HeaderLayout) atoi(option[1])) : HeaderLayout_fromName(option[1]);
          if (this->hLayout < 0 || this->hLayout >= LAST_HEADER_LAYOUT)
             this->hLayout = HF_TWO_50_50;
-         free(this->hColumns);
+         Settings_deleteColumns(this);
          this->hColumns = xCalloc(HeaderLayout_getColumns(this->hLayout), sizeof(MeterColumnSetting));
       } else if (String_eq(option[0], "left_meters")) {
          Settings_readMeters(this, option[1], 0);
@@ -519,18 +552,30 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
          Settings_readMeterModes(this, option[1], 1);
          didReadMeters = true;
       } else if (String_startsWith(option[0], "column_meters_")) {
-         Settings_readMeters(this, option[1], atoi(option[0] + strlen("column_meters_")));
-         didReadMeters = true;
+         const char* colStr = option[0] + strlen("column_meters_");
+         if (isdigit((unsigned char)colStr[0])) {
+            int colIdx = atoi(colStr);
+            if (colIdx >= 0 && (size_t)colIdx < HeaderLayout_getColumns(this->hLayout)) {
+               Settings_readMeters(this, option[1], (size_t) colIdx);
+               didReadMeters = true;
+            }
+         }
       } else if (String_startsWith(option[0], "column_meter_modes_")) {
-         Settings_readMeterModes(this, option[1], atoi(option[0] + strlen("column_meter_modes_")));
-         didReadMeters = true;
+         const char* colStr = option[0] + strlen("column_meter_modes_");
+         if (isdigit((unsigned char)colStr[0])) {
+            int colIdx = atoi(colStr);
+            if (colIdx >= 0 && (size_t)colIdx < HeaderLayout_getColumns(this->hLayout)) {
+               Settings_readMeterModes(this, option[1], (size_t) colIdx);
+               didReadMeters = true;
+            }
+         }
       } else if (String_eq(option[0], "hide_function_bar")) {
          this->hideFunctionBar = atoi(option[1]);
       #ifdef HAVE_LIBHWLOC
       } else if (String_eq(option[0], "topology_affinity")) {
          this->topologyAffinity = !!atoi(option[1]);
       #endif
-      } else if (strncmp(option[0], "screen:", 7) == 0) {
+      } else if (String_startsWith(option[0], "screen:")) {
          screen = Settings_newScreen(this, &(const ScreenDefaults) { .name = option[0] + 7, .columns = option[1] });
       } else if (String_eq(option[0], ".sort_key")) {
          if (screen) {
@@ -569,6 +614,69 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
       String_freeArray(option);
    }
    fclose(fp);
+
+   if (this->hColumns) {
+      const size_t colCount = HeaderLayout_getColumns(this->hLayout);
+      bool anyValidColumn = false;
+
+      for (size_t column = 0; column < colCount; column++) {
+         MeterColumnSetting* setting = &this->hColumns[column];
+         bool invalid = false;
+
+         if (!setting->len) {
+            if ((setting->names && setting->names[0]) || setting->modes)
+               invalid = true;
+         } else if (!setting->names || !setting->modes) {
+            invalid = true;
+         } else {
+            size_t nameCount = 0;
+            while (setting->names[nameCount])
+               nameCount++;
+
+            if (nameCount != setting->len)
+               invalid = true;
+
+            for (size_t i = 0; !invalid && i < setting->len; i++)
+               if (!setting->names[i])
+                  invalid = true;
+         }
+
+         if (invalid) {
+            String_freeArray(setting->names);
+            setting->names = NULL;
+            free(setting->modes);
+            setting->modes = NULL;
+            setting->len = 0;
+            continue;
+         }
+
+         if (setting->len)
+            anyValidColumn = true;
+      }
+
+      if (!anyValidColumn)
+         didReadMeters = false;
+   }
+
+   if (this->hideFunctionBar < 0 || this->hideFunctionBar > 2)
+      this->hideFunctionBar = 0;
+
+   for (unsigned int i = 0; i < this->nScreens; i++) {
+      ScreenSettings* ss = this->screens[i];
+      if (!ss)
+         continue;
+      if (ss->sortKey <= 0 || ss->sortKey >= LAST_PROCESSFIELD)
+         ss->sortKey = PID;
+      if (ss->treeSortKey <= 0 || ss->treeSortKey >= LAST_PROCESSFIELD)
+         ss->treeSortKey = PID;
+      if (ss->direction != -1 && ss->direction != 1)
+         ss->direction = (Process_fields[ss->sortKey].defaultSortDesc) ? -1 : 1;
+      if (ss->treeDirection != -1 && ss->treeDirection != 1)
+         ss->treeDirection = (Process_fields[ss->treeSortKey].defaultSortDesc) ? -1 : 1;
+      if (ss->stableTreeView < 0 || ss->stableTreeView > 2)
+         ss->stableTreeView = 0;
+   }
+
    if (!didReadMeters || !Settings_validateMeters(this))
       Settings_defaultMeters(this, host);
    if (!this->nScreens)
