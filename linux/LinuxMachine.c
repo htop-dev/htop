@@ -89,6 +89,19 @@ static void LinuxMachine_updateCPUcount(LinuxMachine* this) {
 
       existing++;
 
+      /* The scan only writes `online` for CPUs it actually finds, so a CPU
+       * unplugged from the middle of the range would keep its last value for
+       * the rest of the session: the count cannot shrink (the array still has
+       * to reach the highest id) and nothing else ever clears the flag.
+       * Clear them once, then let the rest of this scan turn back on whatever
+       * is still there. This sits on the first CPU we count rather than before
+       * the loop so that the "no CPU found" case below still leaves the
+       * previous state alone, instead of marking every CPU offline. */
+      if (existing == 1) {
+         for (unsigned int i = 1; i <= currExisting; i++)
+            this->cpuData[i].online = false;
+      }
+
       /* readdir() iterates with no specific order */
       unsigned int max = MAXIMUM(existing, cpuid);
       maxSeen = MAXIMUM(maxSeen, max);
