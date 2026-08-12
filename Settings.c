@@ -113,6 +113,9 @@ static void Settings_readMeterModes(Settings* this, const char* line, size_t col
 }
 
 static bool Settings_validateMeters(Settings* this) {
+   if (!this->hColumns)
+      return false;
+
    const size_t colCount = HeaderLayout_getColumns(this->hLayout);
 
    bool anyMeter = false;
