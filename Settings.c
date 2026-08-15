@@ -537,10 +537,10 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
          this->enableMouse = atoi(option[1]);
       #endif
       } else if (String_eq(option[0], "header_layout")) {
+         Settings_deleteColumns(this);
          this->hLayout = isdigit((unsigned char)option[1][0]) ? ((HeaderLayout) atoi(option[1])) : HeaderLayout_fromName(option[1]);
          if (this->hLayout < 0 || this->hLayout >= LAST_HEADER_LAYOUT)
             this->hLayout = HF_TWO_50_50;
-         Settings_deleteColumns(this);
          this->hColumns = xCalloc(HeaderLayout_getColumns(this->hLayout), sizeof(MeterColumnSetting));
       } else if (String_eq(option[0], "left_meters")) {
          Settings_readMeters(this, option[1], 0);
