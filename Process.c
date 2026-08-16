@@ -773,7 +773,7 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
          break;
       }
       break;
-   case ST_UID: xSnprintf(buffer, n, "%*d ", Process_uidDigits, this->st_uid); break;
+   case ST_UID: xSnprintf(buffer, n, "%*u ", Process_uidDigits, this->st_uid); break;
    case TIME: Row_printTime(str, this->time, coloring); return;
    case TGID:
       if (Process_getThreadGroup(this) == Process_getPid(this))
@@ -802,7 +802,7 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
          return;
       }
 
-      xSnprintf(buffer, n, "%-10d ", this->st_uid);
+      xSnprintf(buffer, n, "%-10u ", this->st_uid);
       break;
    default:
       if (DynamicColumn_writeField(this, str, field))
