@@ -108,7 +108,7 @@ static void Table_buildTreeBranch(Table* this, int rowid, unsigned int level, in
       return;
 
    // The vector is sorted by parent, find the start of the range by bisection
-   int vsize = Vector_size(this->rows);
+   const int vsize = Vector_size(this->rows);
    int l = 0;
    int r = vsize;
    while (l < r) {
@@ -160,7 +160,7 @@ static void Table_buildTree(Table* this) {
    Vector_prune(this->displayList);
 
    // Mark root processes
-   int vsize = Vector_size(this->rows);
+   const int vsize = Vector_size(this->rows);
    for (int i = 0; i < vsize; i++) {
       Row* row = (Row*) Vector_get(this->rows, i);
       int parent = Row_getGroupOrParent(row);
@@ -215,7 +215,7 @@ void Table_updateDisplayList(Table* this) {
       if (this->needsSort)
          Vector_insertionSort(this->rows);
       Vector_prune(this->displayList);
-      int size = Vector_size(this->rows);
+      const int size = Vector_size(this->rows);
       for (int i = 0; i < size; i++)
          Vector_add(this->displayList, Vector_get(this->rows, i));
    }
@@ -223,7 +223,7 @@ void Table_updateDisplayList(Table* this) {
 }
 
 void Table_expandTree(Table* this) {
-   int size = Vector_size(this->rows);
+   const int size = Vector_size(this->rows);
    for (int i = 0; i < size; i++) {
       Row* row = (Row*) Vector_get(this->rows, i);
       row->showChildren = true;
@@ -234,7 +234,7 @@ void Table_expandTree(Table* this) {
 void Table_collapseAllBranches(Table* this) {
    Table_buildTree(this); // Update `tree_depth` fields of the rows
    this->needsSort = true; // Table is sorted by parent now, force new sort
-   int size = Vector_size(this->rows);
+   const int size = Vector_size(this->rows);
    for (int i = 0; i < size; i++) {
       Row* row = (Row*) Vector_get(this->rows, i);
       // FreeBSD has pid 0 = kernel and pid 1 = init, so init has tree_depth = 1
@@ -399,7 +399,8 @@ void Table_printHeader(const Settings* settings, RichString* header) {
 
 // set flags on an existing rows before refreshing table
 void Table_prepareEntries(Table* this) {
-   for (int i = 0; i < Vector_size(this->rows); i++) {
+   const int size = Vector_size(this->rows);
+   for (int i = 0; i < size; i++) {
       Row* row = (struct Row_*) Vector_get(this->rows, i);
       row->updated = false;
       row->wasShown = row->show;
@@ -437,10 +438,11 @@ remove:
 void Table_cleanupEntries(Table* this) {
    // Lowest index of the row that is soft-removed. Used to speed up
    // compaction.
+   const int size = Vector_size(this->rows);
    int dirtyIndex = Vector_size(this->rows);
 
    // Finish process table update, culling any removed rows
-   for (int i = Vector_size(this->rows) - 1; i >= 0; i--) {
+   for (int i = size - 1; i >= 0; i--) {
       Row* row = (Row*) Vector_get(this->rows, i);
       if (!Table_cleanupRow(this, row, i)) {
          dirtyIndex = i;

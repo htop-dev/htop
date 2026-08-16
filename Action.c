@@ -138,7 +138,8 @@ bool Action_setUserOnly(const char* userName, uid_t* userId) {
 static void tagAllChildren(Panel* panel, Row* parent) {
    parent->tag = true;
    int parent_id = parent->id;
-   for (int i = 0; i < Panel_size(panel); i++) {
+   const int size =  Panel_size(panel);
+   for (int i = 0; i < size; i++) {
       Row* row = (Row*) Panel_get(panel, i);
       if (!row->tag && Row_isChildOf(row, parent_id)) {
          tagAllChildren(panel, row);
@@ -160,8 +161,9 @@ static bool collapseIntoParent(Panel* panel) {
    if (!r)
       return false;
 
-   int parent_id = Row_getGroupOrParent(r);
-   for (int i = 0; i < Panel_size(panel); i++) {
+   const int parent_id = Row_getGroupOrParent(r);
+   const int size =  Panel_size(panel);
+   for (int i = 0; i < size; i++) {
       Row* row = (Row*) Panel_get(panel, i);
       if (row->id == parent_id) {
          row->showChildren = false;
@@ -642,7 +644,8 @@ static Htop_Reaction actionBacktrace(State *st) {
 
    Vector* processes = Vector_new(Class(Process), false, VECTOR_DEFAULT_SIZE);
    if (selectedProcess && !Process_isUserlandThread(selectedProcess)) {
-      for (int i = 0; i < Vector_size(allProcesses); i++) {
+      const int size = Vector_size(allProcesses);
+      for (int i = 0; i < size; i++) {
          Process* process = (Process *)Vector_get(allProcesses, i);
          if (process && Process_getThreadGroup(process) == Process_getThreadGroup(selectedProcess)) {
             Vector_add(processes, process);
@@ -920,7 +923,8 @@ static Htop_Reaction actionHelp(State* st) {
 }
 
 static Htop_Reaction actionUntagAll(State* st) {
-   for (int i = 0; i < Panel_size((Panel*)st->mainPanel); i++) {
+   const int size = Panel_size((Panel*)st->mainPanel);
+   for (int i = 0; i < size; i++) {
       Row* row = (Row*) Panel_get((Panel*)st->mainPanel, i);
       row->tag = false;
    }

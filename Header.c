@@ -147,7 +147,7 @@ void Header_writeBackToSettings(const Header* this) {
       free(colSettings->modes);
 
       const Vector* vec = this->columns[col];
-      int len = Vector_size(vec);
+      const int len = Vector_size(vec);
 
       colSettings->names = len ? xCalloc(len + 1, sizeof(*colSettings->names)) : NULL;
       colSettings->modes = len ? xCalloc(len, sizeof(*colSettings->modes)) : NULL;
@@ -182,7 +182,8 @@ Meter* Header_addMeterByClass(Header* this, const MeterClass* type, unsigned int
 
 void Header_reinit(Header* this) {
    Header_forEachColumn(this, col) {
-      for (int i = 0; i < Vector_size(this->columns[col]); i++) {
+      const int size = Vector_size(this->columns[col]);
+      for (int i = 0; i < size; i++) {
          Meter* meter = (Meter*) Vector_get(this->columns[col], i);
          if (Meter_initFn(meter)) {
             Meter_init(meter);
@@ -213,7 +214,8 @@ void Header_draw(const Header* this) {
          roundingLoss -= 1.0F;
       }
 
-      for (int y = (pad / 2), i = 0; i < Vector_size(meters); i++) {
+      const int size = Vector_size(meters);
+      for (int y = (pad / 2), i = 0; i < size; i++) {
          Meter* meter = (Meter*) Vector_get(meters, i);
 
          float actualWidth = colWidth;
@@ -240,7 +242,7 @@ void Header_draw(const Header* this) {
 void Header_updateData(Header* this) {
    Header_forEachColumn(this, col) {
       Vector* meters = this->columns[col];
-      int items = Vector_size(meters);
+      const int items = Vector_size(meters);
       for (int i = 0; i < items; i++) {
          Meter* meter = (Meter*) Vector_get(meters, i);
          Meter_updateValues(meter);
@@ -258,7 +260,8 @@ static int calcColumnWidthCount(const Header* this, const Meter* curMeter, const
       const Vector* meters = this->columns[i];
 
       int height = pad;
-      for (int j = 0; j < Vector_size(meters); j++) {
+      const int size = Vector_size(meters);
+      for (int j = 0; j < size; j++) {
          const Meter* meter = (const Meter*) Vector_get(meters, j);
 
          if (height >= curHeight + curMeter->h)
@@ -284,7 +287,8 @@ int Header_calculateHeight(Header* this) {
    Header_forEachColumn(this, col) {
       const Vector* meters = this->columns[col];
       int height = pad;
-      for (int i = 0; i < Vector_size(meters); i++) {
+      const int size = Vector_size(meters);
+      for (int i = 0; i < size; i++) {
          Meter* meter = (Meter*) Vector_get(meters, i);
          meter->columnWidthCount = calcColumnWidthCount(this, meter, pad, col, height);
          height += meter->h;

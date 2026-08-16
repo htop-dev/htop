@@ -63,7 +63,8 @@ void ScreensPanel_cleanup(void) {
 
 static void ScreensPanel_cancelMoving(ScreensPanel* this) {
    Panel* super = &this->super;
-   for (int i = 0; i < Panel_size(super); i++) {
+   const int size = Panel_size(super);
+   for (int i = 0; i < size; i++) {
       ListItem* item = (ListItem*) Panel_get(super, i);
       if (item)
          item->moving = false;
