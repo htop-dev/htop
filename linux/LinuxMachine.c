@@ -62,6 +62,7 @@ static void LinuxMachine_updateCPUcount(LinuxMachine* this) {
       return;
 
    unsigned int currExisting = super->existingCPUs;
+   unsigned int maxSeen = 0;
 
    const struct dirent* entry;
    while ((entry = readdir(dir)) != NULL) {
@@ -88,8 +89,22 @@ static void LinuxMachine_updateCPUcount(LinuxMachine* this) {
 
       existing++;
 
+      /* The scan only writes `online` for CPUs it actually finds, so a CPU
+       * unplugged from the middle of the range would keep its last value for
+       * the rest of the session: the count cannot shrink (the array still has
+       * to reach the highest id) and nothing else ever clears the flag.
+       * Clear them once, then let the rest of this scan turn back on whatever
+       * is still there. This sits on the first CPU we count rather than before
+       * the loop so that the "no CPU found" case below still leaves the
+       * previous state alone, instead of marking every CPU offline. */
+      if (existing == 1) {
+         for (unsigned int i = 1; i <= currExisting; i++)
+            this->cpuData[i].online = false;
+      }
+
       /* readdir() iterates with no specific order */
       unsigned int max = MAXIMUM(existing, cpuid);
+      maxSeen = MAXIMUM(maxSeen, max);
       if (max > currExisting) {
          this->cpuData = xReallocArrayZero(this->cpuData, currExisting ? (currExisting + 1) : 0, max + /* aggregate */ 1, sizeof(CPUData));
          this->cpuData[0].online = true; /* average is always "online" */
@@ -115,6 +130,16 @@ static void LinuxMachine_updateCPUcount(LinuxMachine* this) {
    if (existing < 1)
       return;
 
+   /* The array is only ever grown inside the loop, because readdir() gives no
+    * ordering guarantee and a CPU may still show up later in the same scan.
+    * Shrinking therefore has to wait until every entry has been seen. Without
+    * this, a hot-unplugged CPU is never released: existingCPUs keeps the old
+    * value forever, so htop goes on drawing a meter for a CPU that is gone. */
+   if (maxSeen < currExisting) {
+      this->cpuData = xReallocArrayZero(this->cpuData, currExisting + 1, maxSeen + /* aggregate */ 1, sizeof(CPUData));
+      currExisting = maxSeen;
+   }
+
 #ifdef HAVE_SENSORS_SENSORS_H
    /* When started with offline CPUs, libsensors does not monitor those,
     * even when they become online. */
@@ -123,7 +148,7 @@ static void LinuxMachine_updateCPUcount(LinuxMachine* this) {
 #endif
 
    super->activeCPUs = active;
-   assert(existing == currExisting);
+   assert(existing <= currExisting);
    super->existingCPUs = currExisting;
 }
 
