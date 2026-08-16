@@ -951,29 +951,22 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
 
 static bool CRT_retainScreenOnExit = false;
 
+volatile sig_atomic_t terminate_requested = 0;
+volatile sig_atomic_t terminate_signal = 0;
+
 int CRT_scrollHAmount = 5;
 
 int CRT_scrollWheelVAmount = 10;
 
 ColorScheme CRT_colorScheme = COLORSCHEME_DEFAULT;
 
-ATTR_NORETURN
 static void CRT_handleSIGTERM(int sgn) {
-   CRT_done();
+   if (terminate_requested) {
+      _exit(128 + sgn);
+   }
 
-   if (!CRT_settings->changed)
-      _exit(0);
-
-   const char* signal_str = strsignal(sgn);
-   if (!signal_str)
-      signal_str = "unknown reason";
-
-   char err_buf[512];
-   snprintf(err_buf, sizeof(err_buf),
-           "A signal %d (%s) was received, exiting without persisting settings to htoprc.\n",
-           sgn, signal_str);
-   full_write_str(STDERR_FILENO, err_buf);
-   _exit(0);
+   terminate_signal = (sig_atomic_t)sgn;
+   terminate_requested = (sig_atomic_t)1;
 }
 
 #ifndef NDEBUG
