@@ -49,6 +49,7 @@ in the source distribution for its full text.
 #include "SysArchMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
+#include "XUtils.h"
 #include "darwin/DarwinMachine.h"
 #include "darwin/PlatformHelpers.h"
 #include "generic/fdstat_sysctl.h"
@@ -677,9 +678,14 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
-void Platform_getBattery(double* percent, ACPresence* isOnAC) {
-   *percent = NAN;
-   *isOnAC = AC_ERROR;
+void Platform_getBattery(BatteryInfo* info) {
+   *info = (BatteryInfo) {
+      .ac = AC_ERROR,
+      .percent = NAN,
+      .powerCurr = NAN,
+      .energyCurr = NAN,
+      .energyFull = NAN,
+   };
 
    CFArrayRef list = NULL;
 
@@ -710,8 +716,8 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
       /* Determine the AC state */
       CFStringRef power_state = CFDictionaryGetValue(power_source, CFSTR(kIOPSPowerSourceStateKey));
 
-      if (*isOnAC != AC_PRESENT)
-         *isOnAC = (kCFCompareEqualTo == CFStringCompare(power_state, CFSTR(kIOPSACPowerValue), 0)) ? AC_PRESENT : AC_ABSENT;
+      if (info->ac != AC_PRESENT)
+         info->ac = (kCFCompareEqualTo == CFStringCompare(power_state, CFSTR(kIOPSACPowerValue), 0)) ? AC_PRESENT : AC_ABSENT;
 
       /* Get the percentage remaining */
       double tmp;
@@ -721,8 +727,56 @@ void Platform_getBattery(double* percent, ACPresence* isOnAC) {
       cap_max += tmp;
    }
 
-   if (cap_max > 0.0)
-      *percent = 100.0 * cap_current / cap_max;
+   if (cap_max > 0.0) {
+      info->percent = 100.0 * cap_current / cap_max;
+   }
+
+   io_service_t batt = IOServiceGetMatchingService(iokit_port, IOServiceMatching("AppleSmartBattery"));
+   if (batt) {
+      CFNumberRef ampRef = IORegistryEntryCreateCFProperty(batt, CFSTR("Amperage"), kCFAllocatorDefault, 0);
+      CFNumberRef voltRef = IORegistryEntryCreateCFProperty(batt, CFSTR("Voltage"), kCFAllocatorDefault, 0);
+      CFNumberRef currCapRef = IORegistryEntryCreateCFProperty(batt, CFSTR("AppleRawCurrentCapacity"), kCFAllocatorDefault, 0);
+      CFNumberRef maxCapRef = IORegistryEntryCreateCFProperty(batt, CFSTR("AppleRawMaxCapacity"), kCFAllocatorDefault, 0);
+
+      if (ampRef && voltRef) {
+         double ampMA = 0.0;
+         CFNumberGetValue(ampRef, kCFNumberDoubleType, &ampMA);
+
+         double voltMV = 0.0;
+         CFNumberGetValue(voltRef, kCFNumberDoubleType, &voltMV);
+
+         // Follows the Smart Battery System (SBS) Standard
+         info->powerCurr = ampMA * voltMV / 1e6;
+      }
+
+      if (currCapRef && maxCapRef && voltRef) {
+         double currMAh = 0.0;
+         CFNumberGetValue(currCapRef, kCFNumberDoubleType, &currMAh);
+
+         double maxMAh = 0.0;
+         CFNumberGetValue(maxCapRef, kCFNumberDoubleType, &maxMAh);
+
+         double voltMV = 0.0;
+         CFNumberGetValue(voltRef, kCFNumberDoubleType, &voltMV);
+
+         /* Approximate energy from charge and current battery voltage: mAh * mV / 1e6 = Wh. */
+         if (maxMAh > 0.0 && voltMV > 0.0) {
+            info->energyCurr = CLAMP(currMAh, 0.0, maxMAh) * voltMV / 1e6;
+            info->energyFull = maxMAh * voltMV / 1e6;
+         }
+      }
+
+      if (maxCapRef)
+         CFRelease(maxCapRef);
+      if (currCapRef)
+         CFRelease(currCapRef);
+      if (voltRef)
+         CFRelease(voltRef);
+      if (ampRef)
+         CFRelease(ampRef);
+
+      IOObjectRelease(batt);
+   }
 
 cleanup:
    if (list)
