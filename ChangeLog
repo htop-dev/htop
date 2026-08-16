@@ -1,3 +1,18 @@
+What's new in version 3.5.3
+
+* docs: document CPU meter segments in the man page
+* Improve the settings parser (htoprc) to avoid segfaults on tampered files
+  includes fixing CVE-2024-37676
+* Fix Clang MSan sanitizer security issue
+* linux: fix out-of-bounds access when parsing power supply type
+* linux: mark a CPU offline when it is unplugged from the middle
+* linux: release CPU data when a CPU is hot-unplugged
+* XUtils: use strchr instead strstr
+* darwin: fix blank STARTTIME and wrong ELAPSED for threads
+* Exit follow mode when search or filter is cancelled
+* Extend man page to include a External Libraries section on libnl-3 / libnl-genl-3
+* Add zswap pool usage meters
+
 What's new in version 3.5.2
 
 * Scheduling: OR in SCHED_RESET_ON_FORK instead of ANDing it
