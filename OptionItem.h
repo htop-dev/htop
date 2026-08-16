@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include <stdbool.h>
 
+#include "LineEditor.h"
 #include "Object.h"
 
 #define NUMBERITEM_EDIT_MAX 10
@@ -17,6 +18,7 @@ enum OptionItemType {
    OPTION_ITEM_TEXT,
    OPTION_ITEM_CHECK,
    OPTION_ITEM_NUMBER,
+   OPTION_ITEM_STRING,
 };
 
 typedef struct OptionItemClass_ {
@@ -62,10 +64,20 @@ typedef struct NumberItem_ {
    int savedValue;
 } NumberItem;
 
+typedef struct StringItem_ {
+   OptionItem super;
+   char**  ref;
+   bool    editing;
+   bool    valid;
+   LineEditor editor;
+   bool    (*validate)(const char* text);
+} StringItem;
+
 extern const OptionItemClass OptionItem_class;
 extern const OptionItemClass TextItem_class;
 extern const OptionItemClass CheckItem_class;
 extern const OptionItemClass NumberItem_class;
+extern const OptionItemClass StringItem_class;
 
 TextItem* TextItem_new(const char* text);
 
@@ -87,5 +99,10 @@ void NumberItem_cancelEditing(NumberItem* this);
 bool NumberItem_applyEditing(NumberItem* this);
 bool NumberItem_addChar(NumberItem* this, char c);
 void NumberItem_deleteChar(NumberItem* this);
+
+StringItem* StringItem_newByRef(const char* text, char** ref, bool (*validate)(const char* text));
+void StringItem_startEditing(StringItem* this);
+void StringItem_cancelEditing(StringItem* this);
+bool StringItem_applyEditing(StringItem* this);
 
 #endif
