@@ -36,6 +36,10 @@ static const char* const CategoriesFunctions[] = {"      ", "      ", "      ", 
 
 static void CategoriesPanel_delete(Object* object) {
    CategoriesPanel* this = (CategoriesPanel*) object;
+   if (this->header->metersCopied) {
+      Header_undoMetersCopy(this->header);
+      this->header->metersCopied = false;
+   }
    Panel_done(&this->super);
    free(this);
 }
@@ -44,6 +48,20 @@ static void CategoriesPanel_makeMetersPage(CategoriesPanel* this) {
    size_t columns = HeaderLayout_getColumns(this->scr->header->headerLayout);
    MetersPanel** meterPanels = xMallocArray(columns, sizeof(MetersPanel*));
    Settings* settings = this->host->settings;
+
+   size_t hiddenMeterCount = 0;
+   for (size_t i = columns; i < this->header->maxColumns; i++) {
+      hiddenMeterCount += Vector_size(this->header->columns[i]);
+   }
+
+   if (hiddenMeterCount > 0) {
+      this->header->columns[columns - 1]->owner = false;
+      for (size_t i = columns; i < this->header->maxColumns; i++) {
+         Vector_splice(this->header->columns[columns - 1], this->header->columns[i]);
+      }
+      this->header->columns[columns - 1]->owner = true;
+   }
+   this->header->metersCopied = hiddenMeterCount > 0;
 
    for (size_t i = 0; i < columns; i++) {
       char titleBuffer[32];
@@ -151,6 +169,12 @@ static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
    }
    if (result == HANDLED) {
       int size = ScreenManager_size(this->scr);
+
+      if (this->header->metersCopied) {
+         Header_undoMetersCopy(this->header);
+         this->header->metersCopied = false;
+      }
+
       for (int i = 1; i < size; i++)
          ScreenManager_remove(this->scr, 1);
 
