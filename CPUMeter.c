@@ -36,13 +36,6 @@ static const int CPUMeter_attributes[] = {
    CPU_IOWAIT
 };
 
-static const int CPUMeter_attributes_summary[] = {
-   CPU_NICE,
-   CPU_NORMAL,
-   CPU_SYSTEM,
-   CPU_GUEST
-};
-
 typedef struct CPUMeterData_ {
    unsigned int cpus;
    Meter** meters;
@@ -89,11 +82,6 @@ static void CPUMeter_updateValues(Meter* this) {
 
    const Machine* host = this->host;
    const Settings* settings = host->settings;
-   if (settings->detailedCPUTime) {
-      this->curAttributes = CPUMeter_attributes;
-   } else {
-      this->curAttributes = CPUMeter_attributes_summary;
-   }
 
    unsigned int cpu = this->param;
    if (cpu > host->existingCPUs) {
@@ -197,10 +185,10 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
       len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_NICE]);
       RichString_appendAscii(out, CRT_colors[METER_TEXT], "low:");
       RichString_appendnAscii(out, CRT_colors[CPU_NICE_TEXT], buffer, len);
-      if (isNonnegative(this->values[CPU_METER_IRQ])) {
-         len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_IRQ]);
+      if (isNonnegative(this->values[CPU_METER_STEAL])) {
+         len = xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_STEAL]);
          RichString_appendAscii(out, CRT_colors[METER_TEXT], "vir:");
-         RichString_appendnAscii(out, CRT_colors[CPU_GUEST], buffer, len);
+         RichString_appendnAscii(out, CRT_colors[CPU_STEAL], buffer, len);
       }
    }
 
