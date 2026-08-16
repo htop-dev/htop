@@ -951,6 +951,8 @@ static int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
 
 static bool CRT_retainScreenOnExit = false;
 
+static bool CRT_terminalTitleSet = false;
+
 int CRT_scrollHAmount = 5;
 
 int CRT_scrollWheelVAmount = 10;
@@ -1176,6 +1178,56 @@ static bool terminalSupportsDefinedKeys(const char* termType) {
    return false;
 }
 
+/* Terminals known to understand the XTerm OSC sequence that sets the window
+   title, as well as the CSI window title stack used to restore it on exit. */
+static bool terminalSupportsWindowTitle(const char* termType) {
+   static const char* const knownTerms[] = {
+      "Eterm", "alacritty", "contour", "foot", "gnome", "kitty", "konsole",
+      "mlterm", "putty", "rxvt", "screen", "st", "tmux", "vte", "wezterm",
+      "xterm",
+   };
+
+   if (!termType) {
+      return false;
+   }
+
+   for (size_t i = 0; i < ARRAYSIZE(knownTerms); i++) {
+      if (!String_startsWith(termType, knownTerms[i]))
+         continue;
+
+      /* TERM names join their components with '-' or '.', as in "screen.xterm-256color" */
+      char next = termType[strlen(knownTerms[i])];
+      if (next == '\0' || next == '-' || next == '.')
+         return true;
+   }
+
+   return false;
+}
+
+/* Push the current window title onto the terminal's title stack and replace it
+   with our own, so that the shell's title does not linger while htop runs. */
+static void CRT_setTerminalTitle(const char* title) {
+   if (!terminalSupportsWindowTitle(getenv("TERM"))) {
+      return;
+   }
+
+   printf("\033[22;0t\033]0;%s\007", title);
+   fflush(stdout);
+
+   CRT_terminalTitleSet = true;
+}
+
+static void CRT_restoreTerminalTitle(void) {
+   if (!CRT_terminalTitleSet) {
+      return;
+   }
+
+   CRT_terminalTitleSet = false;
+
+   fputs("\033[23;0t", stdout);
+   fflush(stdout);
+}
+
 void CRT_init(const Settings* settings, bool allowUnicode, bool retainScreenOnExit) {
    initscr();
 
@@ -1269,6 +1321,8 @@ IGNORE_WCASTQUAL_END
       define_key("\033\033[B", KEY_SF); // SF = scroll forward, Alt-DOWN
    }
 
+   CRT_setTerminalTitle(program);
+
    CRT_installSignalHandlers();
 
    use_default_colors();
@@ -1310,6 +1364,8 @@ void CRT_done(void) {
 
    curs_set(1);
    endwin();
+
+   CRT_restoreTerminalTitle();
 
    dumpStderr();
 }
