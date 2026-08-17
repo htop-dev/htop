@@ -1471,7 +1471,11 @@ void CRT_enableDelay(void) {
 }
 
 void CRT_setColors(int colorScheme) {
+#if defined(NCURSES_EXT_FUNCS) && defined(NCURSES_EXT_COLORS)
    CRT_hasDirectColors = (tigetflag("RGB") == 1);
+#else
+   CRT_hasDirectColors = false;
+#endif
 
    if (colorScheme == COLORSCHEME_DIRECT && !CRT_hasDirectColors) {
     colorScheme = COLORSCHEME_DEFAULT;
@@ -1481,12 +1485,11 @@ void CRT_setColors(int colorScheme) {
       colorScheme = COLORSCHEME_DEFAULT;
    }
 
-   if (colorScheme == COLORSCHEME_DEFAULT && CRT_hasDirectColors){
+   if (colorScheme == COLORSCHEME_DEFAULT && CRT_hasDirectColors)
       colorScheme = COLORSCHEME_DIRECT;
-   }
 
    if (colorScheme == COLORSCHEME_DIRECT) {
-#ifdef NCURSES_EXT_FUNCS
+#if defined(NCURSES_EXT_FUNCS) && defined(NCURSES_EXT_COLORS)
       init_extended_pair(DIRECT_PAIR_ORANGE, DIRECT_COLOR_WARM_ORANGE, -1);
       init_extended_pair(DIRECT_PAIR_CYAN, DIRECT_COLOR_NEON_CYAN, -1);
       init_extended_pair(DIRECT_PAIR_GREEN, DIRECT_COLOR_SOFT_GREEN, -1);
