@@ -1473,6 +1473,10 @@ void CRT_enableDelay(void) {
 void CRT_setColors(int colorScheme) {
    CRT_hasDirectColors = (tigetflag("RGB") == 1);
 
+   if (colorScheme == COLORSCHEME_DIRECT && !CRT_hasDirectColors) {
+    colorScheme = COLORSCHEME_DEFAULT;
+   }
+
    if (colorScheme >= LAST_COLORSCHEME || colorScheme < 0) {
       colorScheme = COLORSCHEME_DEFAULT;
    }
@@ -1482,10 +1486,17 @@ void CRT_setColors(int colorScheme) {
    }
 
    if (colorScheme == COLORSCHEME_DIRECT) {
+#ifdef NCURSES_EXT_FUNCS
       init_extended_pair(DIRECT_PAIR_ORANGE, DIRECT_COLOR_WARM_ORANGE, -1);
       init_extended_pair(DIRECT_PAIR_CYAN, DIRECT_COLOR_NEON_CYAN, -1);
       init_extended_pair(DIRECT_PAIR_GREEN, DIRECT_COLOR_SOFT_GREEN, -1);
       init_extended_pair(DIRECT_PAIR_PINK, DIRECT_COLOR_PINK, -1);
+#else
+      init_pair(DIRECT_PAIR_ORANGE, COLOR_YELLOW, -1);
+      init_pair(DIRECT_PAIR_CYAN, COLOR_CYAN, -1);
+      init_pair(DIRECT_PAIR_GREEN, COLOR_GREEN, -1);
+      init_pair(DIRECT_PAIR_PINK, COLOR_MAGENTA, -1);
+#endif
    }
 
    CRT_colorScheme = colorScheme;
