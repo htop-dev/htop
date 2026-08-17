@@ -56,10 +56,10 @@ in the source distribution for its full text.
 #define Cyan    COLOR_CYAN
 #define White   COLOR_WHITE
 
-#define DIRECT_COLOR_WARM_ORANGE 1
-#define DIRECT_COLOR_NEON_CYAN   2
-#define DIRECT_COLOR_SOFT_GREEN  3
-#define DIRECT_COLOR_PINK        4
+#define DIRECT_COLOR_WARM_ORANGE 0xFF8C00
+#define DIRECT_COLOR_NEON_CYAN   0x00FFFF
+#define DIRECT_COLOR_SOFT_GREEN  0x32CD32
+#define DIRECT_COLOR_PINK        0xFF1493
 
 #define DIRECT_PAIR_ORANGE 100
 #define DIRECT_PAIR_CYAN   101
@@ -1342,16 +1342,6 @@ void CRT_init(const Settings* settings, bool allowUnicode, bool retainScreenOnEx
 
    const char* termType = getenv("TERM");
 
-   if (termType) {
-      size_t term_type_len = strlen(termType);
-      const char suffix[] = "-direct";
-      size_t suffix_len = strlen(suffix);
-
-      if (term_type_len >= suffix_len && strcmp(termType + term_type_len - suffix_len, suffix) == 0) {
-         CRT_hasDirectColors = true;
-      }
-   }
-
    if (termType && String_eq(termType, "linux")) {
       CRT_scrollHAmount = 20;
    } else {
@@ -1481,6 +1471,8 @@ void CRT_enableDelay(void) {
 }
 
 void CRT_setColors(int colorScheme) {
+   CRT_hasDirectColors = (tigetflag("RGB") == 1);
+
    if (colorScheme >= LAST_COLORSCHEME || colorScheme < 0) {
       colorScheme = COLORSCHEME_DEFAULT;
    }
@@ -1490,10 +1482,10 @@ void CRT_setColors(int colorScheme) {
    }
 
    if (colorScheme == COLORSCHEME_DIRECT) {
-      init_pair(DIRECT_PAIR_ORANGE, DIRECT_COLOR_WARM_ORANGE, -1);
-      init_pair(DIRECT_PAIR_CYAN, DIRECT_COLOR_NEON_CYAN, -1);
-      init_pair(DIRECT_PAIR_GREEN, DIRECT_COLOR_SOFT_GREEN, -1);
-      init_pair(DIRECT_PAIR_PINK, DIRECT_COLOR_PINK, -1);
+      init_extended_pair(DIRECT_PAIR_ORANGE, DIRECT_COLOR_WARM_ORANGE, -1);
+      init_extended_pair(DIRECT_PAIR_CYAN, DIRECT_COLOR_NEON_CYAN, -1);
+      init_extended_pair(DIRECT_PAIR_GREEN, DIRECT_COLOR_SOFT_GREEN, -1);
+      init_extended_pair(DIRECT_PAIR_PINK, DIRECT_COLOR_PINK, -1);
    }
 
    CRT_colorScheme = colorScheme;
