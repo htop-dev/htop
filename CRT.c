@@ -1341,7 +1341,6 @@ void CRT_init(const Settings* settings, bool allowUnicode, bool retainScreenOnEx
    }
 
    const char* termType = getenv("TERM");
-
    if (termType && String_eq(termType, "linux")) {
       CRT_scrollHAmount = 20;
    } else {
@@ -1477,16 +1476,11 @@ void CRT_setColors(int colorScheme) {
    CRT_hasDirectColors = false;
 #endif
 
-   if (colorScheme == COLORSCHEME_DIRECT && !CRT_hasDirectColors) {
-    colorScheme = COLORSCHEME_DEFAULT;
-   }
-
-   if (colorScheme >= LAST_COLORSCHEME || colorScheme < 0) {
+   if (colorScheme == COLORSCHEME_DIRECT && !CRT_hasDirectColors)
       colorScheme = COLORSCHEME_DEFAULT;
-   }
 
-   if (colorScheme == COLORSCHEME_DEFAULT && CRT_hasDirectColors)
-      colorScheme = COLORSCHEME_DIRECT;
+   if (colorScheme >= LAST_COLORSCHEME || colorScheme < 0)
+      colorScheme = COLORSCHEME_DEFAULT;
 
    if (colorScheme == COLORSCHEME_DIRECT) {
 #if defined(NCURSES_EXT_FUNCS) && defined(NCURSES_EXT_COLORS)
@@ -1494,11 +1488,6 @@ void CRT_setColors(int colorScheme) {
       init_extended_pair(DIRECT_PAIR_CYAN, DIRECT_COLOR_NEON_CYAN, -1);
       init_extended_pair(DIRECT_PAIR_GREEN, DIRECT_COLOR_SOFT_GREEN, -1);
       init_extended_pair(DIRECT_PAIR_PINK, DIRECT_COLOR_PINK, -1);
-#else
-      init_pair(DIRECT_PAIR_ORANGE, COLOR_YELLOW, -1);
-      init_pair(DIRECT_PAIR_CYAN, COLOR_CYAN, -1);
-      init_pair(DIRECT_PAIR_GREEN, COLOR_GREEN, -1);
-      init_pair(DIRECT_PAIR_PINK, COLOR_MAGENTA, -1);
 #endif
    }
 
