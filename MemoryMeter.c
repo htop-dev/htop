@@ -21,7 +21,7 @@ in the source distribution for its full text.
 #include "RichString.h"
 
 
-static const int MemoryMeter_attributes[] = {
+const int MemoryMeter_attributes[] = {
    MEMORY_1,
    MEMORY_2,
    MEMORY_3,
@@ -30,7 +30,7 @@ static const int MemoryMeter_attributes[] = {
    MEMORY_6
 };
 
-static void MemoryMeter_updateValues(Meter* this) {
+void MemoryMeter_updateValuesWith(Meter* this, void (*setValues)(Meter*)) {
    char* buffer = this->txtBuffer;
    size_t size = sizeof(this->txtBuffer);
    int written;
@@ -42,7 +42,7 @@ static void MemoryMeter_updateValues(Meter* this) {
       this->values[memoryClassIdx] = NAN;
    }
 
-   Platform_setMemoryValues(this);
+   setValues(this);
    this->curItems = (uint8_t) Platform_numberOfMemoryClasses;
 
    /* compute the used memory */
@@ -70,7 +70,11 @@ static void MemoryMeter_updateValues(Meter* this) {
    Meter_humanUnit(buffer, this->total, size);
 }
 
-static void MemoryMeter_display(const Object* cast, RichString* out) {
+static void MemoryMeter_updateValues(Meter* this) {
+   MemoryMeter_updateValuesWith(this, Platform_setMemoryValues);
+}
+
+void MemoryMeter_display(const Object* cast, RichString* out) {
    char buffer[50];
    const Meter* this = (const Meter*)cast;
    const Settings* settings = this->host->settings;

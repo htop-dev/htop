@@ -19,20 +19,20 @@ in the source distribution for its full text.
 #include "RichString.h"
 
 
-static const int SwapMeter_attributes[] = {
+const int SwapMeter_attributes[] = {
    SWAP,
    SWAP_CACHE,
    SWAP_FRONTSWAP,
 };
 
-static void SwapMeter_updateValues(Meter* this) {
+void SwapMeter_updateValuesWith(Meter* this, void (*setValues)(Meter*)) {
    char* buffer = this->txtBuffer;
    size_t size = sizeof(this->txtBuffer);
    int written;
 
    this->values[SWAP_METER_CACHE] = NAN;   /* 'cached' not present on all platforms */
    this->values[SWAP_METER_FRONTSWAP] = NAN;   /* 'frontswap' not present on all platforms */
-   Platform_setSwapValues(this);
+   setValues(this);
 
    written = Meter_humanUnit(buffer, this->values[SWAP_METER_USED], size);
    METER_BUFFER_CHECK(buffer, size, written);
@@ -42,7 +42,11 @@ static void SwapMeter_updateValues(Meter* this) {
    Meter_humanUnit(buffer, this->total, size);
 }
 
-static void SwapMeter_display(const Object* cast, RichString* out) {
+static void SwapMeter_updateValues(Meter* this) {
+   SwapMeter_updateValuesWith(this, Platform_setSwapValues);
+}
+
+void SwapMeter_display(const Object* cast, RichString* out) {
    char buffer[50];
    const Meter* this = (const Meter*)cast;
    RichString_writeAscii(out, CRT_colors[METER_TEXT], ":");

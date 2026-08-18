@@ -74,6 +74,10 @@ void Platform_setMemoryValues(Meter* this);
 
 void Platform_setSwapValues(Meter* this);
 
+void Platform_setCGroupMemoryValues(Meter* this);
+
+void Platform_setCGroupSwapValues(Meter* this);
+
 void Platform_setZramValues(Meter* this);
 
 void Platform_setZfsArcValues(Meter* this);

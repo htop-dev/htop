@@ -9,6 +9,9 @@ in the source distribution for its full text.
 */
 
 #include "Meter.h"
+#include "Object.h"
+#include "RichString.h"
+
 
 typedef struct MemoryClass_s {
    const char *label; // e.g. "wired", "shared", "compressed" - platform-specific memory classe names
@@ -18,5 +21,11 @@ typedef struct MemoryClass_s {
 } MemoryClass;
 
 extern const MeterClass MemoryMeter_class;
+
+extern const int MemoryMeter_attributes[];
+
+void MemoryMeter_display(const Object* cast, RichString* out);
+
+void MemoryMeter_updateValuesWith(Meter* this, void (*setValues)(Meter*));
 
 #endif
