@@ -38,6 +38,7 @@ typedef enum ColorScheme_ {
    COLORSCHEME_BLACKNIGHT,
    COLORSCHEME_BROKENGRAY,
    COLORSCHEME_NORD,
+   COLORSCHEME_DIRECT,
    LAST_COLORSCHEME
 } ColorScheme;
 
@@ -211,6 +212,8 @@ extern int CRT_scrollHAmount;
 extern int CRT_scrollWheelVAmount;
 
 extern ColorScheme CRT_colorScheme;
+
+extern bool CRT_hasDirectColors;
 
 #ifdef HAVE_GETMOUSE
 void CRT_setMouse(bool enabled);
