@@ -1356,9 +1356,18 @@ void CRT_setColors(int colorScheme) {
       }
    }
 
-   short int grayBlackFg = COLORS > 8 ? 8 : 0;
-   short int grayBlackBg = (colorScheme != COLORSCHEME_BLACKNIGHT) ? -1 : 0;
-   init_pair(ColorIndexGrayBlack, grayBlackFg, grayBlackBg);
+#if defined(HAVE_INIT_EXTENDED_PAIR)
+   if (COLORS >= 16777216) {
+      int grayBlackBg = (colorScheme != COLORSCHEME_BLACKNIGHT) ? -1 : 0;
+      int grayBlackFg = (colorScheme == COLORSCHEME_LIGHTTERMINAL) ? 0x5F5F5F : 0x949494;
+      init_extended_pair(ColorIndexGrayBlack, grayBlackFg, grayBlackBg);
+   } else
+#endif
+   {
+      short int grayBlackFg = COLORS > 8 ? 8 : 0;
+      short int grayBlackBg = (colorScheme != COLORSCHEME_BLACKNIGHT) ? -1 : 0;
+      init_pair(ColorIndexGrayBlack, grayBlackFg, grayBlackBg);
+   }
 
    init_pair(ColorIndexWhiteDefault, White, -1);
 
