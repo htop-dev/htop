@@ -24,6 +24,7 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "ProvideCurses.h"
 #include "Settings.h"
+#include "StatusBar.h"
 #include "Table.h"
 #include "XUtils.h"
 
@@ -221,6 +222,17 @@ end:
    attrset(CRT_colors[RESET_COLOR]);
 }
 
+static bool ScreenManager_shouldShowStatusBar(const ScreenManager* this) {
+#if defined(HTOP_LINUX) && defined(HAVE_SENSORS_SENSORS_H)
+   return this->host->settings->showStatusBar &&
+          this->panelCount == 1 &&
+          Vector_get(this->panels, 0) == (Object*)this->state->mainPanel;
+#else
+   (void)this;
+   return false;
+#endif
+}
+
 static void ScreenManager_drawPanels(ScreenManager* this, size_t focus, bool force_redraw) {
    Settings* settings = this->host->settings;
    if (settings->screenTabs) {
@@ -260,12 +272,20 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
    this->name = name;
 
    while (!quit) {
+      int statusBarY2 = ScreenManager_shouldShowStatusBar(this) ? -2 : -1;
+      if (this->y2 != statusBarY2) {
+         this->y2 = statusBarY2;
+         ScreenManager_resize(this);
+         force_redraw = true;
+      }
       if (this->header) {
          checkRecalculation(this, &oldTime, &sortTimeout, &redraw, &rescan, &timedOut, &force_redraw);
       }
 
       if (redraw || force_redraw) {
          ScreenManager_drawPanels(this, focus, force_redraw);
+         if (ScreenManager_shouldShowStatusBar(this))
+            StatusBar_draw(this->host, State_hideFunctionBar(this->state) ? LINES - 1 : LINES - 2);
          force_redraw = false;
          if (this->host->iterationsRemaining != -1) {
             if (!--this->host->iterationsRemaining) {

@@ -56,9 +56,19 @@ static void Settings_deleteScreens(Settings* this) {
    this->screens = NULL;
 }
 
+static void Settings_deleteStatusBarSensors(Settings* this) {
+   for (size_t i = 0; i < this->statusBarSensorCount; i++)
+      free(this->statusBarSensors[i].id);
+
+   free(this->statusBarSensors);
+   this->statusBarSensors = NULL;
+   this->statusBarSensorCount = 0;
+}
+
 void Settings_delete(Settings* this) {
    free(this->filename);
    free(this->initialFilename);
+   Settings_deleteStatusBarSensors(this);
    Settings_deleteColumns(this);
    Settings_deleteScreens(this);
    free(this);
@@ -69,6 +79,60 @@ static char** Settings_splitLineToIDs(const char* line) {
    char** ids = String_split(trim, ' ', NULL);
    free(trim);
    return ids;
+}
+
+static void Settings_readStatusBarSensor(Settings* this, const char* line) {
+   char** parts = Settings_splitLineToIDs(line);
+   size_t count = 0;
+   while (parts && parts[count])
+      count++;
+
+   if (count != 5) {
+      String_freeArray(parts);
+      return;
+   }
+
+   bool enabled;
+   if (String_eq(parts[1], "enabled"))
+      enabled = true;
+   else if (String_eq(parts[1], "disabled"))
+      enabled = false;
+   else {
+      String_freeArray(parts);
+      return;
+   }
+
+   bool showMin = false;
+   bool showAverage = false;
+   bool showMax = false;
+
+   for (size_t i = 2; i < 5; i++) {
+      if (String_eq(parts[i], "min"))
+         showMin = true;
+      else if (String_eq(parts[i], "avg"))
+         showAverage = true;
+      else if (String_eq(parts[i], "max"))
+         showMax = true;
+      else if (!String_eq(parts[i], "none")) {
+         String_freeArray(parts);
+         return;
+      }
+   }
+
+   if (!this->statusBarSensorsConfigured) {
+      Settings_deleteStatusBarSensors(this);
+      this->statusBarSensorsConfigured = true;
+   }
+
+   this->statusBarSensors = xReallocArray(this->statusBarSensors, this->statusBarSensorCount + 1, sizeof(StatusBarSensorConfig));
+   StatusBarSensorConfig* config = &this->statusBarSensors[this->statusBarSensorCount++];
+   config->id = xStrdup(parts[0]);
+   config->enabled = enabled;
+   config->showMin = showMin;
+   config->showAverage = showAverage;
+   config->showMax = showMax;
+
+   String_freeArray(parts);
 }
 
 static void Settings_readMeters(Settings* this, const char* line, size_t column) {
@@ -513,6 +577,15 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
          this->stickyFollow = atoi(option[1]);
       } else if (String_eq(option[0], "show_cpu_frequency")) {
          this->showCPUFrequency = atoi(option[1]);
+      } else if (String_eq(option[0], "show_status_bar")) {
+         this->showStatusBar = atoi(option[1]);
+      } else if (String_eq(option[0], "status_bar_sensors")) {
+         if (String_eq(option[1], "none")) {
+            Settings_deleteStatusBarSensors(this);
+            this->statusBarSensorsConfigured = true;
+         }
+      } else if (String_eq(option[0], "status_bar_sensor")) {
+         Settings_readStatusBarSensor(this, option[1]);
       } else if (String_eq(option[0], "show_cached_memory")) {
          this->showCachedMemory = atoi(option[1]);
       #ifdef BUILD_WITH_CPU_TEMP
@@ -828,6 +901,23 @@ int Settings_write(const Settings* this, bool onCrash) {
    printSettingInteger("show_cpu_usage", this->showCPUUsage);
    printSettingInteger("sticky_follow", this->stickyFollow);
    printSettingInteger("show_cpu_frequency", this->showCPUFrequency);
+   printSettingInteger("show_status_bar", this->showStatusBar);
+   if (this->statusBarSensorsConfigured) {
+      if (this->statusBarSensorCount == 0) {
+         printSettingString("status_bar_sensors", "none");
+      } else {
+         for (size_t i = 0; i < this->statusBarSensorCount; i++) {
+            const StatusBarSensorConfig* config = &this->statusBarSensors[i];
+            of(fp, "status_bar_sensor=%s %s %s %s %s%c",
+               config->id,
+               config->enabled ? "enabled" : "disabled",
+               config->showMin ? "min" : "none",
+               config->showAverage ? "avg" : "none",
+               config->showMax ? "max" : "none",
+               separator);
+         }
+      }
+   }
    #ifdef BUILD_WITH_CPU_TEMP
    printSettingInteger("show_cpu_temperature", this->showCPUTemperature);
    printSettingInteger("degree_fahrenheit", this->degreeFahrenheit);
@@ -936,6 +1026,8 @@ Settings* Settings_new(const Machine* host, Hashtable* dynamicMeters, Hashtable*
    this->showCPUUsage = true;
    this->stickyFollow = true;
    this->showCPUFrequency = false;
+   this->showStatusBar = false;
+   this->statusBarSensorsConfigured = false;
    #ifdef BUILD_WITH_CPU_TEMP
    this->showCPUTemperature = false;
    this->degreeFahrenheit = false;

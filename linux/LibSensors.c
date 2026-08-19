@@ -37,6 +37,7 @@ in the source distribution for its full text.
 #define sym_sensors_get_subfeature sensors_get_subfeature
 #define sym_sensors_get_value sensors_get_value
 #define sym_sensors_get_label sensors_get_label
+#define sym_sensors_snprintf_chip_name sensors_snprintf_chip_name
 
 #else
 
@@ -47,10 +48,27 @@ static const sensors_feature* (*sym_sensors_get_features)(const sensors_chip_nam
 static const sensors_subfeature* (*sym_sensors_get_subfeature)(const sensors_chip_name*, const sensors_feature*, sensors_subfeature_type);
 static int (*sym_sensors_get_value)(const sensors_chip_name*, int, double*);
 static char* (*sym_sensors_get_label)(const sensors_chip_name*, const sensors_feature *feature);
+static int (*sym_sensors_snprintf_chip_name)(char*, size_t, const sensors_chip_name*);
 
 static void* dlopenHandle = NULL;
 
 #endif /* BUILD_STATIC */
+
+typedef struct LibSensorsSensorSource_ {
+   const sensors_chip_name* chip;
+   int subFeatureNumber;
+} LibSensorsSensorSource;
+
+static LibSensorsSensorSource* hardwareSensorSources = NULL;
+static size_t hardwareSensorSourceCount = 0;
+static bool hardwareSensorSourcesValid = false;
+
+static void LibSensors_clearHardwareSensorSources(void) {
+   free(hardwareSensorSources);
+   hardwareSensorSources = NULL;
+   hardwareSensorSourceCount = 0;
+   hardwareSensorSourcesValid = false;
+}
 
 int LibSensors_init(void) {
 #ifdef BUILD_STATIC
@@ -86,6 +104,7 @@ int LibSensors_init(void) {
       resolve(sensors_get_subfeature);
       resolve(sensors_get_value);
       resolve(sensors_get_label);
+      resolve(sensors_snprintf_chip_name);
 
       #undef resolve
    }
@@ -106,11 +125,13 @@ dlfailure:
 void LibSensors_cleanup(void) {
 #ifdef BUILD_STATIC
 
+   LibSensors_clearHardwareSensorSources();
    sym_sensors_cleanup();
 
 #else
 
    if (dlopenHandle) {
+      LibSensors_clearHardwareSensorSources();
       sym_sensors_cleanup();
 
       dlclose(dlopenHandle);
@@ -128,8 +149,154 @@ int LibSensors_reload(void) {
    }
 #endif /* !BUILD_STATIC */
 
+   LibSensors_clearHardwareSensorSources();
    sym_sensors_cleanup();
    return sym_sensors_init(NULL);
+}
+
+static char* LibSensors_makeSensorId(const sensors_chip_name* chip, const sensors_feature* feature) {
+   int chipLength = sym_sensors_snprintf_chip_name(NULL, 0, chip);
+   if (chipLength < 0)
+      return NULL;
+
+   const char* featureName = feature->name ? feature->name : "sensor";
+   size_t size = (size_t)chipLength + 1 + strlen(featureName) + 1;
+   char* id = xMalloc(size);
+
+   int written = sym_sensors_snprintf_chip_name(id, (size_t)chipLength + 1, chip);
+   if (written < 0) {
+      free(id);
+      return NULL;
+   }
+
+   xSnprintf(id + chipLength, size - (size_t)chipLength, ":%s", featureName);
+   return id;
+}
+
+HardwareSensor* LibSensors_getHardwareSensors(size_t* count) {
+   assert(count);
+   *count = 0;
+
+#ifndef BUILD_STATIC
+   if (!dlopenHandle)
+      return NULL;
+#endif
+
+   LibSensors_clearHardwareSensorSources();
+
+   HardwareSensor* sensors = NULL;
+   size_t sensorCount = 0;
+   size_t capacity = 0;
+
+   int n = 0;
+   for (const sensors_chip_name* chip = sym_sensors_get_detected_chips(NULL, &n); chip; chip = sym_sensors_get_detected_chips(NULL, &n)) {
+      int m = 0;
+      for (const sensors_feature* feature = sym_sensors_get_features(chip, &m); feature; feature = sym_sensors_get_features(chip, &m)) {
+         HardwareSensorType type;
+         enum sensors_subfeature_type inputType;
+
+         switch (feature->type) {
+         case SENSORS_FEATURE_TEMP:
+            type = SENSOR_TEMPERATURE;
+            inputType = SENSORS_SUBFEATURE_TEMP_INPUT;
+            break;
+         case SENSORS_FEATURE_FAN:
+            type = SENSOR_FAN;
+            inputType = SENSORS_SUBFEATURE_FAN_INPUT;
+            break;
+         default:
+            continue;
+         }
+
+         const sensors_subfeature* subFeature = sym_sensors_get_subfeature(chip, feature, inputType);
+         if (!subFeature)
+            continue;
+
+         double value;
+         if (sym_sensors_get_value(chip, subFeature->number, &value) != 0 || !isfinite(value))
+            continue;
+
+         if (sensorCount == capacity) {
+            capacity = capacity ? capacity * 2 : 8;
+            sensors = xReallocArray(sensors, capacity, sizeof(*sensors));
+            hardwareSensorSources = xReallocArray(hardwareSensorSources, capacity, sizeof(*hardwareSensorSources));
+         }
+
+         char* label = sym_sensors_get_label(chip, feature);
+         if (label && feature->name && String_eq(label, feature->name)) {
+            free(label);
+            label = NULL;
+         }
+
+         sensors[sensorCount] = (HardwareSensor) {
+            .id = LibSensors_makeSensorId(chip, feature),
+            .chip = xStrdup(chip->prefix ? chip->prefix : "sensor"),
+            .label = label,
+            .feature = xStrdup(feature->name ? feature->name : "sensor"),
+            .type = type,
+            .value = value,
+            .min = value,
+            .average = value,
+            .max = value,
+            .sampleCount = 0,
+         };
+         hardwareSensorSources[sensorCount] = (LibSensorsSensorSource) {
+            .chip = chip,
+            .subFeatureNumber = subFeature->number,
+         };
+         sensorCount++;
+      }
+   }
+
+   hardwareSensorSourceCount = sensorCount;
+   hardwareSensorSourcesValid = true;
+
+   *count = sensorCount;
+   return sensors;
+}
+
+bool LibSensors_updateHardwareSensors(HardwareSensor* sensors, size_t count) {
+#ifndef BUILD_STATIC
+   if (!dlopenHandle)
+      return false;
+#endif
+
+   if (!hardwareSensorSourcesValid || count != hardwareSensorSourceCount || (count && !sensors))
+      return false;
+
+   for (size_t i = 0; i < count; i++) {
+      double value;
+      if (sym_sensors_get_value(hardwareSensorSources[i].chip, hardwareSensorSources[i].subFeatureNumber, &value) != 0 || !isfinite(value))
+         return false;
+
+      sensors[i].value = value;
+      if (sensors[i].sampleCount == 0) {
+         sensors[i].min = value;
+         sensors[i].average = value;
+         sensors[i].max = value;
+         sensors[i].sampleCount = 1;
+         continue;
+      }
+
+      if (value < sensors[i].min)
+         sensors[i].min = value;
+      if (value > sensors[i].max)
+         sensors[i].max = value;
+      sensors[i].sampleCount++;
+      sensors[i].average += (value - sensors[i].average) / (double)sensors[i].sampleCount;
+   }
+
+   return true;
+}
+
+void LibSensors_freeHardwareSensors(HardwareSensor* sensors, size_t count) {
+   for (size_t i = 0; i < count; i++) {
+      free(sensors[i].id);
+      free(sensors[i].chip);
+      free(sensors[i].label);
+      free(sensors[i].feature);
+   }
+   free(sensors);
 }
 
 static int tempDriverPriority(const sensors_chip_name* chip) {

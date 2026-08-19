@@ -28,6 +28,8 @@ in the source distribution for its full text.
 #include "ScreensPanel.h"
 #include "ScreenTabsPanel.h"
 #include "Settings.h"
+#include "StatusBarSensorOptionsPanel.h"
+#include "StatusBarSensorsPanel.h"
 #include "Vector.h"
 #include "XUtils.h"
 
@@ -67,6 +69,18 @@ static void CategoriesPanel_makeDisplayOptionsPage(CategoriesPanel* this) {
    Panel* displayOptions = (Panel*) DisplayOptionsPanel_new(settings, this->scr);
    ScreenManager_add(this->scr, displayOptions, -1);
 }
+
+#if defined(HTOP_LINUX) && defined(HAVE_SENSORS_SENSORS_H)
+static void CategoriesPanel_makeStatusBarPage(CategoriesPanel* this) {
+   StatusBarSensorsPanel* sensors = StatusBarSensorsPanel_new(this->host);
+   StatusBarSensorOptionsPanel* options = StatusBarSensorOptionsPanel_new(sensors);
+
+   StatusBarSensorsPanel_setOptionsPanel(sensors, options);
+
+   ScreenManager_add(this->scr, (Panel*) sensors, 24);
+   ScreenManager_add(this->scr, (Panel*) options, -1);
+}
+#endif
 
 static void CategoriesPanel_makeColorsPage(CategoriesPanel* this) {
    Settings* settings = this->host->settings;
@@ -110,6 +124,9 @@ static CategoriesPanelPage categoriesPanelPages[] = {
    { .name = "Display options", .ctor = CategoriesPanel_makeDisplayOptionsPage },
    { .name = "Header layout", .ctor = CategoriesPanel_makeHeaderOptionsPage },
    { .name = "Meters", .ctor = CategoriesPanel_makeMetersPage },
+#if defined(HTOP_LINUX) && defined(HAVE_SENSORS_SENSORS_H)
+   { .name = "Status Bar", .ctor = CategoriesPanel_makeStatusBarPage },
+#endif
 #if defined(HTOP_PCP)   /* all platforms supporting dynamic screens */
    { .name = "Screen tabs", .ctor = CategoriesPanel_makeScreenTabsPage },
 #endif

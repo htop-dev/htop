@@ -17,6 +17,7 @@ in the source distribution for its full text.
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "DiskIOMeter.h"
+#include "HardwareSensor.h"
 #include "Hashtable.h"
 #include "Macros.h"
 #include "MemoryMeter.h"
@@ -93,6 +94,12 @@ bool Platform_getDiskIO(DiskIOData* data);
 bool Platform_getNetworkIO(NetworkIOData* data);
 
 void Platform_getBattery(double* percent, ACPresence* isOnAC);
+
+#ifdef HAVE_SENSORS_SENSORS_H
+size_t Platform_getHardwareSensorCount(const struct Machine_* host);
+bool Platform_getHardwareSensor(const struct Machine_* host, size_t index, const char** id, const char** chip, const char** label, const char** feature, HardwareSensorType* type, double* value);
+bool Platform_getHardwareSensorStats(const struct Machine_* host, size_t index, double* min, double* average, double* max);
+#endif
 
 static inline void Platform_getHostname(char* buffer, size_t size) {
    Generic_hostname(buffer, size);

@@ -880,6 +880,11 @@ void Machine_scan(Machine* super) {
       LinuxMachine_scanCPUFrequency(this);
 
    #ifdef HAVE_SENSORS_SENSORS_H
+   if (settings->showStatusBar && !LibSensors_updateHardwareSensors(this->sensors, this->sensorCount)) {
+      LibSensors_freeHardwareSensors(this->sensors, this->sensorCount);
+      this->sensors = LibSensors_getHardwareSensors(&this->sensorCount);
+   }
+
    if (settings->showCPUTemperature)
       LibSensors_getCPUTemperatures(this->cpuData, super->existingCPUs, super->activeCPUs);
    #endif
@@ -931,6 +936,7 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    int ccds = 0;
    LinuxMachine_fetchCPUTopologyFromCPUinfo(this);
    #ifdef HAVE_SENSORS_SENSORS_H
+   this->sensors = LibSensors_getHardwareSensors(&this->sensorCount);
    ccds = LibSensors_countCCDs();
    #endif
    LinuxMachine_assignCCDs(this, ccds);
@@ -944,6 +950,10 @@ void Machine_delete(Machine* super) {
    GPUEngineData* gpuEngineData = this->gpuEngineData;
 
    Machine_done(super);
+
+#ifdef HAVE_SENSORS_SENSORS_H
+   LibSensors_freeHardwareSensors(this->sensors, this->sensorCount);
+#endif
 
    while (gpuEngineData) {
       GPUEngineData* next = gpuEngineData->next;
