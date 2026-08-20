@@ -230,9 +230,9 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
    const LinuxMachine* lhost = (const LinuxMachine*) super->host;
 
    bool coloring = host->settings->highlightMegabytes;
-   char buffer[256]; buffer[255] = '\0';
+   char buffer[UINT8_MAX + sizeof(" ")]; buffer[sizeof(buffer) - 1] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
-   size_t n = sizeof(buffer) - 1;
+   size_t n = sizeof(buffer);
 
    switch (field) {
    case CMINFLT: Row_printCount(str, lp->cminflt, coloring); return;
