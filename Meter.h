@@ -143,6 +143,10 @@ Meter* Meter_new(const Machine* host, unsigned int param, const MeterClass* type
    Example output strings: "0K", "1023K", "98.7M" and "1.23G" */
 int Meter_humanUnit(char* buffer, double value, size_t size);
 
+/* Formats 'bytesPerSec' into a string and returns the unit suffix
+   ("iB/s" for IEC binary, "B/s" for SI decimal). */
+const char* Meter_ioRateUnit(char* buffer, size_t size, double bytesPerSec, bool decimal);
+
 void Meter_delete(Object* cast);
 
 void Meter_setCaption(Meter* this, const char* caption);
