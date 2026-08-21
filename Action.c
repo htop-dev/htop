@@ -226,18 +226,22 @@ static Htop_Reaction actionSetSortColumn(State* st) {
 }
 
 static Htop_Reaction actionSortByPID(State* st) {
+   st->host->activeTable->needsSort = true;
    return Action_setSortKey(st->host->settings, PID);
 }
 
 static Htop_Reaction actionSortByMemory(State* st) {
+   st->host->activeTable->needsSort = true;
    return Action_setSortKey(st->host->settings, PERCENT_MEM);
 }
 
 static Htop_Reaction actionSortByCPU(State* st) {
+   st->host->activeTable->needsSort = true;
    return Action_setSortKey(st->host->settings, PERCENT_CPU);
 }
 
 static Htop_Reaction actionSortByTime(State* st) {
+   st->host->activeTable->needsSort = true;
    return Action_setSortKey(st->host->settings, TIME);
 }
 
