@@ -49,6 +49,7 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "linux/Compat.h"
+#include "linux/DiskSwapMeter.h"
 #include "linux/IOPriority.h"
 #include "linux/IOPriorityPanel.h"
 #include "linux/LinuxMachine.h"
@@ -238,6 +239,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &MemoryMeter_class,
    &SwapMeter_class,
    &MemorySwapMeter_class,
+   &DiskSwapMeter_class,
    &SysArchMeter_class,
    &HugePageMeter_class,
    &TasksMeter_class,
@@ -505,6 +507,13 @@ void Platform_setZramValues(Meter* this) {
    this->total = lhost->zram.totalZram;
    this->values[ZRAM_METER_COMPRESSED] = lhost->zram.usedZramComp;
    this->values[ZRAM_METER_UNCOMPRESSED] = lhost->zram.usedZramOrig - lhost->zram.usedZramComp;
+}
+
+void Platform_setDiskSwapValues(Meter* this) {
+   const LinuxMachine* lhost = (const LinuxMachine*) this->host;
+
+   this->total = lhost->totalDiskSwap;
+   this->values[0] = lhost->usedDiskSwap;
 }
 
 void Platform_setZfsArcValues(Meter* this) {

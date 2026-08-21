@@ -190,6 +190,7 @@ linux_platform_headers = \
 	generic/uname.h \
 	linux/CGroupUtils.h \
 	linux/Compat.h \
+	linux/DiskSwapMeter.h \
 	linux/GPU.h \
 	linux/HugePageMeter.h \
 	linux/IOPriority.h \
@@ -219,6 +220,7 @@ linux_platform_sources = \
 	generic/uname.c \
 	linux/CGroupUtils.c \
 	linux/Compat.c \
+	linux/DiskSwapMeter.c \
 	linux/GPU.c \
 	linux/HugePageMeter.c \
 	linux/IOPriorityPanel.c \

@@ -20,6 +20,8 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/stat.h>
+#include <sys/sysmacros.h>
 #include <unistd.h>
 #include <time.h>
 
@@ -352,6 +354,58 @@ static bool LinuxMachine_isZramBlockName(const char* name) {
    }
 
    return true;
+}
+
+static bool LinuxMachine_isZramDevice(const char* path) {
+   struct stat st;
+   if (stat(path, &st) != 0 || !S_ISBLK(st.st_mode)) {
+      const char* name = strrchr(path, '/');
+      return LinuxMachine_isZramBlockName(name ? name + 1 : path);
+   }
+
+   char sysfsPath[64];
+   xSnprintf(sysfsPath, sizeof(sysfsPath), "/sys/dev/block/%u:%u", major(st.st_rdev), minor(st.st_rdev));
+
+   char target[PATH_MAX];
+   ssize_t len = readlink(sysfsPath, target, sizeof(target) - 1);
+   if (len < 0)
+      return false;
+   target[len] = '\0';
+
+   const char* name = strrchr(target, '/');
+   return name && LinuxMachine_isZramBlockName(name + 1);
+}
+
+static void LinuxMachine_scanDiskSwapInfo(LinuxMachine* this) {
+   this->totalDiskSwap = 0;
+   this->usedDiskSwap = 0;
+
+   FILE* file = fopen(PROCSWAPSFILE, "r");
+   if (!file)
+      return;
+
+   char buffer[PATH_MAX + 128];
+   if (!fgets(buffer, sizeof(buffer), file)) { /* skip header */
+      fclose(file);
+      return;
+   }
+
+   while (fgets(buffer, sizeof(buffer), file)) {
+      char path[PATH_MAX];
+      memory_t total;
+      memory_t used;
+
+      if (sscanf(buffer, "%4095s %*s %llu %llu", path, &total, &used) != 3)
+         continue;
+
+      if (LinuxMachine_isZramDevice(path))
+         continue;
+
+      this->totalDiskSwap += total;
+      this->usedDiskSwap += used;
+   }
+
+   fclose(file);
 }
 
 static void LinuxMachine_scanZramDevice(openat_arg_t blockDirFd, const char* name, memory_t* totalZram, memory_t* usedZramComp, memory_t* usedZramOrig) {
@@ -869,6 +923,7 @@ void Machine_scan(Machine* super) {
    LinuxMachine_scanHugePages(this);
    LinuxMachine_scanZfsArcstats(this);
    LinuxMachine_scanZramInfo(this);
+   LinuxMachine_scanDiskSwapInfo(this);
    LinuxMachine_scanCPUTime(this);
 
    const Settings* settings = super->settings;

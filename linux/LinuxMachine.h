@@ -84,6 +84,8 @@ typedef struct LinuxMachine_ {
    memory_t usedMem;
    memory_t buffersMem;
    memory_t availableMem;
+   memory_t totalDiskSwap;
+   memory_t usedDiskSwap;
 
    CPUData* cpuData;
 
@@ -115,6 +117,10 @@ typedef struct LinuxMachine_ {
 
 #ifndef PROCMEMINFOFILE
 #define PROCMEMINFOFILE PROCDIR "/meminfo"
+#endif
+
+#ifndef PROCSWAPSFILE
+#define PROCSWAPSFILE PROCDIR "/swaps"
 #endif
 
 #ifndef PROCARCSTATSFILE
