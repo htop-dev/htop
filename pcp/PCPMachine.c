@@ -129,7 +129,7 @@ static void PCPMachine_updateDarwinMemoryInfo(PCPMachine* this, Settings* settin
    }
 
    if (Metric_values(PCP_MEM_COMPRESSED, &value, 1, PM_TYPE_U64) != NULL)
-      this->memValue[MEMORY_CLASS_COMPRESSED] = value.ull;
+      this->memValue[MEMORY_CLASS_DARWIN_COMPRESSED] = value.ull;
    if (Metric_values(PCP_MEM_INACTIVE, &value, 1, PM_TYPE_U64) != NULL)
       this->memValue[MEMORY_CLASS_INACTIVE] = value.ull;
 
