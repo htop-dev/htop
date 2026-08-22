@@ -281,13 +281,13 @@ movement keys like Up, Down, PgUp, and PgDn will end follow mode immediately,
 while Shift+Up and Shift+Down still pan without disabling follow.
 .TP
 .B K
-Hide kernel threads: prevent the threads belonging the kernel to be
+Hide kernel threads: prevent threads belonging to the kernel from being
 displayed in the process list. (This is a toggle key.)
 .TP
 .B H
-Hide user threads: on systems that represent them differently than ordinary
-processes (such as recent NPTL-based systems), this can hide threads from
-userspace processes in the process list. (This is a toggle key.)
+Hide user threads: prevent threads (NPTL, pthreads, LWP, etc.) belonging
+to userspace processes from being displayed in the process list.
+(This is a toggle key.)
 .TP
 .B O
 Hide containerized processes: prevent processes running in a container
