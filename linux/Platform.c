@@ -1130,6 +1130,54 @@ static int dropCapabilities(enum CapMode mode) {
 }
 #endif
 
+#ifdef HAVE_SENSORS_SENSORS_H
+size_t Platform_getHardwareSensorCount(const Machine* host) {
+   const LinuxMachine* linuxHost = (const LinuxMachine*) host;
+   return linuxHost->sensorCount;
+}
+
+bool Platform_getHardwareSensor(const Machine* host, size_t index, const char** id, const char** chip, const char** label, const char** feature, HardwareSensorType* type, double* value) {
+   const LinuxMachine* linuxHost = (const LinuxMachine*) host;
+   if (index >= linuxHost->sensorCount)
+      return false;
+
+   const HardwareSensor* sensor = &linuxHost->sensors[index];
+   if (id)
+      *id = sensor->id;
+   if (chip)
+      *chip = sensor->chip;
+   if (label)
+      *label = sensor->label;
+   if (feature)
+      *feature = sensor->feature;
+   if (type)
+      *type = sensor->type;
+   if (value)
+      *value = sensor->value;
+
+   return true;
+}
+
+bool Platform_getHardwareSensorStats(const Machine* host, size_t index, double* min, double* average, double* max) {
+   const LinuxMachine* linuxHost = (const LinuxMachine*) host;
+   if (index >= linuxHost->sensorCount)
+      return false;
+
+   const HardwareSensor* sensor = &linuxHost->sensors[index];
+   if (sensor->sampleCount == 0)
+      return false;
+
+   if (min)
+      *min = sensor->min;
+   if (average)
+      *average = sensor->average;
+   if (max)
+      *max = sensor->max;
+
+   return true;
+}
+#endif
+
 bool Platform_init(void) {
 #ifdef HAVE_LIBCAP
    if (dropCapabilities(Platform_capabilitiesMode) < 0)

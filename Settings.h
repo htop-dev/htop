@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include "MeterMode.h"
 #include "Row.h"
 #include "RowField.h"
+#include "StatusBarConfig.h"
 
 
 #define DEFAULT_DELAY 15
@@ -79,6 +80,10 @@ typedef struct Settings_ {
    bool showCPUUsage;
    bool stickyFollow;
    bool showCPUFrequency;
+   bool showStatusBar;
+   StatusBarSensorConfig* statusBarSensors;
+   size_t statusBarSensorCount;
+   bool statusBarSensorsConfigured;
    bool showCPUSMTLabels;
    #ifdef BUILD_WITH_CPU_TEMP
    bool showCPUTemperature;
