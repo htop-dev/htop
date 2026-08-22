@@ -59,7 +59,8 @@ void ListItem_append(ListItem* this, const char* text) {
    this->value[newLen] = '\0';
 }
 
-int ListItem_compare(const void* cast1, const void* cast2) {
+int ListItem_compare(const void* cast1, const void* cast2, void* context) {
+   (void)context;
    const ListItem* obj1 = (const ListItem*) cast1;
    const ListItem* obj2 = (const ListItem*) cast2;
    return strcmp(obj1->value, obj2->value);
