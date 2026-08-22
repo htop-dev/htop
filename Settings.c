@@ -924,7 +924,7 @@ Settings* Settings_new(const Machine* host, Hashtable* dynamicMeters, Hashtable*
    this->shadowOtherUsers = false;
    this->showThreadNames = false;
    this->hideKernelThreads = true;
-   this->hideUserlandThreads = false;
+   this->hideUserlandThreads = true;
    this->hideRunningInContainer = false;
    this->highlightBaseName = false;
    this->highlightDeletedExe = true;
