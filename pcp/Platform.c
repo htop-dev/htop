@@ -80,9 +80,9 @@ const unsigned int Platform_numberOfSignals = ARRAYSIZE(Platform_signals);
 static const MemoryClass Linux_memoryClasses[] = {
    [MEMORY_CLASS_USED] = { .label = "used", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_1 },
    [MEMORY_CLASS_SHARED] = { .label = "shared", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_2 },
-   [MEMORY_CLASS_BUFFERS] = { .label = "compressed", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_3 },
-   [MEMORY_CLASS_CACHE] = { .label = "buffers", .countsAsUsed = false, .countsAsCache = false, .color = MEMORY_4 },
-   [MEMORY_CLASS_COMPRESSED] = { .label = "cache", .countsAsUsed = false, .countsAsCache = false, .color = MEMORY_5 },
+   [MEMORY_CLASS_COMPRESSED] = { .label = "compressed", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_3 },
+   [MEMORY_CLASS_BUFFERS] = { .label = "buffers", .countsAsUsed = false, .countsAsCache = true, .color = MEMORY_4 },
+   [MEMORY_CLASS_CACHE] = { .label = "cache", .countsAsUsed = false, .countsAsCache = true, .color = MEMORY_5 },
    [MEMORY_CLASS_AVAILABLE] = { .label = "available", .countsAsUsed = false, .countsAsCache = false, .color = MEMORY_6 },
 };
 
@@ -91,7 +91,7 @@ static const MemoryClass Darwin_memoryClasses[] = {
    [MEMORY_CLASS_SPECULATIVE] = { .label = "speculative", .countsAsUsed = true, .countsAsCache = true, .color = MEMORY_2 },
    [MEMORY_CLASS_ACTIVE] = { .label = "active", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_3 },
    [MEMORY_CLASS_PURGEABLE] = { .label = "purgeable", .countsAsUsed = false, .countsAsCache = true, .color = MEMORY_4 },
-   [MEMORY_CLASS_COMPRESSED] = { .label = "compressed", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_5 },
+   [MEMORY_CLASS_DARWIN_COMPRESSED] = { .label = "compressed", .countsAsUsed = true, .countsAsCache = false, .color = MEMORY_5 },
    [MEMORY_CLASS_INACTIVE] = { .label = "inactive", .countsAsUsed = true, .countsAsCache = true, .color = MEMORY_6 },
 };
 
@@ -631,7 +631,7 @@ static void Platform_setDarwinMemoryValues(double* v, const PCPMachine *host) {
    v[MEMORY_CLASS_SPECULATIVE] = host->memValue[MEMORY_CLASS_SPECULATIVE];
    v[MEMORY_CLASS_ACTIVE] = host->memValue[MEMORY_CLASS_ACTIVE];
    v[MEMORY_CLASS_PURGEABLE] = host->memValue[MEMORY_CLASS_PURGEABLE];
-   v[MEMORY_CLASS_COMPRESSED] = host->memValue[MEMORY_CLASS_COMPRESSED];
+   v[MEMORY_CLASS_DARWIN_COMPRESSED] = host->memValue[MEMORY_CLASS_DARWIN_COMPRESSED];
    v[MEMORY_CLASS_INACTIVE] = host->memValue[MEMORY_CLASS_INACTIVE];
 }
 

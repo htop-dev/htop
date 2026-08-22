@@ -54,18 +54,20 @@ typedef enum CPUMetric_ {
 } CPUMetric;
 
 typedef enum MemoryMetric_ {
-   // Linux
+   // Linux, in the same order as linux/Platform.c
    MEMORY_CLASS_USED = 0,
    MEMORY_CLASS_SHARED = 1,
-   MEMORY_CLASS_BUFFERS = 2,
-   MEMORY_CLASS_CACHE = 3,
-   MEMORY_CLASS_COMPRESSED = 4,
+   MEMORY_CLASS_COMPRESSED = 2,
+   MEMORY_CLASS_BUFFERS = 3,
+   MEMORY_CLASS_CACHE = 4,
    MEMORY_CLASS_AVAILABLE = 5,
-   // Darwin
+   // Darwin, in the same order as darwin/Platform.c; the compressed class
+   // needs its own name because it sits at a different index to the Linux one
    MEMORY_CLASS_WIRED = 0,
    MEMORY_CLASS_SPECULATIVE = 1,
    MEMORY_CLASS_ACTIVE = 2,
    MEMORY_CLASS_PURGEABLE = 3,
+   MEMORY_CLASS_DARWIN_COMPRESSED = 4,
    MEMORY_CLASS_INACTIVE = 5,
    // Maximum
    MEMORY_CLASS_LIMIT = 6

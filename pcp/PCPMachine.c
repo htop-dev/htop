@@ -66,6 +66,7 @@ static void PCPMachine_updateLinuxMemoryInfo(PCPMachine* this) {
    unsigned long long int freeMem = 0;
    unsigned long long int swapFreeMem = 0;
    unsigned long long int sreclaimableMem = 0;
+   unsigned long long int cachedMem = 0;
 
    pmAtomValue value;
    if (Metric_values(PCP_MEM_FREE, &value, 1, PM_TYPE_U64) != NULL)
@@ -76,9 +77,16 @@ static void PCPMachine_updateLinuxMemoryInfo(PCPMachine* this) {
       sreclaimableMem = value.ull;
    if (Metric_values(PCP_MEM_SHARED, &value, 1, PM_TYPE_U64) != NULL)
       this->memValue[MEMORY_CLASS_SHARED] = value.ull;
-   if (Metric_values(PCP_MEM_CACHED, &value, 1, PM_TYPE_U64) != NULL)
-      this->memValue[MEMORY_CLASS_CACHE] = value.ull + sreclaimableMem - this->memValue[MEMORY_CLASS_SHARED];
-   const memory_t usedDiff = freeMem + this->memValue[MEMORY_CLASS_CACHE] + sreclaimableMem + this->memValue[MEMORY_CLASS_BUFFERS];
+   /*
+    * Shmem is part of Cached (see https://lore.kernel.org/patchwork/patch/648763/),
+    * so subtract it from the figure the meter shows, but keep using the raw
+    * Cached below so that it is not subtracted from used a second time.
+    */
+   if (Metric_values(PCP_MEM_CACHED, &value, 1, PM_TYPE_U64) != NULL) {
+      cachedMem = value.ull;
+      this->memValue[MEMORY_CLASS_CACHE] = cachedMem + sreclaimableMem - this->memValue[MEMORY_CLASS_SHARED];
+   }
+   const memory_t usedDiff = freeMem + cachedMem + sreclaimableMem + this->memValue[MEMORY_CLASS_BUFFERS];
    this->memValue[MEMORY_CLASS_USED] = (super->totalMem >= usedDiff) ?
            super->totalMem - usedDiff : super->totalMem - freeMem;
    if (Metric_values(PCP_MEM_AVAILABLE, &value, 1, PM_TYPE_U64) != NULL)
@@ -129,7 +137,7 @@ static void PCPMachine_updateDarwinMemoryInfo(PCPMachine* this, Settings* settin
    }
 
    if (Metric_values(PCP_MEM_COMPRESSED, &value, 1, PM_TYPE_U64) != NULL)
-      this->memValue[MEMORY_CLASS_COMPRESSED] = value.ull;
+      this->memValue[MEMORY_CLASS_DARWIN_COMPRESSED] = value.ull;
    if (Metric_values(PCP_MEM_INACTIVE, &value, 1, PM_TYPE_U64) != NULL)
       this->memValue[MEMORY_CLASS_INACTIVE] = value.ull;
 
