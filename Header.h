@@ -7,6 +7,7 @@ Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <stdbool.h>
 #include <stddef.h>
 
 #include "HeaderLayout.h"
@@ -17,6 +18,8 @@ in the source distribution for its full text.
 
 typedef struct Header_ {
    Vector** columns;
+   size_t maxColumns;
+   bool metersCopied;
    Machine* host;
    HeaderLayout headerLayout;
    int pad;
@@ -30,6 +33,10 @@ Header* Header_new(Machine* host, HeaderLayout hLayout);
 void Header_delete(Header* this);
 
 void Header_setLayout(Header* this, HeaderLayout hLayout);
+
+void Header_undoMetersCopy(Header* this);
+
+void Header_collapseLayout(Header* this);
 
 void Header_populateFromSettings(Header* this);
 

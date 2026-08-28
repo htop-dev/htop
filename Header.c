@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <math.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,17 +21,20 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "CPUMeter.h"
 #include "DynamicMeter.h"
+#include "HeaderLayout.h"
 #include "Macros.h"
 #include "Object.h"
 #include "Platform.h"
 #include "ProvideCurses.h"
 #include "Settings.h"
+#include "Vector.h"
 #include "XUtils.h"
 
 
 Header* Header_new(Machine* host, HeaderLayout hLayout) {
    Header* this = xCalloc(1, sizeof(Header));
    this->columns = xMallocArray(HeaderLayout_getColumns(hLayout), sizeof(Vector*));
+   this->maxColumns = HeaderLayout_getColumns(hLayout);
    this->headerLayout = hLayout;
    this->host = host;
 
@@ -42,7 +46,7 @@ Header* Header_new(Machine* host, HeaderLayout hLayout) {
 }
 
 void Header_delete(Header* this) {
-   Header_forEachColumn(this, i) {
+   for (size_t i = 0; i < this->maxColumns; i++) {
       Vector_delete(this->columns[i]);
    }
 
@@ -59,22 +63,45 @@ void Header_setLayout(Header* this, HeaderLayout hLayout) {
    if (newColumns == oldColumns)
       return;
 
-   if (newColumns > oldColumns) {
+   if (newColumns > this->maxColumns) {
       this->columns = xReallocArray(this->columns, newColumns, sizeof(Vector*));
-      for (size_t i = oldColumns; i < newColumns; i++)
+      for (size_t i = this->maxColumns; i < newColumns; i++)
          this->columns[i] = Vector_new(Class(Meter), true, VECTOR_DEFAULT_SIZE);
-   } else {
-      // move meters from to-be-deleted columns into last one
-      for (size_t i = newColumns; i < oldColumns; i++) {
-         for (int j = this->columns[i]->items - 1; j >= 0; j--) {
-            Vector_add(this->columns[newColumns - 1], Vector_take(this->columns[i], j));
-         }
-         Vector_delete(this->columns[i]);
-      }
-      this->columns = xReallocArray(this->columns, newColumns, sizeof(Vector*));
+      this->maxColumns = newColumns;
    }
 
    Header_calculateHeight(this);
+}
+
+void Header_undoMetersCopy(Header* this) {
+   size_t currentColumns = HeaderLayout_getColumns(this->headerLayout);
+   size_t maxColumns = this->maxColumns;
+
+   size_t duplicateMeters = 0;
+   for (size_t i = currentColumns; i < maxColumns; i++) {
+      duplicateMeters += Vector_size(this->columns[i]);
+   }
+
+   Vector* lastColumn = this->columns[currentColumns - 1];
+   lastColumn->owner = false;
+
+   for (size_t j = 0; j < duplicateMeters; j++) {
+      Vector_remove(lastColumn, Vector_size(lastColumn) - 1);
+   }
+   lastColumn->owner = true;
+}
+
+void Header_collapseLayout(Header* this) {
+   size_t currentColumns = HeaderLayout_getColumns(this->headerLayout);
+   size_t maxColumns = this->maxColumns;
+
+   for (size_t i = currentColumns; i < maxColumns; i++) {
+      Vector* column = this->columns[i];
+      column->owner = false;
+      Vector_delete(column);
+   }
+   this->columns = xReallocArray(this->columns, currentColumns, sizeof(Vector*));
+   this->maxColumns = currentColumns;
 }
 
 static void Header_addMeterByName(Header* this, const char* name, MeterModeId mode, size_t column) {
@@ -135,6 +162,7 @@ void Header_populateFromSettings(Header* this) {
 void Header_writeBackToSettings(const Header* this) {
    Settings* settings = this->host->settings;
    Settings_setHeaderLayout(settings, this->headerLayout);
+   const size_t numCols = HeaderLayout_getColumns(this->headerLayout);
 
    Header_forEachColumn(this, col) {
       MeterColumnSetting* colSettings = &settings->hColumns[col];
@@ -146,27 +174,38 @@ void Header_writeBackToSettings(const Header* this) {
       }
       free(colSettings->modes);
 
-      const Vector* vec = this->columns[col];
-      int len = Vector_size(vec);
+      size_t saveCol = col;
+      int len = 0;
+      do {
+         len += Vector_size(this->columns[saveCol++]);
+      } while ((col == numCols - 1) && (saveCol < this->maxColumns) && !this->metersCopied);
 
       colSettings->names = len ? xCalloc(len + 1, sizeof(*colSettings->names)) : NULL;
       colSettings->modes = len ? xCalloc(len, sizeof(*colSettings->modes)) : NULL;
       colSettings->len = len;
 
-      for (int i = 0; i < len; i++) {
-         const Meter* meter = (Meter*) Vector_get(vec, i);
-         char* name = NULL;
-         if (meter->param && As_Meter(meter) == &DynamicMeter_class) {
-            const char* dynamic = DynamicMeter_lookup(settings->dynamicMeters, meter->param);
-            xAsprintf(&name, "%s(%s)", As_Meter(meter)->name, dynamic);
-         } else if (meter->param && As_Meter(meter) == &CPUMeter_class) {
-            xAsprintf(&name, "%s(%u)", As_Meter(meter)->name, meter->param);
-         } else {
-            xAsprintf(&name, "%s", As_Meter(meter)->name);
+      int idx = 0;
+      saveCol = col;
+      if (!len)
+         continue;
+      do {
+         const Vector* vec = this->columns[saveCol++];
+         for (int i = 0; i < Vector_size(vec); i++) {
+            const Meter* meter = (Meter*) Vector_get(vec, i);
+            char* name = NULL;
+            if (meter->param && As_Meter(meter) == &DynamicMeter_class) {
+               const char* dynamic = DynamicMeter_lookup(settings->dynamicMeters, meter->param);
+               xAsprintf(&name, "%s(%s)", As_Meter(meter)->name, dynamic);
+            } else if (meter->param && As_Meter(meter) == &CPUMeter_class) {
+               xAsprintf(&name, "%s(%u)", As_Meter(meter)->name, meter->param);
+            } else {
+               xAsprintf(&name, "%s", As_Meter(meter)->name);
+            }
+            colSettings->names[idx] = name;
+            colSettings->modes[idx] = meter->mode;
+            idx++;
          }
-         colSettings->names[i] = name;
-         colSettings->modes[i] = meter->mode;
-      }
+      } while ((col == numCols - 1) && (saveCol < this->maxColumns) && !this->metersCopied);
    }
 }
 
@@ -204,7 +243,7 @@ void Header_draw(const Header* this) {
    float roundingLoss = 0.0F;
 
    Header_forEachColumn(this, col) {
-      Vector* meters = this->columns[col];
+      size_t drawCol = col;
       float colWidth = (float)width * HeaderLayout_layouts[this->headerLayout].widths[col] / 100.0F;
 
       roundingLoss += colWidth - floorf(colWidth);
@@ -213,24 +252,29 @@ void Header_draw(const Header* this) {
          roundingLoss -= 1.0F;
       }
 
-      for (int y = (pad / 2), i = 0; i < Vector_size(meters); i++) {
-         Meter* meter = (Meter*) Vector_get(meters, i);
+      int y = pad / 2;
 
-         float actualWidth = colWidth;
+      do {
+         Vector* meters = this->columns[drawCol++];
+         for (int i = 0; i < Vector_size(meters); i++) {
+            Meter* meter = (Meter*) Vector_get(meters, i);
 
-         /* Let meters in text mode expand to the right on empty neighbors;
-            except for multi column meters. */
-         if (meter->mode == TEXT_METERMODE && !Meter_isMultiColumn(meter)) {
-            for (int j = 1; j < meter->columnWidthCount; j++) {
-               actualWidth++; /* separator column */
-               actualWidth += (float)width * HeaderLayout_layouts[this->headerLayout].widths[col + j] / 100.0F;
+            float actualWidth = colWidth;
+
+            /* Let meters in text mode expand to the right on empty neighbors;
+               except for multi column meters. */
+            if (meter->mode == TEXT_METERMODE && !Meter_isMultiColumn(meter)) {
+               for (int j = 1; j < meter->columnWidthCount; j++) {
+                  actualWidth++; /* separator column */
+                  actualWidth += (float)width * HeaderLayout_layouts[this->headerLayout].widths[col + j] / 100.0F;
+               }
             }
-         }
 
-         assert(meter->draw);
-         meter->draw(meter, x, y, floorf(actualWidth));
-         y += meter->h;
-      }
+            assert(meter->draw);
+            meter->draw(meter, x, y, floorf(actualWidth));
+            y += meter->h;
+         }
+      } while ((col == numCols - 1) && (drawCol < this->maxColumns) && !this->metersCopied);
 
       x += floorf(colWidth);
       x++; /* separator column */
@@ -238,13 +282,16 @@ void Header_draw(const Header* this) {
 }
 
 void Header_updateData(Header* this) {
+   const size_t numCols = HeaderLayout_getColumns(this->headerLayout);
    Header_forEachColumn(this, col) {
-      Vector* meters = this->columns[col];
-      int items = Vector_size(meters);
-      for (int i = 0; i < items; i++) {
-         Meter* meter = (Meter*) Vector_get(meters, i);
-         Meter_updateValues(meter);
-      }
+      size_t updCol = col;
+      do {
+         Vector* meters = this->columns[updCol++];
+         for (int i = 0; i < Vector_size(meters); i++) {
+            Meter* meter = (Meter*) Vector_get(meters, i);
+            Meter_updateValues(meter);
+         }
+      } while ((col == numCols - 1) && (updCol < this->maxColumns) && !this->metersCopied);
    }
 }
 
@@ -282,14 +329,18 @@ int Header_calculateHeight(Header* this) {
    int maxHeight = pad;
 
    Header_forEachColumn(this, col) {
-      const Vector* meters = this->columns[col];
+      size_t calcCol = col;
       int height = pad;
-      for (int i = 0; i < Vector_size(meters); i++) {
-         Meter* meter = (Meter*) Vector_get(meters, i);
-         meter->columnWidthCount = calcColumnWidthCount(this, meter, pad, col, height);
-         height += meter->h;
-      }
-      maxHeight = MAXIMUM(maxHeight, height);
+
+      do {
+         const Vector* meters = this->columns[calcCol++];
+         for (int i = 0; i < Vector_size(meters); i++) {
+            Meter* meter = (Meter*) Vector_get(meters, i);
+            meter->columnWidthCount = calcColumnWidthCount(this, meter, pad, col, height);
+            height += meter->h;
+         }
+         maxHeight = MAXIMUM(maxHeight, height);
+      } while ((col == HeaderLayout_getColumns(this->headerLayout) - 1) && (calcCol < this->maxColumns) && !this->metersCopied);
    }
 
    if (maxHeight == pad) {
