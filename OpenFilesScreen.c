@@ -175,7 +175,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
             free_and_xStrdup(&item->data[index], line + 1);
             size_t dlen = strlen(item->data[index]);
             if (dlen > (size_t)pdata->cols[index]) {
-               pdata->cols[index] = (int)CLAMP(dlen, 0, INT16_MAX);
+               pdata->cols[index] = (int)MINIMUM(dlen, (size_t)INT16_MAX);
             }
             break;
          }
@@ -189,7 +189,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
             }
             size_t dlen = strlen(item->data[index]);
             if (dlen > (size_t)pdata->cols[index]) {
-               pdata->cols[index] = (int)CLAMP(dlen, 0, INT16_MAX);
+               pdata->cols[index] = (int)MINIMUM(dlen, (size_t)INT16_MAX);
             }
             break;
          }
