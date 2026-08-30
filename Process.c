@@ -405,7 +405,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
    size_t commLen = 0;
 
    bool haveCommInExe = false;
-   if (procExe && procComm && (!Process_isUserlandThread(this) || showThreadNames)) {
+   if (!Process_isUserlandThread(this) || showThreadNames) {
       haveCommInExe = strncmp(procExe + exeBasenameOffset, procComm, TASK_COMM_LEN - 1) == 0;
    }
    if (haveCommInExe) {
@@ -415,7 +415,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
    bool haveCommInCmdline = false;
    size_t commStart = 0;
 
-   if (!haveCommInExe && this->cmdline && procComm && searchCommInCmdline && (!Process_isUserlandThread(this) || showThreadNames)) {
+   if (!haveCommInExe && this->cmdline && searchCommInCmdline && (!Process_isUserlandThread(this) || showThreadNames)) {
       haveCommInCmdline = findCommInCmdline(procComm, cmdline, cmdlineBasenameStart, &commStart, &commLen);
    }
 
@@ -463,7 +463,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
 
    bool haveCommField = false;
 
-   if (!haveCommInExe && !haveCommInCmdline && procComm && (!Process_isUserlandThread(this) || showThreadNames)) {
+   if (!haveCommInExe && !haveCommInCmdline && (!Process_isUserlandThread(this) || showThreadNames)) {
       WRITE_SEPARATOR;
       WRITE_HIGHLIGHT(0, strlen(procComm), commAttr, CMDLINE_HIGHLIGHT_FLAG_COMM);
       str = stpcpy(str, procComm);
