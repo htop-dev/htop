@@ -111,14 +111,23 @@ inline bool String_contains_i(const char* s1, const char* s2, bool multi) {
    if (multi && strchr(s2, '|')) {
       size_t nNeedles;
       char** needles = String_split(s2, '|', &nNeedles);
+      size_t nSearched = 0;
       for (size_t i = 0; i < nNeedles; i++) {
+         // A leading or repeated '|' leaves an empty needle, which strcasestr()
+         // reports as a match against anything. Skip those so a half-typed
+         // filter narrows nothing instead of matching every row.
+         if (needles[i][0] == '\0')
+            continue;
+
+         nSearched++;
          if (strcasestr(s1, needles[i]) != NULL) {
             String_freeArray(needles);
             return true;
          }
       }
       String_freeArray(needles);
-      return false;
+      // Separators alone carry no search term, like an empty filter.
+      return nSearched == 0;
    } else {
       return strcasestr(s1, s2) != NULL;
    }
