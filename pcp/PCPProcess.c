@@ -161,9 +161,9 @@ static void PCPProcess_rowWriteField(const Row* super, RichString* str, ProcessF
    case RBYTES: Row_printBytes(str, pp->io_read_bytes, coloring); return;
    case WBYTES: Row_printBytes(str, pp->io_write_bytes, coloring); return;
    case CNCLWB: Row_printBytes(str, pp->io_cancelled_write_bytes, coloring); return;
-   case IO_READ_RATE:  Row_printRate(str, pp->io_rate_read_bps, coloring); return;
-   case IO_WRITE_RATE: Row_printRate(str, pp->io_rate_write_bps, coloring); return;
-   case IO_RATE: Row_printRate(str, PCPProcess_totalIORate(pp), coloring); return;
+   case IO_READ_RATE:  Row_printRate(str, pp->io_rate_read_bps, coloring, super->host->settings->decimalUnits); return;
+   case IO_WRITE_RATE: Row_printRate(str, pp->io_rate_write_bps, coloring, super->host->settings->decimalUnits); return;
+   case IO_RATE: Row_printRate(str, PCPProcess_totalIORate(pp), coloring, super->host->settings->decimalUnits); return;
    case CGROUP: xSnprintf(buffer, n, "%-35.35s ", pp->cgroup ? pp->cgroup : "N/A"); break;
    case CCGROUP: xSnprintf(buffer, n, "%-35.35s ", pp->cgroup_short ? pp->cgroup_short : (pp->cgroup ? pp->cgroup : "N/A")); break;
    case CONTAINER: xSnprintf(buffer, n, "%-35.35s ", pp->container_short ? pp->container_short : "N/A"); break;

@@ -574,6 +574,8 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
          }
       } else if (String_eq(option[0], "hide_function_bar")) {
          this->hideFunctionBar = atoi(option[1]);
+      } else if (String_eq(option[0], "decimal_units")) {
+         this->decimalUnits = !!atoi(option[1]);
       #ifdef HAVE_LIBHWLOC
       } else if (String_eq(option[0], "topology_affinity")) {
          this->topologyAffinity = !!atoi(option[1]);
@@ -841,6 +843,7 @@ int Settings_write(const Settings* this, bool onCrash) {
    #endif
    printSettingInteger("delay", (int) this->delay);
    printSettingInteger("hide_function_bar", (int) this->hideFunctionBar);
+   printSettingInteger("decimal_units", this->decimalUnits);
    #ifdef HAVE_LIBHWLOC
    printSettingInteger("topology_affinity", this->topologyAffinity);
    #endif
@@ -993,6 +996,7 @@ Settings* Settings_new(const Machine* host, Hashtable* dynamicMeters, Hashtable*
       free_and_xStrdup(&this->filename, this->initialFilename);
 
    this->colorScheme = 0;
+   this->decimalUnits = false;
 #ifdef HAVE_GETMOUSE
    this->enableMouse = true;
 #endif
