@@ -209,7 +209,7 @@ int Panel_size(const Panel* this) {
 void Panel_setSelected(Panel* this, int selected) {
    assert(this != NULL);
 
-   int size = Vector_size(this->items);
+   const int size = Vector_size(this->items);
    if (selected >= size) {
       selected = size - 1;
    }
@@ -249,8 +249,8 @@ static void RichString_printPinnedVal(const RichString* str, int y, int x, int p
 void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelected, bool hideFunctionBar) {
    assert(this != NULL);
 
-   int size = Vector_size(this->items);
-   int scrollH = this->scrollH;
+   const int size = Vector_size(this->items);
+   const int scrollH = this->scrollH;
    int y = this->y;
    int x = this->x;
    int h = this->h;
