@@ -38,6 +38,8 @@ in the source distribution for its full text.
    #define PATH_MAX 4096
 #endif
 
+#define HWMONDIR "/sys/class/hwmon"
+
 
 extern const ScreenDefaults Platform_defaultScreens[];
 
@@ -69,6 +71,8 @@ pid_t Platform_getMaxPid(void);
 double Platform_setCPUValues(Meter* this, unsigned int cpu);
 
 void Platform_setGPUValues(Meter* this, double* totalUsage, unsigned long long* totalGPUTimeDiff);
+
+int Platform_getFanSpeed(void);
 
 void Platform_setMemoryValues(Meter* this);
 
