@@ -64,6 +64,7 @@ List of additional build-time dependencies (based on feature flags):
 *  `hwloc`
 *  `libcap` (v2.21 or later)
 *  `libnl-3` and `libnl-genl-3`
+*  `libbpf` (headers) and `clang` (to compile the eBPF programs)
 
 `pkg-config` is optional but recommended. The configure script of `htop` might utilize `pkg-config` to obtain the compiler and linker flags required for a library. Some OS distributions provide `pkg-config` functionalities through an alternative implementation such as `pkgconf`. Look for both names in your package manager.
 

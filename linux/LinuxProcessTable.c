@@ -686,18 +686,18 @@ static void LinuxProcessTable_readIoFile(LinuxProcess* lp, openat_arg_t procFd, 
    const char* line;
    while ((line = strsep(&buf, "\n")) != NULL) {
       switch (line[0]) {
-case 'r':
-             if (line[1] == 'c' && String_startsWith(line + 2, "har: ")) {
-                lp->io_rchar = strtoull(line + 7, NULL, 10);
-             } else if (String_startsWith(line + 1, "ead_bytes: ")) {
-                lp->io_read_bytes = strtoull(line + 12, NULL, 10);
-                lp->io_rate_read_bps = time_delta ? saturatingSub(lp->io_read_bytes, last_read) * /*ms to s*/1000. / time_delta : NAN;
-             }
-             break;
-          case 'w':
-             if (line[1] == 'c' && String_startsWith(line + 2, "har: ")) {
-                lp->io_wchar = strtoull(line + 7, NULL, 10);
-             } else if (String_startsWith(line + 1, "rite_bytes: ")) {
+         case 'r':
+            if (line[1] == 'c' && String_startsWith(line + 2, "har: ")) {
+               lp->io_rchar = strtoull(line + 7, NULL, 10);
+            } else if (String_startsWith(line + 1, "ead_bytes: ")) {
+               lp->io_read_bytes = strtoull(line + 12, NULL, 10);
+               lp->io_rate_read_bps = time_delta ? saturatingSub(lp->io_read_bytes, last_read) * /*ms to s*/1000. / time_delta : NAN;
+            }
+            break;
+         case 'w':
+            if (line[1] == 'c' && String_startsWith(line + 2, "har: ")) {
+               lp->io_wchar = strtoull(line + 7, NULL, 10);
+            } else if (String_startsWith(line + 1, "rite_bytes: ")) {
                lp->io_write_bytes = strtoull(line + 13, NULL, 10);
                lp->io_rate_write_bps = time_delta ? saturatingSub(lp->io_write_bytes, last_write) * /*ms to s*/1000. / time_delta : NAN;
             }

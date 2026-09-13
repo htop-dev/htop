@@ -23,6 +23,7 @@ in the source distribution for its full text.
 #include <unistd.h>
 
 #include "XUtils.h"
+#include "linux/Platform.h"
 
 
 /* eBPF object embedded into the binary by objcopy */
@@ -128,6 +129,13 @@ static int netioMapFd = -1;
 /* Upper bound on the number of eBPF programs attached (one per SEC section) */
 #define NETMONITOR_MAX_PROGRAMS 16
 
+/* Retained from the load attempt so NetMonitor_freeBPF() can tear the
+ * object and every attached probe down; bpf_object__close() alone does not
+ * destroy bpf_link instances. */
+static void* bpfObj = NULL;
+static void* bpfLinks[NETMONITOR_MAX_PROGRAMS];
+static size_t nBpfLinks = 0;
+
 /* dlopen "libbpf.so.1"/"libbpf.so.0", fall back to the unversioned name */
 static bool NetMonitor_resolveLibbpf(void) {
    if (dlopenHandle)
@@ -194,8 +202,18 @@ static bool NetMonitor_resolveLibbpf(void) {
 }
 
 static void NetMonitor_freeBPF(void) {
-   if (netioMapFd >= 0)
-      netioMapFd = -1;
+   for (size_t i = 0; i < nBpfLinks; i++) {
+      if (bpfLinks[i]) {
+         sym_bpf_link__destroy(bpfLinks[i]);
+         bpfLinks[i] = NULL;
+      }
+   }
+   nBpfLinks = 0;
+   if (bpfObj) {
+      sym_bpf_object__close(bpfObj);
+      bpfObj = NULL;
+   }
+   netioMapFd = -1;
    eBPFActive = false;
 }
 
@@ -257,11 +275,12 @@ static bool NetMonitor_loadBPF(void) {
    }
 
    void* obj = sym_bpf_object__open_mem(_binary_NetMonitor_bpf_o_start, objSize, NULL);
-   if (!obj) {
+   if (sym_libbpf_get_error(obj) != 0) {
       int e = errno;
       NetMonitor_debug("bpf_object__open_mem failed%s%s\n", e ? ": " : "", e ? strerror(e) : "");
       return false;
    }
+   bpfObj = obj;
 
    if (sym_bpf_object__load(obj) != 0) {
       int e = errno;
@@ -278,8 +297,7 @@ static bool NetMonitor_loadBPF(void) {
  * A probe whose target symbol does not exist on this kernel (e.g.
  * ping_v6_sendmsg() without CONFIG_IPV6) is skipped rather than fatal;
  * the probes that did attach still account the traffic they see. */
-   void* links[NETMONITOR_MAX_PROGRAMS];
-   size_t nLinks = 0;
+   nBpfLinks = 0;
 #if !defined(NDEBUG)
    struct NetMonitorAttachResult {
       const char* section;
@@ -292,29 +310,30 @@ static bool NetMonitor_loadBPF(void) {
    void* prog = NULL;
    while ((prog = sym_bpf_object__next_program(obj, prog)) != NULL) {
       void* link = sym_bpf_program__attach(prog);
+      /* libbpf 0.x returns ERR_PTR for failures, 1.x returns NULL. */
+      long linkErr = sym_libbpf_get_error(link);
 #if !defined(NDEBUG)
-      int error = link ? 0 : errno;
+      int error = linkErr ? (int) -linkErr : 0;
       if (nResults < NETMONITOR_MAX_PROGRAMS) {
          results[nResults].section = sym_bpf_program__section_name(prog);
-         results[nResults].attached = link != NULL;
+         results[nResults].attached = !linkErr;
          results[nResults].error = error;
          nResults++;
       }
 #endif
-      if (!link) {
+      if (linkErr) {
 #if !defined(NDEBUG)
          if (error == EPERM)
             anyNotAllowed = true;
 #endif
-      } else if (nLinks < NETMONITOR_MAX_PROGRAMS) {
-         links[nLinks++] = link;
+      } else if (nBpfLinks < NETMONITOR_MAX_PROGRAMS) {
+         bpfLinks[nBpfLinks++] = link;
+      } else {
+         sym_bpf_link__destroy(link);
       }
    }
-   if (!nLinks) {
-      for (size_t i = 0; i < nLinks; i++)
-         sym_bpf_link__destroy(links[i]);
+   if (!nBpfLinks)
       goto fail;
-   }
 #if !defined(NDEBUG)
    NetMonitor_debug("eBPF probe attach summary (load succeeded):\n");
    for (size_t i = 0; i < nResults; i++) {
@@ -360,8 +379,7 @@ static bool NetMonitor_loadBPF(void) {
    return true;
 
 fail:
-   sym_bpf_object__close(obj);
-   eBPFActive = false;
+   NetMonitor_freeBPF();
    return false;
 }
 
@@ -386,6 +404,7 @@ void NetMonitor_init(void) {
    eBPFLoadAttempted = false;
    eBPFActive = false;
    netioMapFd = -1;
+   nBpfLinks = 0;
 }
 
 void NetMonitor_done(void) {
@@ -405,7 +424,12 @@ void NetMonitor_update(void) {
       if (eBPFLoadAttempted)
          return;
       eBPFLoadAttempted = true;
-      if (!NetMonitor_loadBPF())
+      bool loaded = NetMonitor_loadBPF();
+      /* Load-time-only privileges (CAP_BPF, CAP_PERFMON, CAP_SYSLOG,
+       * CAP_SYS_ADMIN) are no longer needed once the maps exist, whether the
+       * attempt succeeded or not. */
+      Platform_dropEBPFCapabilities();
+      if (!loaded)
          return;
    }
 

@@ -1156,6 +1156,34 @@ static int dropCapabilities(enum CapMode mode) {
 }
 #endif
 
+#ifdef HAVE_EBPF_NET
+/* After the one-time eBPF load attempt the load-time capabilities are no
+ * longer required: map lookup, iteration and deletion all go through the
+ * already-open map file descriptor. */
+void Platform_dropEBPFCapabilities(void) {
+#ifdef HAVE_LIBCAP
+   if (Platform_capabilitiesMode != CAP_MODE_BASIC)
+      return;
+
+   static const cap_value_t dropcaps[] = { CAP_BPF, CAP_PERFMON, CAP_SYSLOG, CAP_SYS_ADMIN };
+
+   cap_t caps = cap_get_proc();
+   if (caps == NULL)
+      return;
+
+   for (size_t i = 0; i < ARRAYSIZE(dropcaps); i++) {
+      if (!CAP_IS_SUPPORTED(dropcaps[i]))
+         continue;
+      cap_set_flag(caps, CAP_PERMITTED, 1, &dropcaps[i], CAP_CLEAR);
+      cap_set_flag(caps, CAP_EFFECTIVE, 1, &dropcaps[i], CAP_CLEAR);
+   }
+
+   cap_set_proc(caps);
+   cap_free(caps);
+#endif
+}
+#endif
+
 bool Platform_init(void) {
 #ifdef HAVE_LIBCAP
    if (dropCapabilities(Platform_capabilitiesMode) < 0)

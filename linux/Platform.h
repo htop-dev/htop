@@ -56,6 +56,10 @@ extern const MeterClass* const Platform_meterTypes[];
 bool Platform_init(void);
 void Platform_done(void);
 
+#ifdef HAVE_EBPF_NET
+void Platform_dropEBPFCapabilities(void);
+#endif
+
 extern bool Running_containerized;
 
 void Platform_setBindings(Htop_Action* keys);

@@ -1780,7 +1780,7 @@ case "$enable_ebpf_net" in
 esac
 if test "$enable_ebpf_net" = yes; then
    AC_DEFINE([HAVE_EBPF_NET], [1], [Define if eBPF based per-process network bandwidth support should be enabled.])
-   AC_PATH_TOOL([HTop_LD], [ld], [ld])
+   AC_PATH_TOOL([HTop_LD], [ld], [])
    if test -z "$HTop_LD"; then
       AC_MSG_ERROR([cannot find required tool ld for --enable-ebpf-net])
    fi
