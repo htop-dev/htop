@@ -1047,7 +1047,7 @@ CommandLineStatus Platform_getLongOption(int opt, int argc, char** argv) {
 }
 
 #ifdef HAVE_LIBCAP
-static int dropCapabilities(enum CapMode mode) {
+static int dropCapabilities(enum CapMode mode, bool keepEBPFCaps) {
 
    if (mode == CAP_MODE_OFF)
       return 0;
@@ -1083,11 +1083,13 @@ static int dropCapabilities(enum CapMode mode) {
       KEEP(CAP_NET_ADMIN);      /* communicate over netlink socket for delay accounting */
 #endif
 #ifdef HAVE_EBPF_NET
-      if (keepSysAdmin)
-         KEEP(CAP_SYS_ADMIN);   /* perf_event_open() kprobe attach requires it when perf_event_paranoid>2 */
-      KEEP(CAP_BPF);            /* bpf() syscall to load eBPF programs for the NET columns */
-      KEEP(CAP_PERFMON);        /* perf_event_open() to attach the kprobes/kretprobes */
-      KEEP(CAP_SYSLOG);         /* resolve kernel symbols for the kprobe targets */
+      if (keepEBPFCaps) {
+         if (keepSysAdmin)
+            KEEP(CAP_SYS_ADMIN);   /* perf_event_open() kprobe attach requires it when perf_event_paranoid>2 */
+         KEEP(CAP_BPF);            /* bpf() syscall to load eBPF programs for the NET columns */
+         KEEP(CAP_PERFMON);        /* perf_event_open() to attach the kprobes/kretprobes */
+         KEEP(CAP_SYSLOG);         /* resolve kernel symbols for the kprobe targets */
+      }
 #endif
    }
 
@@ -1160,33 +1162,21 @@ static int dropCapabilities(enum CapMode mode) {
 /* After the one-time eBPF load attempt the load-time capabilities are no
  * longer required: map lookup, iteration and deletion all go through the
  * already-open map file descriptor. */
-void Platform_dropEBPFCapabilities(void) {
+int Platform_dropEBPFCapabilities(void) {
 #ifdef HAVE_LIBCAP
    if (Platform_capabilitiesMode != CAP_MODE_BASIC)
-      return;
+      return 0;
 
-   static const cap_value_t dropcaps[] = { CAP_BPF, CAP_PERFMON, CAP_SYSLOG, CAP_SYS_ADMIN };
-
-   cap_t caps = cap_get_proc();
-   if (caps == NULL)
-      return;
-
-   for (size_t i = 0; i < ARRAYSIZE(dropcaps); i++) {
-      if (!CAP_IS_SUPPORTED(dropcaps[i]))
-         continue;
-      cap_set_flag(caps, CAP_PERMITTED, 1, &dropcaps[i], CAP_CLEAR);
-      cap_set_flag(caps, CAP_EFFECTIVE, 1, &dropcaps[i], CAP_CLEAR);
-   }
-
-   cap_set_proc(caps);
-   cap_free(caps);
+   return dropCapabilities(CAP_MODE_BASIC, false);
+#else
+   return 0;
 #endif
 }
 #endif
 
 bool Platform_init(void) {
 #ifdef HAVE_LIBCAP
-   if (dropCapabilities(Platform_capabilitiesMode) < 0)
+   if (dropCapabilities(Platform_capabilitiesMode, true) < 0)
       return false;
 #endif
 

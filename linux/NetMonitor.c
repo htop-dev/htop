@@ -427,8 +427,13 @@ void NetMonitor_update(void) {
       bool loaded = NetMonitor_loadBPF();
       /* Load-time-only privileges (CAP_BPF, CAP_PERFMON, CAP_SYSLOG,
        * CAP_SYS_ADMIN) are no longer needed once the maps exist, whether the
-       * attempt succeeded or not. */
-      Platform_dropEBPFCapabilities();
+       * attempt succeeded or not. dropCapabilities() already kills htop, so
+       * the below is mostly cosmetics / debugging and should go when the
+       * feature is being committed to main.
+       * !!!TODO DL260913 */
+      int capResult = Platform_dropEBPFCapabilities();
+      if (capResult != 0)
+         NetMonitor_debug("could not drop the eBPF load-time capabilities\n");
       if (!loaded)
          return;
    }
