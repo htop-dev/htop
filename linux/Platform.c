@@ -1047,7 +1047,7 @@ CommandLineStatus Platform_getLongOption(int opt, int argc, char** argv) {
 }
 
 #ifdef HAVE_LIBCAP
-static int dropCapabilities(enum CapMode mode, bool keepEBPFCaps) {
+static int dropCapabilities(enum CapMode mode, ATTR_UNUSED bool keepEBPFCaps) {
 
    if (mode == CAP_MODE_OFF)
       return 0;
