@@ -1790,8 +1790,16 @@ if test "$enable_ebpf_net" = yes; then
    fi
 
    # clang -target bpf does not add the multiarch include directory that
-   # provides the asm/ UAPI headers needed by linux/bpf.h and friends.
+   # provides the asm/ UAPI headers needed by linux/bpf.h and friends, and
+   # clang itself does not answer -print-multiarch either, so fall back to
+   # the build host's C compiler to find the directory.
    GCC_MULTIARCH="$($CC -print-multiarch 2>/dev/null)"
+   if test -z "$GCC_MULTIARCH" && command -v cc >/dev/null 2>&1; then
+      GCC_MULTIARCH="$(cc -print-multiarch 2>/dev/null)"
+   fi
+   if test -z "$GCC_MULTIARCH" && command -v gcc >/dev/null 2>&1; then
+      GCC_MULTIARCH="$(gcc -print-multiarch 2>/dev/null)"
+   fi
    if test -n "$GCC_MULTIARCH" && test -d "/usr/include/$GCC_MULTIARCH"; then
       HTOP_BPF_INCLUDES="-I/usr/include/$GCC_MULTIARCH"
    else

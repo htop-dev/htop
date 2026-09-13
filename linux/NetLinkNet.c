@@ -80,7 +80,7 @@ enum {
 #define NLA_DATA(nla) ((void*)((char*)(nla) + NLA_HDRLEN))
 #define NLA_LEN(nla) ((nla)->nla_len - NLA_HDRLEN)
 #define NLA_OK(nla, len) ((len) >= (int)sizeof(struct nlattr) && (nla)->nla_len >= sizeof(struct nlattr) && (nla)->nla_len <= (len))
-#define NLA_NEXT(nla, len) ((len) -= NLA_ALIGN((nla)->nla_len), (struct nlattr*)((char*)(nla) + NLA_ALIGN((nla)->nla_len)))
+#define NLA_NEXT(nla, len) ((len) -= NLA_ALIGN((nla)->nla_len), (struct nlattr*)(void*)((char*)(nla) + NLA_ALIGN((nla)->nla_len)))
 
 /* The TCP state constants are not exported to userspace by linux/tcp.h. */
 #ifndef TCP_LISTEN
@@ -383,8 +383,11 @@ static int NetLinkNet_validCb(struct nl_msg* msg, ATTR_UNUSED void* arg) {
    unsigned long long rx = 0;
    unsigned long long tx = 0;
 
+   /* Netlink attribute payloads are NLA_ALIGNTO aligned, so the void* casts
+    * below (which also silence -Wcast-align for compilers stricter than GCC)
+    * are safe. */
    struct nlattr* attr;
-   for (attr = (struct nlattr*) attrdata; NLA_OK(attr, remaining); attr = NLA_NEXT(attr, remaining)) {
+   for (attr = (struct nlattr*) (void*) attrdata; NLA_OK(attr, remaining); attr = NLA_NEXT(attr, remaining)) {
       int type = attr->nla_type & 0x3fff;
       void* data = NLA_DATA(attr);
       int len = NLA_LEN(attr);
