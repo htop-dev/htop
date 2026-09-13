@@ -296,6 +296,10 @@ static void NetLinkNet_rescanInodes(void) {
          continue;
 
       int fdDirFd = dirfd(fdDir);
+      if (fdDirFd == -1) {
+         closedir(fdDir);
+         continue;
+      }
       struct dirent* fde;
       while ((fde = readdir(fdDir)) != NULL) {
          struct stat st;
