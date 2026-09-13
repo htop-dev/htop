@@ -109,6 +109,8 @@ static const char* NetMonitor_expectedMissing(const char* section) {
       const char* section;
       const char* note;
    } expectedMissing[] = {
+      { "kprobe/ping_v4_sendmsg", "kernel >= 3.18" },
+      { "kprobe/ping_v6_sendmsg", "kernel >= 3.18" },
       { "kretprobe/ping_v4_sendmsg", "kernel >= 3.18" },
       { "kretprobe/ping_v6_sendmsg", "kernel >= 3.18" },
    };
@@ -127,7 +129,7 @@ static int netioMapFd = -1;
 #define NETMONITOR_CLEANUP_INTERVAL 16
 
 /* Upper bound on the number of eBPF programs attached (one per SEC section) */
-#define NETMONITOR_MAX_PROGRAMS 16
+#define NETMONITOR_MAX_PROGRAMS 24
 
 /* Retained from the load attempt so NetMonitor_freeBPF() can tear the
  * object and every attached probe down; bpf_object__close() alone does not
