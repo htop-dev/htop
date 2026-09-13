@@ -27,6 +27,7 @@ void NetLinkNet_done(void);
 bool NetLinkNet_isActive(void);
 void NetLinkNet_update(void);
 bool NetLinkNet_getNetBytes(pid_t pid, unsigned long long* rx, unsigned long long* tx);
+bool NetLinkNet_isProcessUnreadable(pid_t pid);
 
 #else /* !HAVE_LIBNL_NET */
 
@@ -35,6 +36,7 @@ static inline void NetLinkNet_done(void) { }
 static inline bool NetLinkNet_isActive(void) { return false; }
 static inline void NetLinkNet_update(void) { }
 static inline bool NetLinkNet_getNetBytes(pid_t pid, unsigned long long* rx, unsigned long long* tx) { (void) pid; (void) rx; (void) tx; return false; }
+static inline bool NetLinkNet_isProcessUnreadable(pid_t pid) { (void) pid; return false; }
 
 #endif /* HAVE_LIBNL_NET */
 

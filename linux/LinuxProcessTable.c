@@ -837,10 +837,16 @@ static void LinuxProcessTable_readNetIO(LinuxProcess* lp, const Machine* host) {
       /* Tier 2, NETLINK_SOCK_DIAG: socket-level tcp_info byte counters, used
        * when eBPF is unavailable. TCP bandwidth matches the eBPF scale; the
        * UDP/ICMP socket-buffer queue levels only give a lower bound. */
+      pid_t tgid = Process_getThreadGroup(&lp->super);
       unsigned long long rx, tx;
-      if (!NetLinkNet_getNetBytes(Process_getThreadGroup(&lp->super), &rx, &tx)) {
-         lp->net_rate_rx_bps = 0;
-         lp->net_rate_tx_bps = 0;
+      if (!NetLinkNet_getNetBytes(tgid, &rx, &tx)) {
+         if (NetLinkNet_isProcessUnreadable(tgid)) {
+            lp->net_rate_rx_bps = NAN;
+            lp->net_rate_tx_bps = NAN;
+         } else {
+            lp->net_rate_rx_bps = 0;
+            lp->net_rate_tx_bps = 0;
+         }
          return;
       }
 

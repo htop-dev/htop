@@ -129,6 +129,9 @@ static Hashtable* pidTotals = NULL;
  * while NetLinkNet_rescanInodes runs */
 static Hashtable* pidsPresent = NULL;
 
+/* tgid -> 1 of processes whose /proc/<pid>/fd is not readable */
+static Hashtable* unreadablePids = NULL;
+
 static unsigned int roundCounter = 0;
 static uint64_t lastRescanMs = 0;
 
@@ -274,6 +277,7 @@ static void NetLinkNet_rescanInodes(void) {
       return;
 
    Hashtable* freshInodePid = Hashtable_new(1024, false);
+   Hashtable* freshUnreadable = Hashtable_new(256, false);
    pidsPresent = Hashtable_new(256, false);
 
    struct dirent* de;
@@ -292,8 +296,10 @@ static void NetLinkNet_rescanInodes(void) {
       char fdPath[64];
       xSnprintf(fdPath, sizeof(fdPath), PROCDIR "/%s/fd", de->d_name);
       DIR* fdDir = opendir(fdPath);
-      if (!fdDir)
+      if (!fdDir) {
+         Hashtable_put(freshUnreadable, (ht_key_t) tgid, (void*) 1);
          continue;
+      }
 
       int fdDirFd = dirfd(fdDir);
       if (fdDirFd == -1) {
@@ -315,6 +321,10 @@ static void NetLinkNet_rescanInodes(void) {
    if (inodePid)
       Hashtable_delete(inodePid);
    inodePid = freshInodePid;
+
+   if (unreadablePids)
+      Hashtable_delete(unreadablePids);
+   unreadablePids = freshUnreadable;
 
    /* Drop totals of processes without sockets left; a recycled pid must
     * not inherit the counters of its previous holder. */
@@ -513,6 +523,7 @@ void NetLinkNet_init(void) {
    socketState = NULL;
    pidTotals = NULL;
    pidsPresent = NULL;
+   unreadablePids = NULL;
    roundCounter = 0;
    lastRescanMs = 0;
 }
@@ -540,6 +551,10 @@ void NetLinkNet_done(void) {
    if (pidsPresent) {
       Hashtable_delete(pidsPresent);
       pidsPresent = NULL;
+   }
+   if (unreadablePids) {
+      Hashtable_delete(unreadablePids);
+      unreadablePids = NULL;
    }
 }
 
@@ -606,6 +621,13 @@ bool NetLinkNet_getNetBytes(pid_t pid, unsigned long long* rx, unsigned long lon
    *rx = totals->rx;
    *tx = totals->tx;
    return true;
+}
+
+bool NetLinkNet_isProcessUnreadable(pid_t pid) {
+   if (!unreadablePids)
+      return false;
+
+   return Hashtable_get(unreadablePids, (ht_key_t) pid) != NULL;
 }
 
 #endif /* HAVE_LIBNL_NET */
