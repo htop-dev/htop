@@ -13,6 +13,7 @@ EXTRA_DIST = \
 	htop.desktop \
 	htop.png \
 	htop.svg \
+	linux/NetMonitor.bpf.c \
 	build-aux/compile \
 	build-aux/depcomp \
 	build-aux/install-sh \
@@ -198,6 +199,8 @@ linux_platform_headers = \
 	linux/LinuxMachine.h \
 	linux/LinuxProcess.h \
 	linux/LinuxProcessTable.h \
+	linux/NetLinkNet.h \
+	linux/NetMonitor.h \
 	linux/OpenRCMeter.h \
 	linux/Platform.h \
 	linux/PressureStallMeter.h \
@@ -239,6 +242,37 @@ linux_platform_sources = \
 if HAVE_DELAYACCT
 linux_platform_headers += linux/LibNl.h
 linux_platform_sources += linux/LibNl.c
+endif
+
+if HAVE_LIBNL_NET
+linux_platform_sources += linux/NetLinkNet.c
+endif
+
+htop_LDADD =
+CLEANFILES =
+
+if HAVE_EBPF_NET
+linux_platform_sources += linux/NetMonitor.c
+htop_LDADD += linux/NetMonitor_bpf_embedded.o
+
+# Compile the eBPF program. @CLANG@ and @htop_bpf_arch@ are set by configure.
+linux/NetMonitor.bpf.o: linux/NetMonitor.bpf.c linux/NetMonitor.h
+	$(AM_V_CC)$(CLANG) -target bpf -O2 -g -Wall $(CPPFLAGS) $(HTOP_BPF_INCLUDES) \
+	  -D__TARGET_ARCH_$(htop_bpf_arch) \
+	  -c $< -o $@
+
+# Embed the compiled eBPF ELF object into a relocatable object so the bytes
+# are linked straight into the htop binary. The ld -b binary symbol names are
+# derived from the file name given on the command line, so copy the object to
+# a fixed name first to keep _binary_NetMonitor_bpf_o_start/_end stable (they
+# are referenced from linux/NetMonitor.c), also for out-of-tree builds.
+linux/NetMonitor_bpf_embedded.o: linux/NetMonitor.bpf.o
+	$(AM_V_GEN)cp $< NetMonitor_bpf.o
+	$(AM_V_GEN)$(HTop_LD) -r -b binary NetMonitor_bpf.o -o $@
+	$(AM_V_GEN)$(OBJCOPY) --rename-section .data=.rodata,alloc,load,readonly,data,contents $@ $@
+	$(AM_V_GEN)rm -f NetMonitor_bpf.o
+
+CLEANFILES += linux/NetMonitor.bpf.o NetMonitor_bpf.o linux/NetMonitor_bpf_embedded.o
 endif
 
 if HTOP_LINUX

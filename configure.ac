@@ -1644,6 +1644,70 @@ AM_CONDITIONAL([HAVE_DELAYACCT], [test "$enable_delayacct" = yes])
 
 
 AC_ARG_ENABLE(
+   [libnl-net],
+   [AS_HELP_STRING(
+      [--enable-libnl-net],
+      [enable socket-level network statistics via NETLINK_SOCK_DIAG; requires libnl-3 @<:@default=check@:>@]
+   )],
+   [],
+   [enable_libnl_net=check]
+)
+case "$enable_libnl_net" in
+   no|yes)
+      ;;
+   check)
+      if test "$my_htop_platform" != linux; then
+         enable_libnl_net=no
+      elif test "$enable_static" = yes; then
+         enable_libnl_net=no
+      fi
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_libnl_net' for --enable-libnl-net])
+      ;;
+esac
+
+case "$enable_libnl_net" in
+   check|yes)
+      if test "x${LIBNL3_CFLAGS+y}" = x; then
+         HTOP_PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [LIBNL3_CFLAGS="-I/usr/include/libnl3"])
+      fi
+
+      AC_MSG_CHECKING([the search path of libnl-3])
+
+      htop_libnl3_link_succeed=no
+      htop_try_link_libnl3 "$LIBNL3_LIBDIR"
+      if test "$htop_libnl3_link_succeed${LIBNL3_LIBDIR+y}" = no && test "x$PKG_CONFIG" != x; then
+         LIBNL3_LIBDIR=`$PKG_CONFIG --variable=libdir libnl-3.0 2>/dev/null`
+         if test "x$LIBNL3_LIBDIR" != x; then
+            htop_try_link_libnl3 "$LIBNL3_LIBDIR"
+         fi
+      fi
+
+      if test "x$LIBNL3_LIBDIR" = x; then
+         AC_MSG_RESULT([(default)])
+      else
+         # The path must end with a slash
+         LIBNL3_LIBDIR=`echo "x$LIBNL3_LIBDIR" | sed 's/^x//; s|/*$|/|'`
+         AC_MSG_RESULT([$LIBNL3_LIBDIR])
+      fi
+      if test "$htop_libnl3_link_succeed" = no; then
+         AC_MSG_WARN([libnl-3 binary currently not present; will be needed in htop runtime for socket-level network statistics])
+      fi
+
+      enable_libnl_net=yes
+      ;;
+esac
+if test "$enable_libnl_net" = yes; then
+   AC_DEFINE([HAVE_LIBNL_NET], [1], [Define if socket-level network statistics should be enabled.])
+   if test "$enable_delayacct" != yes; then
+      AC_DEFINE_UNQUOTED([LIBNL3_LIBDIR], ["$LIBNL3_LIBDIR"], [libnl-3 search path; use the default search paths if empty])
+   fi
+fi
+AM_CONDITIONAL([HAVE_LIBNL_NET], [test "$enable_libnl_net" = yes])
+
+
+AC_ARG_ENABLE(
    [sensors],
    [AS_HELP_STRING(
       [--enable-sensors],
@@ -1675,6 +1739,84 @@ esac
 if test "$enable_sensors" = yes || test "$my_htop_platform" = freebsd; then
    AC_DEFINE([BUILD_WITH_CPU_TEMP], [1], [Define if CPU temperature option should be enabled.])
 fi
+
+
+AC_ARG_ENABLE(
+   [ebpf-net],
+   [AS_HELP_STRING(
+      [--enable-ebpf-net],
+      [enable eBPF based per-process network bandwidth columns; requires libbpf headers at compile time, at runtime libbpf is loaded via dlopen @<:@default=check@:>@]
+   )],
+   [],
+   [enable_ebpf_net=check]
+)
+case "$enable_ebpf_net" in
+   no)
+      ;;
+   check)
+      if test "$my_htop_platform" != linux; then
+         enable_ebpf_net=no
+      elif test "$enable_static" = yes; then
+         enable_ebpf_net=no
+      else
+         enable_ebpf_net=yes
+         AC_PATH_PROG([CLANG], [clang], [], [$PATH])
+         if test -z "$CLANG"; then
+            enable_ebpf_net=no
+         fi
+         AC_CHECK_HEADERS([bpf/libbpf.h], [], [enable_ebpf_net=no])
+      fi
+      ;;
+   yes)
+      AC_PATH_PROG([CLANG], [clang], [], [$PATH])
+      if test -z "$CLANG"; then
+         AC_MSG_ERROR([cannot find required tool clang for --enable-ebpf-net])
+      fi
+      AC_CHECK_HEADERS([bpf/libbpf.h], [], [AC_MSG_ERROR([cannot find required header file bpf/libbpf.h])])
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_ebpf_net' for --enable-ebpf-net])
+      ;;
+esac
+if test "$enable_ebpf_net" = yes; then
+   AC_DEFINE([HAVE_EBPF_NET], [1], [Define if eBPF based per-process network bandwidth support should be enabled.])
+   AC_PATH_TOOL([HTop_LD], [ld], [ld])
+   if test -z "$HTop_LD"; then
+      AC_MSG_ERROR([cannot find required tool ld for --enable-ebpf-net])
+   fi
+   AC_CHECK_TOOL([OBJCOPY], [objcopy], [])
+   if test -z "$OBJCOPY"; then
+      AC_MSG_ERROR([cannot find required tool objcopy for --enable-ebpf-net])
+   fi
+
+   # clang -target bpf does not add the multiarch include directory that
+   # provides the asm/ UAPI headers needed by linux/bpf.h and friends.
+   GCC_MULTIARCH="$($CC -print-multiarch 2>/dev/null)"
+   if test -n "$GCC_MULTIARCH" && test -d "/usr/include/$GCC_MULTIARCH"; then
+      HTOP_BPF_INCLUDES="-I/usr/include/$GCC_MULTIARCH"
+   else
+      HTOP_BPF_INCLUDES=""
+   fi
+   AC_SUBST([HTOP_BPF_INCLUDES])
+
+   # The eBPF program is compiled for the local architecture it will run on.
+   case "$host_cpu" in
+      x86_64|amd64) htop_bpf_arch=x86 ;;
+      aarch64|arm64) htop_bpf_arch=arm64 ;;
+      arm*|armv*) htop_bpf_arch=arm ;;
+      s390x) htop_bpf_arch=s390x ;;
+      riscv64) htop_bpf_arch=riscv ;;
+      powerpc64le|ppc64le) htop_bpf_arch=powerpc ;;
+      *) htop_bpf_arch=unknown ;;
+   esac
+   if test "$htop_bpf_arch" = unknown; then
+      AC_MSG_ERROR([cannot determine eBPF architecture for host '$host_cpu' required by --enable-ebpf-net])
+   fi
+fi
+AC_SUBST([CLANG])
+AC_SUBST([HTop_LD])
+AC_SUBST([htop_bpf_arch])
+AM_CONDITIONAL([HAVE_EBPF_NET], [test "$enable_ebpf_net" = yes])
 
 # ----------------------------------------------------------------------
 
@@ -1819,16 +1961,18 @@ fi
 AC_MSG_RESULT([
   ${PACKAGE_NAME} ${VERSION}
 
-  platform:                  $my_htop_platform ($host_os)
-  (Linux) proc directory:    $with_proc
-  (Linux) delay accounting:  $enable_delayacct
-  (Linux) sensors:           $enable_sensors
-  (Linux) capabilities:      $enable_capabilities
-  unicode:                   $enable_unicode
-  affinity:                  $enable_affinity
-  backtrace:                 $enable_backtrace
-  demangling:                $enable_demangling
-  hwloc:                     $enable_hwloc
-  debug:                     $enable_debug
-  static:                    $enable_static
+  platform:                      $my_htop_platform ($host_os)
+  (Linux) proc directory:        $with_proc
+  (Linux) delay accounting:      $enable_delayacct
+  (Linux) sensors:               $enable_sensors
+  (Linux) eBPF net columns:      $enable_ebpf_net
+  (Linux) netlink net columns:   $enable_libnl_net
+  (Linux) capabilities:          $enable_capabilities
+  unicode:                       $enable_unicode
+  affinity:                      $enable_affinity
+  backtrace:                     $enable_backtrace
+  demangling:                    $enable_demangling
+  hwloc:                         $enable_hwloc
+  debug:                         $enable_debug
+  static:                        $enable_static
 ])

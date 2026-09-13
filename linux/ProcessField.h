@@ -49,6 +49,9 @@ in the source distribution for its full text.
    GPU_PERCENT = 133,            \
    ISCONTAINER = 134,            \
    M_EPSS = 135,                 \
+   NET_RX = 136,                 \
+   NET_TX = 137,                 \
+   NET_TOTAL = 138,              \
    // End of list
 
 

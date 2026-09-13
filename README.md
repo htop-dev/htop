@@ -162,7 +162,14 @@ To install on the local system run `make install`. By default `make install` ins
     enable Linux delay accounting support
     - dependencies: *libnl-3-dev*(build-time) and *libnl-genl-3-dev*(build-time), at runtime *libnl-3* and *libnl-genl-3* are loaded via `dlopen(3)` if available and requested
     - default: *check*
-
+  * `--enable-ebpf-net`:
+    enable eBPF based per-process network bandwidth columns
+    - dependencies: *libbpf*(build-time) and *clang*(build-time, for compiling the eBPF programs); at runtime *libbpf* is loaded via `dlopen(3)` if available
+    - default: *check*
+  * `--enable-libnl-net`:
+    enable Linux socket-level network statistics via the kernel `NETLINK_SOCK_DIAG` interface, used for the network rate columns when eBPF is unavailable
+    - dependencies: *libnl-3-dev*(build-time), at runtime *libnl-3* is loaded via `dlopen(3)` if available
+    - default: *check*
 
 ## Runtime dependencies:
 `htop` has a set of fixed minimum runtime dependencies, which is kept as minimal as possible:
@@ -177,6 +184,8 @@ To install on the local system run `make install`. By default `make install` ins
 * `libsensors`, readout of temperatures and CPU speeds, is optional even when `--enable-sensors` was used to configure `htop`.
 * `libsystemd` is optional when `--enable-static` was not used to configure `htop`. If building statically and `libsystemd` is not found by `configure`, support for the systemd meter is disabled entirely.
 * `libnl-3` and `libnl-genl-3`, if `htop` was configured with `--enable-delayacct` and delay accounting process fields are active.
+* `libnl-3`, for the socket-level network statistics columns when `htop` was configured with `--enable-libnl-net`.
+* `libbpf`, for the eBPF-based network statistics columns when `htop` was configured with `--enable-ebpf-net`.
 * I/O counters are available when the kernel is compiled with `CONFIG_TASK_IO_ACCOUNTING=Y`.
 
 `htop` checks for the availability of the actual runtime libraries as `htop` runs.

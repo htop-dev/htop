@@ -573,6 +573,58 @@ The I/O rate of write(2) in bytes per second, for the process.
 .B IO_RATE (DISK R/W)
 The I/O rate, IO_READ_RATE + IO_WRITE_RATE (see above).
 .TP
+.B NET_RX (NET RX)
+The network receive rate in bytes per second for the process. Measured with an eBPF
+program that hooks the kernel TCP, UDP and ICMP (ping) send and receive paths. When
+eBPF is unavailable the value comes from the kernel sock_diag interface
+(NETLINK_SOCK_DIAG, enabled with --enable-libnl-net) and is prefixed with a plus
+sign (+). When sock_diag is unavailable too, the value is an estimate derived from
+the read(2)/write(2) byte counters and is prefixed with a tilde (~). The three
+sources are exact, concise and approximate, respectively.
+
+All three sources feed the same sliding-window average and the same time base, so
+values are directly comparable in magnitude across sources. The per-socket tcp_info
+byte counters used by the sock_diag source for TCP sockets count network payload
+bytes, matching the eBPF send/recv byte counts and typically agreeing within a few
+percent on sustained streams; differences stem from buffered-but-unread data and
+in-flight (not yet acknowledged) bytes. For UDP and ICMP sockets sock_diag only
+exposes the current socket buffer queue sizes, which reflect how much traffic is
+buffered right now rather than throughput, so those values are a lower bound and
+are not directly comparable to the eBPF throughput for streaming traffic.
+
+The eBPF measurement is attempted on the first screen update that shows one of the
+NET columns; the reason it stays disabled, if it does, is printed to standard error.
+Loading the program requires all of the following on the host:
+.IP \(bu
+the libbpf runtime library (libbpf.so.1 or libbpf.so.0),
+.IP \(bu
+a kernel built with BPF and kprobe support (CONFIG_BPF_SYSCALL, CONFIG_KPROBES and
+CONFIG_PERF_EVENTS),
+.IP \(bu
+the tracefs filesystem mounted at /sys/kernel/tracing (or /sys/kernel/debug/tracing),
+.IP \(bu
+sufficient privileges: root, or CAP_BPF/CAP_SYS_ADMIN together with CAP_PERFMON and
+CAP_SYSLOG (to resolve kprobe symbols).
+When built against libcap, htop drops capabilities at startup unless told otherwise:
+the default --drop-capabilities=basic keeps the eBPF capabilities (CAP_BPF, CAP_PERFMON
+and CAP_SYSLOG, plus CAP_SYS_ADMIN while kernel.perf_event_paranoid is greater than two,
+as this value requires CAP_SYS_ADMIN for kprobe attachment), whereas
+--drop-capabilities=strict drops them again (use --drop-capabilities=off to keep all
+capabilities for the feature).
+If the program was started inside a container or user namespace the effective
+capabilities may be restricted even when running as root, and kernel lockdown
+(integrity/confidentiality, see kernel_lockdown(7)) also blocks kprobe-based eBPF
+even for privileged users.
+If eBPF cannot be used the NET columns fall back to the sock_diag counters described
+above and, when sock_diag is unavailable too, to the read(2)/write(2) estimate.
+.TP
+.B NET_TX (NET TX)
+The network transmit rate in bytes per second for the process, measured and estimated
+as described for NET_RX above.
+.TP
+.B NET_TOTAL (NET TOTAL)
+The total network rate, NET_RX + NET_TX (see above).
+.TP
 .B CGROUP
 Which cgroup the process is in. For a shortened view see the CCGROUP column below.
 .TP

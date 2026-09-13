@@ -137,6 +137,22 @@ char* String_cat(const char* s1, const char* s2) {
    return out;
 }
 
+char* String_join(const char* sep, const char* const items[]) {
+   size_t length = 1;
+   for (size_t i = 0; items[i]; i++)
+      length += strlen(items[i]) + (i ? strlen(sep) : 0);
+
+   char* joined = xMalloc(length);
+   size_t pos = 0;
+   for (size_t i = 0; items[i]; i++) {
+      if (i)
+         pos += xSnprintf(joined + pos, length - pos, "%s", sep);
+      pos += xSnprintf(joined + pos, length - pos, "%s", items[i]);
+   }
+   joined[pos] = '\0';
+   return joined;
+}
+
 char* String_trim(const char* in) {
    while (in[0] == ' ' || in[0] == '\t' || in[0] == '\n') {
       in++;
