@@ -235,7 +235,8 @@ static void LinuxMachine_scanMemoryInfo(LinuxMachine* this) {
 
    /*
     * Compute memory partition like procps(free)
-    *  https://gitlab.com/procps-ng/procps/-/blob/master/proc/sysinfo.c
+    *  https://gitlab.com/procps-ng/procps/-/blob/v4.0.7/library/meminfo.c?ref_type=tags
+    *  https://gitlab.com/procps-ng/procps/-/commit/2184e90d2e7cdb582f9a5b706b47015e56707e4d
     *
     * Adjustments:
     *  - Shmem in part of Cached (see https://lore.kernel.org/patchwork/patch/648763/),
@@ -244,10 +245,9 @@ static void LinuxMachine_scanMemoryInfo(LinuxMachine* this) {
    host->totalMem = totalMem;
    this->cachedMem = cachedMem + sreclaimableMem - sharedMem;
    this->sharedMem = sharedMem;
-   const memory_t usedDiff = freeMem + cachedMem + sreclaimableMem + buffersMem;
-   this->usedMem = (totalMem >= usedDiff) ? totalMem - usedDiff : totalMem - freeMem;
    this->buffersMem = buffersMem;
    this->availableMem = availableMem != 0 ? MINIMUM(availableMem, totalMem) : freeMem;
+   this->usedMem = (totalMem >= availableMem && availableMem > 0) ? totalMem - availableMem : totalMem - freeMem;
    host->totalSwap = swapTotalMem;
    host->usedSwap = swapTotalMem - swapFreeMem - swapCacheMem;
    host->cachedSwap = swapCacheMem;
