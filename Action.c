@@ -155,22 +155,6 @@ static bool expandCollapse(Panel* panel) {
    return true;
 }
 
-static bool collapseIntoParent(Panel* panel) {
-   const Row* r = (Row*) Panel_getSelected(panel);
-   if (!r)
-      return false;
-
-   int parent_id = Row_getGroupOrParent(r);
-   for (int i = 0; i < Panel_size(panel); i++) {
-      Row* row = (Row*) Panel_get(panel, i);
-      if (row->id == parent_id) {
-         row->showChildren = false;
-         Panel_setSelected(panel, i);
-         return true;
-      }
-   }
-   return false;
-}
 
 Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey) {
    ScreenSettings_setSortKey(settings->ss, (RowField) sortKey);
@@ -372,13 +356,6 @@ static Htop_Reaction actionExpandOrCollapse(State* st) {
    return changed ? HTOP_RECALCULATE : HTOP_OK;
 }
 
-static Htop_Reaction actionCollapseIntoParent(State* st) {
-   if (!st->host->settings->ss->treeView) {
-      return HTOP_OK;
-   }
-   bool changed = collapseIntoParent((Panel*)st->mainPanel);
-   return changed ? HTOP_RECALCULATE : HTOP_OK;
-}
 
 static Htop_Reaction actionExpandCollapseOrSortColumn(State* st) {
    return st->host->settings->ss->treeView ? actionExpandOrCollapse(st) : actionSetSortColumn(st);
@@ -1012,8 +989,7 @@ void Action_setBindings(Htop_Action* keys) {
 #endif
    keys['Z'] = actionTogglePauseUpdate;
    keys['['] = actionLowerPriority;
-   keys['\014'] = actionRedraw; // Ctrl+L
-   keys['\177'] = actionCollapseIntoParent;
+   keys[KEY_CTRL('L')] = actionRedraw;
    keys['\\'] = actionIncFilter;
    keys[']'] = actionHigherPriority;
    keys['a'] = actionSetAffinity;

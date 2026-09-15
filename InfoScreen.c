@@ -166,7 +166,7 @@ void InfoScreen_run(InfoScreen* this) {
 
             InfoScreen_draw(this);
             break;
-         case '\014': // Ctrl+L
+         case KEY_CTRL('L'):
             clear();
             InfoScreen_draw(this);
             break;
