@@ -638,16 +638,23 @@ static bool LinuxProcessTable_updateUser(const Machine* host, Process* process, 
 /*
  * Read /proc/<pid>/io (thread-specific data)
  */
-#define NET_RATE_WINDOW_MS 1000
-#define NET_RATE_MIN_MS 250
+/* The network rate estimate decays with a time constant, so a finished burst
+ * falls below displayable resolution within a few UI updates instead of trailing off.
+ * Once the smoothed rate drops below NET_RATE_ZERO_FLOOR_BPS while the counters
+ * are idle, it is snapped to zero so that sub-byte echoes do not linger on screen. */
+#define NET_RATE_ZERO_FLOOR_BPS 0.5
 
-static void NetRateWindow_update(NetRateWindow* w, unsigned long long now, unsigned long long curRx, unsigned long long curTx);
+static void NetRateWindow_update(NetRateWindow* w, unsigned long long now, unsigned long long curRx, unsigned long long curTx, unsigned long long decayMs);
 
 /* Every network tier (eBPF, netlink sock_diag, rchar/wchar estimate) passes
- * its cumulative counters through the same sliding window and the same time
- * source, so the rates they produce are directly comparable in magnitude. */
+ * its cumulative counters through the same exponential moving average and
+ * the same time source, so the rates they produce are directly comparable
+ * in magnitude. */
 static void LinuxProcess_updateNetRateWindow(NetRateWindow* window, const Machine* host, unsigned long long rx, unsigned long long tx) {
-   NetRateWindow_update(window, host->realtimeMs, rx, tx);
+   /* --delay is configured in tenths of seconds; the smoothing decays with a
+    * time constant of one update interval regardless of the scan rate. */
+   const unsigned long long delayMs = (unsigned long long) host->settings->delay * 100;
+   NetRateWindow_update(window, host->realtimeMs, rx, tx, delayMs);
 }
 
 static void LinuxProcessTable_readIoFile(LinuxProcess* lp, openat_arg_t procFd, bool scanMainThread) {
@@ -745,17 +752,14 @@ static void LinuxProcessTable_readIoFile(LinuxProcess* lp, openat_arg_t procFd, 
    lp->io_last_scan_time_ms = host->realtimeMs;
 }
 
-static void NetRateWindow_update(NetRateWindow* w, unsigned long long now, unsigned long long curRx, unsigned long long curTx) {
+static void NetRateWindow_update(NetRateWindow* w, unsigned long long now, unsigned long long curRx, unsigned long long curTx, unsigned long long decayMs) {
    if (!w->seen) {
       /* First observation: record the cumulative counters and the current
        * time as the baseline, so the rate starts at zero rather than
        * absorbing bytes accumulated since tracking began. */
       w->seen = true;
-      w->window_rx_bytes = curRx;
-      w->window_tx_bytes = curTx;
       w->last_rx_bytes = curRx;
       w->last_tx_bytes = curTx;
-      w->window_start_ms = now;
       w->last_scan_ms = now;
       w->rx_bps = 0;
       w->tx_bps = 0;
@@ -764,36 +768,43 @@ static void NetRateWindow_update(NetRateWindow* w, unsigned long long now, unsig
 
    /* A cumulative counter that went backwards means the tracking state was
     * reset elsewhere (dropped map entry, PID reuse, readahead counted in
-    * read_bytes before the corresponding rchar). The previous baselines no
-    * longer apply, so re-seed instead of trusting a bogus delta that would
+    * read_bytes before the corresponding rchar). The previous baseline no
+    * longer applies, so re-seed instead of trusting a bogus delta that would
     * surface as a huge rate. */
    if (curRx < w->last_rx_bytes || curTx < w->last_tx_bytes) {
-      w->window_rx_bytes = curRx;
-      w->window_tx_bytes = curTx;
-      w->window_start_ms = now;
+      w->last_rx_bytes = curRx;
+      w->last_tx_bytes = curTx;
+      w->last_scan_ms = now;
       w->rx_bps = 0;
       w->tx_bps = 0;
-   } else {
-      /* Sliding window average: emit the rate over all data sampled since
-       * the window started, not a single scan interval. Once the window has
-       * elapsed it is slid forward, anchoring the baseline at the current
-       * cumulative counters. */
-      const unsigned long long elapsed = saturatingSub(now, w->window_start_ms);
-      if (elapsed >= NET_RATE_WINDOW_MS) {
-         w->rx_bps = saturatingSub(curRx, w->window_rx_bytes) * 1000. / (double) elapsed;
-         w->tx_bps = saturatingSub(curTx, w->window_tx_bytes) * 1000. / (double) elapsed;
-         w->window_rx_bytes = curRx;
-         w->window_tx_bytes = curTx;
-         w->window_start_ms = now;
-      } else if (elapsed >= NET_RATE_MIN_MS) {
-         /* Prompt feedback for fresh rows: a prorated rate once enough time
-          * has passed, so the column is not blank for a whole window. */
-         w->rx_bps = saturatingSub(curRx, w->window_rx_bytes) * 1000. / (double) elapsed;
-         w->tx_bps = saturatingSub(curTx, w->window_tx_bytes) * 1000. / (double) elapsed;
-      }
-      /* Otherwise too little time has elapsed since the window start;
-       * keep the previously displayed rates. */
+      return;
    }
+
+   /* Exponential moving average of the instantaneous rate between scans. A
+    * new value is emitted on every scan, so updates start at the second scan
+    * of a fresh row and the display never keeps a stale rate. The smoothing
+    * factor is derived from the elapsed scan interval and the update period
+    * (decayMs), so a finished burst decays over a few UI updates regardless
+    * of the scan rate. */
+   const unsigned long long dt = saturatingSub(now, w->last_scan_ms);
+   if (!dt) {
+      /* No time elapsed since the last scan; keep the previously displayed rate. */
+      return;
+   }
+
+   const double instRx = saturatingSub(curRx, w->last_rx_bytes) * /*ms to s*/1000. / (double) dt;
+   const double instTx = saturatingSub(curTx, w->last_tx_bytes) * /*ms to s*/1000. / (double) dt;
+   const double alpha = 1.0 - exp(-(double) dt / (double) decayMs);
+   w->rx_bps += alpha * (instRx - w->rx_bps);
+   w->tx_bps += alpha * (instTx - w->tx_bps);
+
+   /* A finished burst leaves a long exponential tail of sub-displayable
+    * values; once the counters stop moving and the smoothed rate is below
+    * the display floor, it is snapped to zero. */
+   if (instRx <= 0.0 && w->rx_bps < NET_RATE_ZERO_FLOOR_BPS)
+      w->rx_bps = 0;
+   if (instTx <= 0.0 && w->tx_bps < NET_RATE_ZERO_FLOOR_BPS)
+      w->tx_bps = 0;
 
    w->last_rx_bytes = curRx;
    w->last_tx_bytes = curTx;
@@ -811,7 +822,7 @@ static void NetRateWindow_update(NetRateWindow* w, unsigned long long now, unsig
  * estimate in lp->net_rate_*; each higher tier below overrides it only if it
  * is actually available. Therefore every scan attributes a process from
  * exactly one source, reflecting the fallback chain. All tiers feed their
- * cumulative counters through the shared sliding window
+ * cumulative counters through the shared exponential moving average
  * (LinuxProcess_updateNetRateWindow), so the produced rates use the same
  * time base and are directly comparable in magnitude. */
 static void LinuxProcessTable_readNetIO(LinuxProcess* lp, const Machine* host) {

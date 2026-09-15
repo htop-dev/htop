@@ -31,26 +31,20 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_LINUX_CONTAINER 0x00200000
 #define PROCESS_FLAG_LINUX_NETIO     0x00400000
 
-/* Sliding-window rate estimator over a pair of cumulative kernel counters.
- * The rate is the average over the data sampled since the window started,
- * so a single noisy scan interval cannot inflate the displayed value.
- * A cumulative counter that goes backwards (reset elsewhere, PID reuse)
- * re-seeds the window instead of producing a bogus huge rate. */
+/* Exponential moving average rate estimator over a pair of cumulative kernel
+ * counters. The instantaneous rate between scans is smoothed, so a single
+ * noisy scan interval cannot inflate the displayed value, while quiet gaps
+ * between bursts decay the rate instead of snapping it to zero. A cumulative
+ * counter that goes backwards (reset elsewhere, PID reuse) re-seeds the
+ * tracker instead of producing a bogus huge rate. */
 typedef struct NetRateWindow_ {
-   /* Rate over the current window (bytes per second) */
+   /* Smoothed rate (bytes per second) */
    double rx_bps;
    double tx_bps;
-
-   /* Cumulative bytes at the start of the current window */
-   unsigned long long window_rx_bytes;
-   unsigned long long window_tx_bytes;
 
    /* Cumulative bytes as of the last scan */
    unsigned long long last_rx_bytes;
    unsigned long long last_tx_bytes;
-
-   /* Point in time when the current rate window started (milliseconds elapsed since the Epoch) */
-   unsigned long long window_start_ms;
 
    /* Point in time of the last scan (milliseconds elapsed since the Epoch) */
    unsigned long long last_scan_ms;
