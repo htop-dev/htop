@@ -983,7 +983,7 @@ void Action_setBindings(Htop_Action* keys) {
 #endif
    keys['Z'] = actionTogglePauseUpdate;
    keys['['] = actionLowerPriority;
-   keys['\014'] = actionRedraw; // Ctrl+L
+   keys[KEY_CTRL('L')] = actionRedraw;
    keys['\\'] = actionIncFilter;
    keys[']'] = actionHigherPriority;
    keys['a'] = actionSetAffinity;
