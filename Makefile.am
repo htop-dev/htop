@@ -255,9 +255,10 @@ if HAVE_EBPF_NET
 linux_platform_sources += linux/NetMonitor.c
 htop_LDADD += linux/NetMonitor_bpf_embedded.o
 
-# Compile the eBPF program. @CLANG@ and @htop_bpf_arch@ are set by configure.
+# Compile the eBPF program. @HTop_BPF_CC@, @htop_bpf_cc_flags@ and
+# @htop_bpf_arch@ are set by configure.
 linux/NetMonitor.bpf.o: linux/NetMonitor.bpf.c linux/NetMonitor.h
-	$(AM_V_CC)mkdir -p $(dir $@) && $(CLANG) -target bpf -O2 -g -Wall $(CPPFLAGS) $(HTOP_BPF_INCLUDES) \
+	$(AM_V_CC)mkdir -p $(dir $@) && $(HTop_BPF_CC) -O2 -g -Wall $(htop_bpf_cc_flags) $(CPPFLAGS) $(HTOP_BPF_INCLUDES) \
 	  -D__TARGET_ARCH_$(htop_bpf_arch) \
 	  -c $< -o $@
 

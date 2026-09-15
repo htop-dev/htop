@@ -64,7 +64,7 @@ List of additional build-time dependencies (based on feature flags):
 *  `hwloc`
 *  `libcap` (v2.21 or later)
 *  `libnl-3` and `libnl-genl-3`
-*  `libbpf` (headers) and `clang` (to compile the eBPF programs)
+*  `libbpf` (headers) and `clang` or `bpf-unknown-none-gcc` (to compile the eBPF programs)
 
 `pkg-config` is optional but recommended. The configure script of `htop` might utilize `pkg-config` to obtain the compiler and linker flags required for a library. Some OS distributions provide `pkg-config` functionalities through an alternative implementation such as `pkgconf`. Look for both names in your package manager.
 
@@ -165,7 +165,7 @@ To install on the local system run `make install`. By default `make install` ins
     - default: *check*
   * `--enable-ebpf-net`:
     enable eBPF based per-process network bandwidth columns
-    - dependencies: *libbpf*(build-time) and *clang*(build-time, for compiling the eBPF programs); at runtime *libbpf* is loaded via `dlopen(3)` if available
+    - dependencies: *libbpf*(build-time) and either *clang* or the GCC cross-compiler *bpf-unknown-none-gcc* (build-time, for compiling the eBPF programs); at runtime *libbpf* is loaded via `dlopen(3)` if available
     - default: *check*
   * `--enable-libnl-net`:
     enable Linux socket-level network statistics via the kernel `NETLINK_SOCK_DIAG` interface, used for the network rate columns when eBPF is unavailable

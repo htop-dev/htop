@@ -1745,11 +1745,13 @@ AC_ARG_ENABLE(
    [ebpf-net],
    [AS_HELP_STRING(
       [--enable-ebpf-net],
-      [enable eBPF based per-process network bandwidth columns; requires libbpf headers at compile time, at runtime libbpf is loaded via dlopen @<:@default=check@:>@]
+      [enable eBPF based per-process network bandwidth columns; requires libbpf headers and clang or the bpf-unknown-none-gcc cross-compiler at compile time, at runtime libbpf is loaded via dlopen @<:@default=check@:>@]
    )],
    [],
    [enable_ebpf_net=check]
 )
+AC_PATH_PROG([CLANG], [clang], [], [$PATH])
+AC_PATH_PROG([BPF_CC], [bpf-unknown-none-gcc], [], [$PATH])
 case "$enable_ebpf_net" in
    no)
       ;;
@@ -1758,19 +1760,16 @@ case "$enable_ebpf_net" in
          enable_ebpf_net=no
       elif test "$enable_static" = yes; then
          enable_ebpf_net=no
+      elif test -z "$CLANG" && test -z "$BPF_CC"; then
+         enable_ebpf_net=no
       else
          enable_ebpf_net=yes
-         AC_PATH_PROG([CLANG], [clang], [], [$PATH])
-         if test -z "$CLANG"; then
-            enable_ebpf_net=no
-         fi
          AC_CHECK_HEADERS([bpf/libbpf.h], [], [enable_ebpf_net=no])
       fi
       ;;
    yes)
-      AC_PATH_PROG([CLANG], [clang], [], [$PATH])
-      if test -z "$CLANG"; then
-         AC_MSG_ERROR([cannot find required tool clang for --enable-ebpf-net])
+      if test -z "$CLANG" && test -z "$BPF_CC"; then
+         AC_MSG_ERROR([cannot find required tool clang or bpf-unknown-none-gcc for --enable-ebpf-net])
       fi
       AC_CHECK_HEADERS([bpf/libbpf.h], [], [AC_MSG_ERROR([cannot find required header file bpf/libbpf.h])])
       ;;
@@ -1780,6 +1779,17 @@ case "$enable_ebpf_net" in
 esac
 if test "$enable_ebpf_net" = yes; then
    AC_DEFINE([HAVE_EBPF_NET], [1], [Define if eBPF based per-process network bandwidth support should be enabled.])
+
+   # Select the compiler for the eBPF program: clang with -target bpf, or the
+   # GCC BPF cross-compiler bpf-unknown-none-gcc (e.g. Debian's gcc-bpf).
+   if test -n "$CLANG"; then
+      HTop_BPF_CC="$CLANG"
+      htop_bpf_cc_flags="-target bpf"
+   else
+      HTop_BPF_CC="$BPF_CC"
+      htop_bpf_cc_flags="-std=gnu11"
+   fi
+
    AC_PATH_TOOL([HTop_LD], [ld], [])
    if test -z "$HTop_LD"; then
       AC_MSG_ERROR([cannot find required tool ld for --enable-ebpf-net])
@@ -1789,10 +1799,9 @@ if test "$enable_ebpf_net" = yes; then
       AC_MSG_ERROR([cannot find required tool objcopy for --enable-ebpf-net])
    fi
 
-   # clang -target bpf does not add the multiarch include directory that
-   # provides the asm/ UAPI headers needed by linux/bpf.h and friends, and
-   # clang itself does not answer -print-multiarch either, so fall back to
-   # the build host's C compiler to find the directory.
+   # A BPF compiler does not add the multiarch include directory that
+   # provides the asm/ UAPI headers needed by linux/bpf.h and friends, so
+   # fall back to the build host's C compiler to find the directory.
    GCC_MULTIARCH="$($CC -print-multiarch 2>/dev/null)"
    if test -z "$GCC_MULTIARCH" && command -v cc >/dev/null 2>&1; then
       GCC_MULTIARCH="$(cc -print-multiarch 2>/dev/null)"
@@ -1822,6 +1831,9 @@ if test "$enable_ebpf_net" = yes; then
    fi
 fi
 AC_SUBST([CLANG])
+AC_SUBST([BPF_CC])
+AC_SUBST([HTop_BPF_CC])
+AC_SUBST([htop_bpf_cc_flags])
 AC_SUBST([HTop_LD])
 AC_SUBST([htop_bpf_arch])
 AM_CONDITIONAL([HAVE_EBPF_NET], [test "$enable_ebpf_net" = yes])
