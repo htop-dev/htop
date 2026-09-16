@@ -446,15 +446,15 @@ void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt) {
 
    for (mach_msg_type_number_t i = 0; i < thread_count; i++) {
 
-      thread_identifier_info_data_t identifer_info;
-      mach_msg_type_number_t identifer_info_count = THREAD_IDENTIFIER_INFO_COUNT;
-      ret = thread_info(thread_list[i], THREAD_IDENTIFIER_INFO, (thread_info_t) &identifer_info, &identifer_info_count);
+      thread_identifier_info_data_t identifier_info;
+      mach_msg_type_number_t identifier_info_count = THREAD_IDENTIFIER_INFO_COUNT;
+      ret = thread_info(thread_list[i], THREAD_IDENTIFIER_INFO, (thread_info_t) &identifier_info, &identifier_info_count);
       if (ret != KERN_SUCCESS) {
          CRT_debug("thread_info(%d:%d) for identifier failed: %s", pid, i, mach_error_string(ret));
          continue;
       }
 
-      uint64_t tid = identifer_info.thread_id;
+      uint64_t tid = identifier_info.thread_id;
 
       bool preExisting;
       Process *tprocess = ProcessTable_getProcess(&dpt->super, (pid_t)tid, &preExisting, DarwinProcess_new);
