@@ -272,6 +272,6 @@ int Metric_lookupText(const char* metric, char** desc) {
       return sts;
 
    if (pmLookupText(pmid, PM_TEXT_ONELINE, desc) >= 0)
-      (*desc)[0] = (char) toupper((*desc)[0]); /* UI consistency */
+      (*desc)[0] = (char) toupper((unsigned char)(*desc)[0]); /* UI consistency */
    return 0;
 }

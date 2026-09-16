@@ -567,7 +567,7 @@ static bool LinuxProcessTable_readStatusFile(Process* process, openat_arg_t proc
             ++ptr;
 
          while (*ptr && *ptr != '\n') {
-            if (isdigit(*ptr))
+            if (isdigit((unsigned char)*ptr))
                pid_ns_count++;
             while (isdigit((unsigned char)*ptr))
                ++ptr;
