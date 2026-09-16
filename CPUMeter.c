@@ -55,7 +55,9 @@ static void CPUMeter_init(Meter* this) {
       Meter_setCaption(this, "Avg");
    } else if (host->activeCPUs > 1) {
       char caption[10];
-      if (host->settings->showCPUSMTLabels) {
+      /* The SMT topology of a CPU that is not present cannot be looked up,
+         so fall back to the plain CPU number for such a meter. */
+      if (host->settings->showCPUSMTLabels && cpu <= host->existingCPUs) {
          int coreID = Machine_getCPUPhysicalCoreID(host, cpu - 1);
          int threadIndex = Machine_getCPUThreadIndex(host, cpu - 1);
          char threadLetter = 'a' + (char)(threadIndex % 26);
@@ -97,6 +99,10 @@ static void CPUMeter_updateValues(Meter* this) {
 
    unsigned int cpu = this->param;
    if (cpu > host->existingCPUs) {
+      /* Nothing to draw: leaving curItems at its Meter_new() default of
+         maxItems would make the bar and graph modes walk past the end of
+         curAttributes (4 or 8 entries, while maxItems is CPU_METER_ITEMCOUNT). */
+      this->curItems = 0;
       xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "absent");
       return;
    }
