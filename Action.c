@@ -963,9 +963,12 @@ void Action_setBindings(Htop_Action* keys) {
    keys[' '] = actionTag;
    keys['#'] = actionToggleHideMeters;
    keys['*'] = actionExpandOrCollapseAllBranches;
+   keys[KEY_PADSTAR] = actionExpandOrCollapseAllBranches;
    keys['+'] = actionExpandOrCollapse;
+   keys[KEY_PADPLUS] = actionExpandOrCollapse;
    keys[','] = actionSetSortColumn;
    keys['-'] = actionExpandOrCollapse;
+   keys[KEY_PADMINUS] = actionExpandOrCollapse;
    keys['.'] = actionSetSortColumn;
    keys['/'] = actionIncSearch;
    keys['<'] = actionSetSortColumn;

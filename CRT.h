@@ -179,8 +179,8 @@ void CRT_handleSIGSEGV(int signal) ATTR_NORETURN;
 #define KEY_RIGHTCLICK KEY_F(33)
 #define KEY_SHIFT_TAB  KEY_F(34)
 #define KEY_ALT(x)     (KEY_F(64 - 26) + ((x) - 'A'))
-#define KEY_FOCUS_IN   (KEY_MAX + 'I')
-#define KEY_FOCUS_OUT  (KEY_MAX + 'O')
+#define KEY_FOCUS_IN   (KEY_MAX_HTOP + 'I')
+#define KEY_FOCUS_OUT  (KEY_MAX_HTOP + 'O')
 #define KEY_DEL_MAC    127
 #define KEY_CTRL_LEFT  KEY_SLEFT   // we treat them the same
 #define KEY_CTRL_RIGHT KEY_SRIGHT  // we treat them, yup, the same
@@ -188,10 +188,16 @@ void CRT_handleSIGSEGV(int signal) ATTR_NORETURN;
 #ifndef PADPLUS
 # define KEY_PADPLUS   583
 # define KEY_PADMINUS  588
+# define KEY_PADSTAR   587
 #else
 # define KEY_PADPLUS   PADPLUS
 # define KEY_PADMINUS  PADMINUS
+# define KEY_PADSTAR   PADSTAR
 #endif
+
+/* Upper bound for MainPanel's key table; covers the keypad keys, which are
+   htop-internal values above ncurses' KEY_MAX (0777 oct = 511 dec). */
+#define KEY_MAX_HTOP  (KEY_MAX > KEY_PADMINUS ? KEY_MAX : KEY_PADMINUS + 1)
 
 extern char CRT_degreeSign[];
 
