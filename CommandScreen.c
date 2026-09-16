@@ -36,7 +36,7 @@ static void CommandScreen_scan(InfoScreen* this) {
          assert(line_offset <= line_maxlen);
          assert(last_space <= line_maxlen);
 
-         size_t line_len = last_space <= 0 ? line_offset : last_space;
+         size_t line_len = last_space == 0 ? line_offset : last_space;
          char tmp = line[line_len];
          line[line_len] = '\0';
          InfoScreen_addLine(this, line);
