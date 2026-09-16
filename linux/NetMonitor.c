@@ -9,7 +9,7 @@ in the source distribution for its full text.
 
 #include "linux/NetMonitor.h"
 
-#ifdef HAVE_EBPF_NET
+#ifdef HAVE_EBPF
 
 #include <dlfcn.h>
 #include <errno.h>
@@ -461,4 +461,4 @@ bool NetMonitor_getNetIO(pid_t pid, NetIOData* data) {
    return true;
 }
 
-#endif /* HAVE_EBPF_NET */
+#endif /* HAVE_EBPF */

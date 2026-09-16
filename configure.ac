@@ -1742,43 +1742,43 @@ fi
 
 
 AC_ARG_ENABLE(
-   [ebpf-net],
+   [ebpf],
    [AS_HELP_STRING(
-      [--enable-ebpf-net],
+      [--enable-ebpf],
       [enable eBPF based per-process network bandwidth columns; requires libbpf headers and clang or the bpf-unknown-none-gcc cross-compiler at compile time, at runtime libbpf is loaded via dlopen @<:@default=check@:>@]
    )],
    [],
-   [enable_ebpf_net=check]
+   [enable_ebpf=check]
 )
 AC_PATH_PROG([CLANG], [clang], [], [$PATH])
 AC_PATH_PROG([BPF_CC], [bpf-unknown-none-gcc], [], [$PATH])
-case "$enable_ebpf_net" in
+case "$enable_ebpf" in
    no)
       ;;
    check)
       if test "$my_htop_platform" != linux; then
-         enable_ebpf_net=no
+         enable_ebpf=no
       elif test "$enable_static" = yes; then
-         enable_ebpf_net=no
+         enable_ebpf=no
       elif test -z "$CLANG" && test -z "$BPF_CC"; then
-         enable_ebpf_net=no
+         enable_ebpf=no
       else
-         enable_ebpf_net=yes
-         AC_CHECK_HEADERS([bpf/libbpf.h], [], [enable_ebpf_net=no])
+         enable_ebpf=yes
+         AC_CHECK_HEADERS([bpf/libbpf.h], [], [enable_ebpf=no])
       fi
       ;;
    yes)
       if test -z "$CLANG" && test -z "$BPF_CC"; then
-         AC_MSG_ERROR([cannot find required tool clang or bpf-unknown-none-gcc for --enable-ebpf-net])
+         AC_MSG_ERROR([cannot find required tool clang or bpf-unknown-none-gcc for --enable-ebpf])
       fi
       AC_CHECK_HEADERS([bpf/libbpf.h], [], [AC_MSG_ERROR([cannot find required header file bpf/libbpf.h])])
       ;;
    *)
-      AC_MSG_ERROR([bad value '$enable_ebpf_net' for --enable-ebpf-net])
+      AC_MSG_ERROR([bad value '$enable_ebpf' for --enable-ebpf])
       ;;
 esac
-if test "$enable_ebpf_net" = yes; then
-   AC_DEFINE([HAVE_EBPF_NET], [1], [Define if eBPF based per-process network bandwidth support should be enabled.])
+if test "$enable_ebpf" = yes; then
+   AC_DEFINE([HAVE_EBPF], [1], [Define if eBPF based per-process network bandwidth support should be enabled.])
 
    # Select the compiler for the eBPF program: clang with -target bpf, or the
    # GCC BPF cross-compiler bpf-unknown-none-gcc (e.g. Debian's gcc-bpf).
@@ -1792,11 +1792,11 @@ if test "$enable_ebpf_net" = yes; then
 
    AC_PATH_TOOL([HTop_LD], [ld], [])
    if test -z "$HTop_LD"; then
-      AC_MSG_ERROR([cannot find required tool ld for --enable-ebpf-net])
+      AC_MSG_ERROR([cannot find required tool ld for --enable-ebpf])
    fi
    AC_CHECK_TOOL([OBJCOPY], [objcopy], [])
    if test -z "$OBJCOPY"; then
-      AC_MSG_ERROR([cannot find required tool objcopy for --enable-ebpf-net])
+      AC_MSG_ERROR([cannot find required tool objcopy for --enable-ebpf])
    fi
 
    # A BPF compiler does not add the multiarch include directory that
@@ -1827,7 +1827,7 @@ if test "$enable_ebpf_net" = yes; then
       *) htop_bpf_arch=unknown ;;
    esac
    if test "$htop_bpf_arch" = unknown; then
-      AC_MSG_ERROR([cannot determine eBPF architecture for host '$host_cpu' required by --enable-ebpf-net])
+      AC_MSG_ERROR([cannot determine eBPF architecture for host '$host_cpu' required by --enable-ebpf])
    fi
 fi
 AC_SUBST([CLANG])
@@ -1836,7 +1836,7 @@ AC_SUBST([HTop_BPF_CC])
 AC_SUBST([htop_bpf_cc_flags])
 AC_SUBST([HTop_LD])
 AC_SUBST([htop_bpf_arch])
-AM_CONDITIONAL([HAVE_EBPF_NET], [test "$enable_ebpf_net" = yes])
+AM_CONDITIONAL([HAVE_EBPF], [test "$enable_ebpf" = yes])
 
 # ----------------------------------------------------------------------
 
@@ -1978,21 +1978,29 @@ if test "$my_htop_platform" = unsupported; then
    echo ""
 fi
 
+htop_net_columns=""
+if test "$enable_ebpf" = yes; then
+   htop_net_columns="eBPF, "
+fi
+if test "$enable_libnl_net" = yes; then
+   htop_net_columns="${htop_net_columns}netlink, "
+fi
+htop_net_columns="${htop_net_columns}read/write"
+
 AC_MSG_RESULT([
   ${PACKAGE_NAME} ${VERSION}
 
-  platform:                      $my_htop_platform ($host_os)
-  (Linux) proc directory:        $with_proc
-  (Linux) delay accounting:      $enable_delayacct
-  (Linux) sensors:               $enable_sensors
-  (Linux) eBPF net columns:      $enable_ebpf_net
-  (Linux) netlink net columns:   $enable_libnl_net
-  (Linux) capabilities:          $enable_capabilities
-  unicode:                       $enable_unicode
-  affinity:                      $enable_affinity
-  backtrace:                     $enable_backtrace
-  demangling:                    $enable_demangling
-  hwloc:                         $enable_hwloc
-  debug:                         $enable_debug
-  static:                        $enable_static
+  platform:                  $my_htop_platform ($host_os)
+  (Linux) proc directory:    $with_proc
+  (Linux) delay accounting:  $enable_delayacct
+  (Linux) sensors:           $enable_sensors
+  (Linux) net columns:       $htop_net_columns
+  (Linux) capabilities:      $enable_capabilities
+  unicode:                   $enable_unicode
+  affinity:                  $enable_affinity
+  backtrace:                 $enable_backtrace
+  demangling:                $enable_demangling
+  hwloc:                     $enable_hwloc
+  debug:                     $enable_debug
+  static:                    $enable_static
 ])

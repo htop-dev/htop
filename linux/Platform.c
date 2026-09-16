@@ -1055,7 +1055,7 @@ static int dropCapabilities(enum CapMode mode, ATTR_UNUSED bool keepEBPFCaps) {
    /* kprobe attachment via perf_event_open() needs CAP_SYS_ADMIN when
     * kernel.perf_event_paranoid exceeds the level CAP_PERFMON alone covers
     * (paranoid 3 is e.g. the default shipping in Debian). */
-#ifdef HAVE_EBPF_NET
+#ifdef HAVE_EBPF
    bool keepSysAdmin = false;
    int paranoid = 3;
    FILE* fp = fopen("/proc/sys/kernel/perf_event_paranoid", "r");
@@ -1082,7 +1082,7 @@ static int dropCapabilities(enum CapMode mode, ATTR_UNUSED bool keepEBPFCaps) {
 #ifdef HAVE_DELAYACCT
       KEEP(CAP_NET_ADMIN);      /* communicate over netlink socket for delay accounting */
 #endif
-#ifdef HAVE_EBPF_NET
+#ifdef HAVE_EBPF
       if (keepEBPFCaps) {
          if (keepSysAdmin)
             KEEP(CAP_SYS_ADMIN);   /* perf_event_open() kprobe attach requires it when perf_event_paranoid>2 */
@@ -1158,7 +1158,7 @@ static int dropCapabilities(enum CapMode mode, ATTR_UNUSED bool keepEBPFCaps) {
 }
 #endif
 
-#ifdef HAVE_EBPF_NET
+#ifdef HAVE_EBPF
 /* After the one-time eBPF load attempt the load-time capabilities are no
  * longer required: map lookup, iteration and deletion all go through the
  * already-open map file descriptor. */

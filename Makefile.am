@@ -251,7 +251,7 @@ endif
 htop_LDADD =
 CLEANFILES =
 
-if HAVE_EBPF_NET
+if HAVE_EBPF
 linux_platform_sources += linux/NetMonitor.c
 htop_LDADD += linux/NetMonitor_bpf_embedded.o
 

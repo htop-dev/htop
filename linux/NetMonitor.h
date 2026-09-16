@@ -25,7 +25,7 @@ typedef struct NetIOData_ {
    uint64_t txPackets;
 } NetIOData;
 
-#ifdef HAVE_EBPF_NET
+#ifdef HAVE_EBPF
 
 void NetMonitor_init(void);
 void NetMonitor_done(void);
@@ -33,7 +33,7 @@ bool NetMonitor_isActive(void);
 void NetMonitor_update(void);
 bool NetMonitor_getNetIO(pid_t pid, NetIOData* data);
 
-#else /* !HAVE_EBPF_NET */
+#else /* !HAVE_EBPF */
 
 static inline void NetMonitor_init(void) { }
 static inline void NetMonitor_done(void) { }
@@ -41,6 +41,6 @@ static inline bool NetMonitor_isActive(void) { return false; }
 static inline void NetMonitor_update(void) { }
 static inline bool NetMonitor_getNetIO(pid_t pid, NetIOData* data) { (void) pid; (void) data; return false; }
 
-#endif /* HAVE_EBPF_NET */
+#endif /* HAVE_EBPF */
 
 #endif /* HEADER_NetMonitor */
