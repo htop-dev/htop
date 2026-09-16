@@ -121,6 +121,9 @@ static inline int RichString_writeFromWide(RichString* this, int attrs, const ch
 }
 
 int RichString_appendnWideColumns(RichString* this, int attrs, const char* data_c, size_t len, int* columns) {
+   if (len < 1)
+      return 0;
+
    if (len > RICHSTRING_MAX_WIDE_LEN)
       len = RICHSTRING_MAX_WIDE_LEN;
 
