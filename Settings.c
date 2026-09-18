@@ -405,9 +405,13 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
          break;
       }
       didReadAny = true;
+      /* cleanup whitespace, as the PCP dynamic readers do: String_readLine
+         strips only the '\n', so a CRLF file leaves a '\r' on the value */
+      char* trimmed = String_trim(line);
+      free(line);
       size_t nOptions;
-      char** option = String_split(line, '=', &nOptions);
-      free (line);
+      char** option = String_split(trimmed, '=', &nOptions);
+      free(trimmed);
       if (nOptions < 2) {
          String_freeArray(option);
          continue;
