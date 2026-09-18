@@ -1535,6 +1535,15 @@ case "$enable_capabilities" in
       ;;
 esac
 
+AH_TEMPLATE([CAP_PERFMON], [Fallback constant if libcap is too old.])
+if test "$enable_capabilities" = yes; then
+   AC_CHECK_DECL(
+      [CAP_PERFMON],
+      [],
+      [AC_DEFINE([CAP_PERFMON], [38])],
+      [[#include <linux/capability.h>]]
+   )
+fi
 
 # $1: libnl-3 search path
 htop_try_link_libnl3 () {
