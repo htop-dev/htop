@@ -325,7 +325,7 @@ static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
          result = HANDLED;
          break;
       default:
-         if (ch < 255 && isalpha(ch))
+         if (0 < ch && ch < 255 && isalpha((unsigned char)ch))
             result = Panel_selectByTyping(super, ch);
          if (result == BREAK_LOOP)
             result = IGNORED;
