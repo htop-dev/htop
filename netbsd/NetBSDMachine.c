@@ -158,7 +158,7 @@ static void NetBSDMachine_scanMemoryInfo(NetBSDMachine* this) {
    // NOTE: it is wrong in NetBSD to represent the "cache" memory as a memory class by itself.
    // The only page classes exposed by the kernel in the uvmexp struct are these.
    // The "cached" memory can be obtained from another sysctl, but there is no simple way
-   // in NetBSD to determine which page classe(s) this "cached" memory should be substracted from.
+   // in NetBSD to determine which page class(es) this "cached" memory should be subtracted from.
    this->wiredMem = this->pageSizeKB * uvmexp.wired;
    this->activeMem = this->pageSizeKB * uvmexp.active;
    this->pagedMem = this->pageSizeKB * uvmexp.paging;
