@@ -270,12 +270,11 @@ static void ScreenSettings_readFields(ScreenSettings* ss, Hashtable* columns, co
    memset(ss->fields, '\0', LAST_PROCESSFIELD * sizeof(ProcessField));
 
    for (size_t j = 0, i = 0; ids[i]; i++) {
-      if (j >= UINT_MAX / sizeof(ProcessField))
+      if (j >= UINT_MAX / sizeof(ProcessField) - 1)
          continue;
-      if (j >= LAST_PROCESSFIELD) {
-         ss->fields = xRealloc(ss->fields, (j + 1) * sizeof(ProcessField));
-         memset(&ss->fields[j], 0, sizeof(ProcessField));
-      }
+      /* keep one slot spare, so the list always ends in a NULL_FIELD entry */
+      if (j + 1 >= LAST_PROCESSFIELD)
+         ss->fields = xReallocArrayZero(ss->fields, j + 1, j + 2, sizeof(ProcessField));
       int id = toFieldIndex(columns, ids[i]);
       if (id >= 0)
          ss->fields[j++] = id;
