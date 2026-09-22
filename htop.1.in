@@ -3,11 +3,12 @@
 htop, pcp-htop \- interactive process viewer
 .SH "SYNOPSIS"
 .B htop
-.RB [ \-dCFhpustvH ]
+.RB [ \-CdFHhMnpstUuV ]
 .br
 .B pcp-htop
-.RB [ \-dCFhpustvH ]
-.RB [ \-\-host/-h\ host ]
+.RB [ \-CdFHhMnpstUuV ]
+.RB [ \-\-host=HOSTSPEC ]
+.RB [ \-\-hostzone | \-\-timezone=TZ ]
 .SH "DESCRIPTION"
 .B htop
 is a cross-platform ncurses-based process viewer.
