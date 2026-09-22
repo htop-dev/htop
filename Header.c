@@ -227,7 +227,9 @@ void Header_draw(const Header* this) {
    }
 }
 
-void Header_updateData(Header* this) {
+/* Returns true if the header height changed, e.g. because a meter resized
+ * itself (CPUs hot-plugged or hidden) */
+bool Header_updateData(Header* this) {
    Header_forEachColumn(this, col) {
       Vector* meters = this->columns[col];
       int items = Vector_size(meters);
@@ -236,6 +238,9 @@ void Header_updateData(Header* this) {
          Meter_updateValues(meter);
       }
    }
+
+   int oldHeight = this->height;
+   return Header_calculateHeight(this) != oldHeight;
 }
 
 /*

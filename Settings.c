@@ -506,6 +506,8 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
          this->countCPUsFromOne = !atoi(option[1]);
       } else if (String_eq(option[0], "show_cpu_smt_labels")) {
          this->showCPUSMTLabels = atoi(option[1]);
+      } else if (String_eq(option[0], "hide_offline_cpus")) {
+         this->hideOfflineCPUs = atoi(option[1]);
       } else if (String_eq(option[0], "show_cpu_usage")) {
          this->showCPUUsage = atoi(option[1]);
       } else if (String_eq(option[0], "sticky_follow")) {
@@ -826,6 +828,7 @@ int Settings_write(const Settings* this, bool onCrash) {
    printSettingInteger("detailed_cpu_time", this->detailedCPUTime);
    printSettingInteger("cpu_count_from_one", this->countCPUsFromOne);
    printSettingInteger("show_cpu_smt_labels", this->showCPUSMTLabels);
+   printSettingInteger("hide_offline_cpus", this->hideOfflineCPUs);
    printSettingInteger("show_cpu_usage", this->showCPUUsage);
    printSettingInteger("sticky_follow", this->stickyFollow);
    printSettingInteger("show_cpu_frequency", this->showCPUFrequency);
@@ -1059,6 +1062,7 @@ Settings* Settings_new(const Machine* host, Hashtable* dynamicMeters, Hashtable*
    this->detailedCPUTime = false;
    this->countCPUsFromOne = false;
    this->showCPUSMTLabels = false;
+   this->hideOfflineCPUs = false;
    this->showCPUUsage = true;
    this->stickyFollow = true;
    this->showCPUFrequency = false;

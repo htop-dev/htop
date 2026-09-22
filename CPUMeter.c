@@ -44,8 +44,11 @@ static const int CPUMeter_attributes_summary[] = {
 };
 
 typedef struct CPUMeterData_ {
-   unsigned int cpus;
-   Meter** meters;
+   unsigned int ncol;         /* columns the shown sub-meters are laid out in */
+   unsigned int cpus;         /* size of meters: one slot per existing CPU */
+   Meter** meters;            /* sub-meter per CPU id, created when first shown */
+   unsigned int shownCount;
+   Meter** shown;             /* the sub-meters currently shown, in display order */
 } CPUMeterData;
 
 static void CPUMeter_init(Meter* this) {
@@ -239,8 +242,23 @@ static void CPUMeter_display(const Object* cast, RichString* out) {
    #endif
 }
 
+/* Whether the multi-CPU meters show a slot for this CPU (0-based id) */
+static bool CPUMeter_isShown(const Machine* host, unsigned int cpu) {
+   return !host->settings->hideOfflineCPUs || Machine_isCPUonline(host, cpu);
+}
+
+static unsigned int CPUMeter_countShown(const Machine* host) {
+   unsigned int shown = 0;
+   for (unsigned int cpu = 0; cpu < host->existingCPUs; cpu++) {
+      if (CPUMeter_isShown(host, cpu))
+         shown++;
+   }
+   return shown;
+}
+
+/* Range of this meter within the sequence of shown CPUs */
 static void AllCPUsMeter_getRange(const Meter* this, unsigned int* start, unsigned int* count) {
-   unsigned int cpus = this->host->existingCPUs;
+   unsigned int cpus = CPUMeter_countShown(this->host);
    switch (Meter_name(this)[0]) {
       default:
       case 'A': // All
@@ -258,105 +276,144 @@ static void AllCPUsMeter_getRange(const Meter* this, unsigned int* start, unsign
    }
 }
 
-static void CPUMeterCommonInit(Meter* this) {
-   unsigned int start, count, prevCount;
+/* Maps the shown CPUs of this meter onto their sub-meters, creating the ones
+ * seen for the first time. Sub-meters are kept per CPU id, so a CPU that is
+ * hidden or shifts to another slot keeps its history. Returns true if the
+ * shown sequence changed. */
+static bool CPUMeter_commonMapCPUs(Meter* this) {
+   const Machine* host = this->host;
+   CPUMeterData* data = this->meterData;
+   unsigned int start, count;
    AllCPUsMeter_getRange(this, &start, &count);
 
-   CPUMeterData* data = this->meterData;
-   if (!data) {
-      data = xCalloc(1, sizeof(CPUMeterData));
-      data->cpus = 0;   /* no meters allocated yet */
-      data->meters = NULL;
-      this->meterData = data;
-   }
-
-   prevCount = data->cpus;
-   if (count != prevCount) {
-      /* free meters for CPUs that are no longer in range */
-      for (unsigned int i = count; i < prevCount; i++)
+   if (host->existingCPUs != data->cpus) {
+      for (unsigned int i = host->existingCPUs; i < data->cpus; i++)
          Meter_delete((Object*)data->meters[i]);
 
-      if (count > 0) {
-         data->meters = xReallocArrayZero(data->meters, prevCount, count, sizeof(Meter*));
+      if (host->existingCPUs > 0) {
+         data->meters = xReallocArrayZero(data->meters, data->cpus, host->existingCPUs, sizeof(Meter*));
       } else {
          free(data->meters);
          data->meters = NULL;
       }
-      data->cpus = count;
+      data->cpus = host->existingCPUs;
    }
 
-   Meter** meters = data->meters;
-   for (unsigned int i = 0; i < count; i++) {
-      if (!meters[i])
-         meters[i] = Meter_new(this->host, start + i + 1, (const MeterClass*) Class(CPUMeter));
-
-      Meter_init(meters[i]);
+   bool changed = count != data->shownCount;
+   if (changed) {
+      if (count > 0) {
+         data->shown = xReallocArray(data->shown, count, sizeof(Meter*));
+      } else {
+         free(data->shown);
+         data->shown = NULL;
+      }
+      data->shownCount = count;
    }
+
+   unsigned int slot = 0;
+   for (unsigned int cpu = 0, seen = 0; cpu < data->cpus && slot < count; cpu++) {
+      if (!CPUMeter_isShown(host, cpu))
+         continue;
+      if (seen++ < start)
+         continue;
+
+      if (!data->meters[cpu])
+         data->meters[cpu] = Meter_new(host, cpu + 1, (const MeterClass*) Class(CPUMeter));
+
+      if (!changed && data->shown[slot] != data->meters[cpu])
+         changed = true;
+      data->shown[slot++] = data->meters[cpu];
+   }
+   assert(slot == count);
+
+   return changed;
 }
 
-static void AllCPUsMeter_updateValues(Meter* this) {
-   CPUMeterData* data = this->meterData;
-   unsigned int start, count;
-   AllCPUsMeter_getRange(this, &start, &count);
-   /* Reinit if the number of CPUs changed (e.g. hot-plug) */
-   if (count != data->cpus)
-      CPUMeterCommonInit(this);
-   data = this->meterData;
-   Meter** meters = data->meters;
-   for (unsigned int i = 0; i < count; i++)
-      Meter_updateValues(meters[i]);
-}
-
-static void CPUMeterCommonUpdateMode(Meter* this, MeterModeId mode, unsigned int ncol) {
-   /* Reinit first in case the CPU count changed since last init */
-   CPUMeterCommonInit(this);
-   CPUMeterData* data = this->meterData;
-   Meter** meters = data->meters;
-   this->mode = mode;
-   unsigned int start, count;
-   AllCPUsMeter_getRange(this, &start, &count);
-   if (!count) {
+static void CPUMeter_commonUpdateHeight(Meter* this) {
+   const CPUMeterData* data = this->meterData;
+   if (!data->shownCount) {
       this->h = 1;
       return;
    }
-   for (unsigned int i = 0; i < count; i++) {
-      Meter_setMode(meters[i], mode);
-   }
-   int h = meters[0]->h;
+   int h = data->shown[0]->h;
    assert(h > 0);
-   this->h = h * ((count + ncol - 1) / ncol);
+   this->h = h * ((data->shownCount + data->ncol - 1) / data->ncol);
+}
+
+/* (Re)initializes every sub-meter, syncs it to this meter's mode and keeps
+ * the height in sync with the shown CPUs (hot-plug, setup changes) */
+static void CPUMeter_commonInitSubMeters(Meter* this) {
+   const CPUMeterData* data = this->meterData;
+   for (unsigned int i = 0; i < data->cpus; i++) {
+      Meter* meter = data->meters[i];
+      if (!meter)
+         continue;
+
+      Meter_init(meter);
+      if (this->mode != 0)
+         Meter_setMode(meter, this->mode);
+   }
+
+   CPUMeter_commonUpdateHeight(this);
+}
+
+static void CPUMeter_commonInit(Meter* this, unsigned int ncol) {
+   CPUMeterData* data = this->meterData;
+   if (!data) {
+      data = xCalloc(1, sizeof(CPUMeterData));
+      this->meterData = data;
+   }
+   data->ncol = ncol;
+
+   CPUMeter_commonMapCPUs(this);
+   CPUMeter_commonInitSubMeters(this);
+}
+
+static void SingleColCPUsMeter_init(Meter* this) {
+   CPUMeter_commonInit(this, 1);
+}
+
+static void DualColCPUsMeter_init(Meter* this) {
+   CPUMeter_commonInit(this, 2);
+}
+
+static void QuadColCPUsMeter_init(Meter* this) {
+   CPUMeter_commonInit(this, 4);
+}
+
+static void OctoColCPUsMeter_init(Meter* this) {
+   CPUMeter_commonInit(this, 8);
+}
+
+static void AllCPUsMeter_updateValues(Meter* this) {
+   /* Reinit if the shown CPUs changed (e.g. hot-plug, hidden offline CPUs) */
+   if (CPUMeter_commonMapCPUs(this))
+      CPUMeter_commonInitSubMeters(this);
+
+   const CPUMeterData* data = this->meterData;
+   for (unsigned int i = 0; i < data->shownCount; i++)
+      Meter_updateValues(data->shown[i]);
+}
+
+static void AllCPUsMeter_updateMode(Meter* this, MeterModeId mode) {
+   this->mode = mode;
+   Meter_init(this);
 }
 
 static void AllCPUsMeter_done(Meter* this) {
    CPUMeterData* data = this->meterData;
-   Meter** meters = data->meters;
    for (unsigned int i = 0; i < data->cpus; i++)
-      Meter_delete((Object*)meters[i]);
+      Meter_delete((Object*)data->meters[i]);
    free(data->meters);
+   free(data->shown);
    free(data);
 }
 
-static void SingleColCPUsMeter_updateMode(Meter* this, MeterModeId mode) {
-   CPUMeterCommonUpdateMode(this, mode, 1);
-}
-
-static void DualColCPUsMeter_updateMode(Meter* this, MeterModeId mode) {
-   CPUMeterCommonUpdateMode(this, mode, 2);
-}
-
-static void QuadColCPUsMeter_updateMode(Meter* this, MeterModeId mode) {
-   CPUMeterCommonUpdateMode(this, mode, 4);
-}
-
-static void OctoColCPUsMeter_updateMode(Meter* this, MeterModeId mode) {
-   CPUMeterCommonUpdateMode(this, mode, 8);
-}
-
-static void CPUMeterCommonDraw(Meter* this, int x, int y, int w, unsigned int ncol) {
-   CPUMeterData* data = this->meterData;
-   Meter** meters = data->meters;
-   unsigned int start, count;
-   AllCPUsMeter_getRange(this, &start, &count);
+static void AllCPUsMeter_draw(Meter* this, int x, int y, int w) {
+   const CPUMeterData* data = this->meterData;
+   Meter** meters = data->shown;
+   unsigned int count = data->shownCount;
+   unsigned int ncol = data->ncol;
    int colwidth = w / (int)ncol;
    int diff = w % (int)ncol;
    unsigned int nrows = (count + ncol - 1) / ncol;
@@ -366,30 +423,6 @@ static void CPUMeterCommonDraw(Meter* this, int x, int y, int w, unsigned int nc
       int xpos = x + ((int)col * colwidth) + d;
       int ypos = y + ((i % nrows) * meters[0]->h);
       meters[i]->draw(meters[i], xpos, ypos, colwidth);
-   }
-}
-
-static void DualColCPUsMeter_draw(Meter* this, int x, int y, int w) {
-   CPUMeterCommonDraw(this, x, y, w, 2);
-}
-
-static void QuadColCPUsMeter_draw(Meter* this, int x, int y, int w) {
-   CPUMeterCommonDraw(this, x, y, w, 4);
-}
-
-static void OctoColCPUsMeter_draw(Meter* this, int x, int y, int w) {
-   CPUMeterCommonDraw(this, x, y, w, 8);
-}
-
-
-static void SingleColCPUsMeter_draw(Meter* this, int x, int y, int w) {
-   CPUMeterData* data = this->meterData;
-   Meter** meters = data->meters;
-   unsigned int start, count;
-   AllCPUsMeter_getRange(this, &start, &count);
-   for (unsigned int i = 0; i < count; i++) {
-      meters[i]->draw(meters[i], x, y, w);
-      y += meters[i]->h;
    }
 }
 
@@ -429,9 +462,9 @@ const MeterClass AllCPUsMeter_class = {
    .uiName = "CPUs (1/1)",
    .description = "CPUs (1/1): all CPUs",
    .caption = "CPU",
-   .draw = SingleColCPUsMeter_draw,
-   .init = CPUMeterCommonInit,
-   .updateMode = SingleColCPUsMeter_updateMode,
+   .draw = AllCPUsMeter_draw,
+   .init = SingleColCPUsMeter_init,
+   .updateMode = AllCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
 
@@ -451,9 +484,9 @@ const MeterClass AllCPUs2Meter_class = {
    .uiName = "CPUs (1&2/2)",
    .description = "CPUs (1&2/2): all CPUs in 2 shorter columns",
    .caption = "CPU",
-   .draw = DualColCPUsMeter_draw,
-   .init = CPUMeterCommonInit,
-   .updateMode = DualColCPUsMeter_updateMode,
+   .draw = AllCPUsMeter_draw,
+   .init = DualColCPUsMeter_init,
+   .updateMode = AllCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
 
@@ -473,9 +506,9 @@ const MeterClass LeftCPUsMeter_class = {
    .uiName = "CPUs (1/2)",
    .description = "CPUs (1/2): first half of list",
    .caption = "CPU",
-   .draw = SingleColCPUsMeter_draw,
-   .init = CPUMeterCommonInit,
-   .updateMode = SingleColCPUsMeter_updateMode,
+   .draw = AllCPUsMeter_draw,
+   .init = SingleColCPUsMeter_init,
+   .updateMode = AllCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
 
@@ -495,9 +528,9 @@ const MeterClass RightCPUsMeter_class = {
    .uiName = "CPUs (2/2)",
    .description = "CPUs (2/2): second half of list",
    .caption = "CPU",
-   .draw = SingleColCPUsMeter_draw,
-   .init = CPUMeterCommonInit,
-   .updateMode = SingleColCPUsMeter_updateMode,
+   .draw = AllCPUsMeter_draw,
+   .init = SingleColCPUsMeter_init,
+   .updateMode = AllCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
 
@@ -517,9 +550,9 @@ const MeterClass LeftCPUs2Meter_class = {
    .uiName = "CPUs (1&2/4)",
    .description = "CPUs (1&2/4): first half in 2 shorter columns",
    .caption = "CPU",
-   .draw = DualColCPUsMeter_draw,
-   .init = CPUMeterCommonInit,
-   .updateMode = DualColCPUsMeter_updateMode,
+   .draw = AllCPUsMeter_draw,
+   .init = DualColCPUsMeter_init,
+   .updateMode = AllCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
 
@@ -539,9 +572,9 @@ const MeterClass RightCPUs2Meter_class = {
    .uiName = "CPUs (3&4/4)",
    .description = "CPUs (3&4/4): second half in 2 shorter columns",
    .caption = "CPU",
-   .draw = DualColCPUsMeter_draw,
-   .init = CPUMeterCommonInit,
-   .updateMode = DualColCPUsMeter_updateMode,
+   .draw = AllCPUsMeter_draw,
+   .init = DualColCPUsMeter_init,
+   .updateMode = AllCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
 
@@ -561,9 +594,9 @@ const MeterClass AllCPUs4Meter_class = {
    .uiName = "CPUs (1&2&3&4/4)",
    .description = "CPUs (1&2&3&4/4): all CPUs in 4 shorter columns",
    .caption = "CPU",
-   .draw = QuadColCPUsMeter_draw,
-   .init = CPUMeterCommonInit,
-   .updateMode = QuadColCPUsMeter_updateMode,
+   .draw = AllCPUsMeter_draw,
+   .init = QuadColCPUsMeter_init,
+   .updateMode = AllCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
 
@@ -583,9 +616,9 @@ const MeterClass LeftCPUs4Meter_class = {
    .uiName = "CPUs (1-4/8)",
    .description = "CPUs (1-4/8): first half in 4 shorter columns",
    .caption = "CPU",
-   .draw = QuadColCPUsMeter_draw,
-   .init = CPUMeterCommonInit,
-   .updateMode = QuadColCPUsMeter_updateMode,
+   .draw = AllCPUsMeter_draw,
+   .init = QuadColCPUsMeter_init,
+   .updateMode = AllCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
 
@@ -605,9 +638,9 @@ const MeterClass RightCPUs4Meter_class = {
    .uiName = "CPUs (5-8/8)",
    .description = "CPUs (5-8/8): second half in 4 shorter columns",
    .caption = "CPU",
-   .draw = QuadColCPUsMeter_draw,
-   .init = CPUMeterCommonInit,
-   .updateMode = QuadColCPUsMeter_updateMode,
+   .draw = AllCPUsMeter_draw,
+   .init = QuadColCPUsMeter_init,
+   .updateMode = AllCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
 
@@ -627,9 +660,9 @@ const MeterClass AllCPUs8Meter_class = {
    .uiName = "CPUs (1-8/8)",
    .description = "CPUs (1-8/8): all CPUs in 8 shorter columns",
    .caption = "CPU",
-   .draw = OctoColCPUsMeter_draw,
-   .init = CPUMeterCommonInit,
-   .updateMode = OctoColCPUsMeter_updateMode,
+   .draw = AllCPUsMeter_draw,
+   .init = OctoColCPUsMeter_init,
+   .updateMode = AllCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
 
@@ -649,9 +682,9 @@ const MeterClass LeftCPUs8Meter_class = {
    .uiName = "CPUs (1-8/16)",
    .description = "CPUs (1-8/16): first half in 8 shorter columns",
    .caption = "CPU",
-   .draw = OctoColCPUsMeter_draw,
-   .init = CPUMeterCommonInit,
-   .updateMode = OctoColCPUsMeter_updateMode,
+   .draw = AllCPUsMeter_draw,
+   .init = OctoColCPUsMeter_init,
+   .updateMode = AllCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
 
@@ -671,8 +704,8 @@ const MeterClass RightCPUs8Meter_class = {
    .uiName = "CPUs (9-16/16)",
    .description = "CPUs (9-16/16): second half in 8 shorter columns",
    .caption = "CPU",
-   .draw = OctoColCPUsMeter_draw,
-   .init = CPUMeterCommonInit,
-   .updateMode = OctoColCPUsMeter_updateMode,
+   .draw = AllCPUsMeter_draw,
+   .init = OctoColCPUsMeter_init,
+   .updateMode = AllCPUsMeter_updateMode,
    .done = AllCPUsMeter_done
 };
