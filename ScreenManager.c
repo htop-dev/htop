@@ -350,6 +350,12 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
             } else if (mevent.bstate & BUTTON5_PRESSED) {
                ch = KEY_WHEELDOWN;
             #endif
+            #if NCURSES_MOUSE_VERSION > 2
+            } else if (mevent.bstate & BUTTON6_PRESSED) {
+               ch = KEY_LEFT;
+            } else if (mevent.bstate & BUTTON7_PRESSED) {
+               ch = KEY_RIGHT;
+            #endif
             }
          }
       }
