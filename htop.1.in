@@ -35,7 +35,6 @@ to display values from arbitrary metrics.
 See the section below titled
 .B "CONFIG FILES"
 for further details.
-.br
 .SH "COMMAND-LINE OPTIONS"
 Mandatory arguments to long options are mandatory for short options too.
 .TP
@@ -54,21 +53,21 @@ Start
 .B htop
 in monochrome mode
 .TP
-\fB\-F \-\-filter=FILTER
+\fB\-F \-\-filter=FILTER\fR
 Filter processes by terms matching the commands. The terms are matched
 case-insensitive and as fixed strings (not regexs). You can separate multiple terms with "|".
 .TP
 \fB\-\-no-function-bar\fR
 Hide the function bar
 .TP
-\fB\-h \-\-help
+\fB\-h \-\-help\fR
 Display a help message and exit
 .TP
-\fB\-p \-\-pid=PID,PID...\fR
+\fB\-p \-\-pid=PID[,PID...]\fR
 Show only the given PIDs
 .TP
-\fB\-s \-\-sort\-key COLUMN\fR
-Sort by this column (use \-\-sort\-key help for a column list).
+\fB\-s \-\-sort\-key=COLUMN\fR
+Sort by this column (use \-\-sort\-key=help for a column list).
 This will force a list view unless you specify -t at the same time.
 Sorting in tree mode applies to the direct children of each process.
 .TP
@@ -84,7 +83,7 @@ Disable support of mouse control
 \fB\-\-no-meters\fR
 Hide graph meters
 .TP
- \fB\-\-keep-visible[=N]\fR
+\fB\-\-keep-visible[=N]\fR
 Keep the first N columns visible when scrolling sideways in the process list.
 The argument is optional; if omitted, N is taken to be 1, and 0 disables the
 feature (the default). If N is larger than the number of columns of the
@@ -94,10 +93,10 @@ the last column remains scrollable.
 \fB\-\-readonly\fR
 Disable all system and process changing features
 .TP
-\fB\-V \-\-version
+\fB\-V \-\-version\fR
 Output version information and exit
 .TP
-\fB\-t \-\-tree[=MODE]
+\fB\-t \-\-tree[=MODE]\fR
 Show processes in tree view.
 This can be used to force a tree view when requesting a sort order with -s.
 The optional MODE can used to set the stable tree mode (0/classic ;
@@ -106,8 +105,10 @@ Soft mode will try to stabilize the current PID line visually on the screen.
 Hard mode will additionally allow to move the whole tree down, creating
 empty space above the root when necessary.
 .TP
-\fB\-H \-\-highlight-changes=DELAY\fR
-Highlight new and old processes
+\fB\-H \-\-highlight-changes[=DELAY]\fR
+Highlight new and old processes.
+If DELAY is omitted, the highlight time configured in the setup screen is
+used (5 seconds by default).
 .TP
 \fB\-\-drop-capabilities[=off|basic|strict]\fR
 Linux only; this option needs to have been enabled at compile-time and
@@ -117,6 +118,29 @@ Drop unneeded Linux capabilities.
 In strict mode features like killing, changing process priorities and reading
 process delay accounting information will not work due to fewer capabilities
 being held.
+.TP
+\fB\-\-host=HOSTSPEC\fR
+.B pcp-htop
+only.
+.br
+Read metrics from the PMCD daemon on HOSTSPEC rather than from the local host; see
+.BR PCPIntro (1)
+for the HOSTSPEC syntax.
+.TP
+\fB\-\-hostzone\fR
+.B pcp-htop
+only.
+.br
+Set the reporting timezone to the local timezone of the host supplying the metrics,
+rather than that of the local host.
+Mutually exclusive with \fB\-\-timezone\fR.
+.TP
+\fB\-\-timezone=TZ\fR
+.B pcp-htop
+only.
+.br
+Set the reporting timezone to TZ, using the syntax of the TZ environment variable.
+Mutually exclusive with \fB\-\-hostzone\fR.
 .SH "INTERACTIVE COMMANDS"
 The following commands are supported while in
 .BR htop :
