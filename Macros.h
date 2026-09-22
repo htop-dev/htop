@@ -91,7 +91,9 @@ in the source distribution for its full text.
 
 #endif /* HAVE_ATTR_ALLOC_SIZE */
 
-#ifdef HAVE_ATTR_ACCESS
+/* clang ignores the access attribute and emits -Wunknown-attributes for it,
+ * so only define it when the compiler actually supports it. */
+#if defined(HAVE_ATTR_ACCESS) && !defined(__clang__)
 
 #define ATTR_ACCESS2(mode, ref)         __attribute__((access (mode, ref)))
 #define ATTR_ACCESS3(mode, ref, size)   __attribute__((access (mode, ref, size)))

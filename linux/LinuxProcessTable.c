@@ -44,6 +44,8 @@ in the source distribution for its full text.
 #include "linux/GPU.h"
 #include "linux/LinuxMachine.h"
 #include "linux/LinuxProcess.h"
+#include "linux/NetLinkNet.h"
+#include "linux/NetMonitor.h"
 #include "linux/Platform.h" // needed for GNU/hurd to get PATH_MAX  // IWYU pragma: keep
 
 #ifdef HAVE_DELAYACCT
@@ -63,6 +65,10 @@ in the source distribution for its full text.
 
 /* Maximum buffer size for reading COMMAND / comm */
 #define MAX_CMDLINE_BUFFER_SIZE (2 * 1024 * 1024 + 512)
+
+/* Per-syscall byte budget for the rchar/wchar network guesstimate, mirroring
+ * the per-probe-clamp the eBPF path applies. */
+#define NET_GUESSTIMATE_MAX_BYTES (1 << 20)
 
 /* Inode number of the PID namespace of htop */
 static ino_t rootPidNs = (ino_t)-1;
@@ -632,6 +638,25 @@ static bool LinuxProcessTable_updateUser(const Machine* host, Process* process, 
 /*
  * Read /proc/<pid>/io (thread-specific data)
  */
+/* The network rate estimate decays with a time constant, so a finished burst
+ * falls below displayable resolution within a few UI updates instead of trailing off.
+ * Once the smoothed rate drops below NET_RATE_ZERO_FLOOR_BPS while the counters
+ * are idle, it is snapped to zero so that sub-byte echoes do not linger on screen. */
+#define NET_RATE_ZERO_FLOOR_BPS 0.5
+
+static void NetRateWindow_update(NetRateWindow* w, unsigned long long now, unsigned long long curRx, unsigned long long curTx, unsigned long long decayMs);
+
+/* Every network tier (eBPF, netlink sock_diag, rchar/wchar estimate) passes
+ * its cumulative counters through the same exponential moving average and
+ * the same time source, so the rates they produce are directly comparable
+ * in magnitude. */
+static void LinuxProcess_updateNetRateWindow(NetRateWindow* window, const Machine* host, unsigned long long rx, unsigned long long tx) {
+   /* --delay is configured in tenths of seconds; the smoothing decays with a
+    * time constant of one update interval regardless of the scan rate. */
+   const unsigned long long delayMs = (unsigned long long) host->settings->delay * 100;
+   NetRateWindow_update(window, host->realtimeMs, rx, tx, delayMs);
+}
+
 static void LinuxProcessTable_readIoFile(LinuxProcess* lp, openat_arg_t procFd, bool scanMainThread) {
    Process* process = &lp->super;
    const Machine* host = process->super.host;
@@ -644,6 +669,8 @@ static void LinuxProcessTable_readIoFile(LinuxProcess* lp, openat_arg_t procFd, 
    if (r < 0) {
       lp->io_rate_read_bps = NAN;
       lp->io_rate_write_bps = NAN;
+      lp->net_rate_rx_bps = NAN;
+      lp->net_rate_tx_bps = NAN;
       lp->io_rchar = ULLONG_MAX;
       lp->io_wchar = ULLONG_MAX;
       lp->io_syscr = ULLONG_MAX;
@@ -696,7 +723,151 @@ static void LinuxProcessTable_readIoFile(LinuxProcess* lp, openat_arg_t procFd, 
       }
    }
 
+   /* The rchar/wchar guesstimate counts all read(2)/write(2) activity, not
+    * just network bytes. Subtract the storage-layer bytes (those really
+    * fetched from / sent to disk) so file I/O does not inflate the estimate,
+    * then bound the remainder by the syscall count, mirroring the eBPF probe
+    * clamp: a single syscall cannot account for more than the per-call
+    * budget, so an absurd byte total cannot inflate the displayed rate. */
+   const unsigned long long last_syscr = lp->io_last_scan_syscr;
+   const unsigned long long last_syscw = lp->io_last_scan_syscw;
+   if (time_delta) {
+      const unsigned long long rcharBound = saturatingSub(lp->io_syscr, last_syscr) * NET_GUESSTIMATE_MAX_BYTES;
+      const unsigned long long wcharBound = saturatingSub(lp->io_syscw, last_syscw) * NET_GUESSTIMATE_MAX_BYTES;
+      /* Cumulative non-storage I/O. Saturating subtraction keeps readahead
+       * (counted in read_bytes before the corresponding rchar) from turning
+       * the estimate negative. */
+      const unsigned long long estRx = saturatingSub(lp->io_rchar, lp->io_read_bytes);
+      const unsigned long long estTx = saturatingSub(lp->io_wchar, lp->io_write_bytes);
+      LinuxProcess_updateNetRateWindow(&lp->netEst, host, estRx, estTx);
+      lp->net_rate_rx_bps = MINIMUM(lp->netEst.rx_bps, rcharBound * /*ms to s*/1000. / time_delta);
+      lp->net_rate_tx_bps = MINIMUM(lp->netEst.tx_bps, wcharBound * /*ms to s*/1000. / time_delta);
+   } else {
+      lp->net_rate_rx_bps = NAN;
+      lp->net_rate_tx_bps = NAN;
+   }
+
+   lp->io_last_scan_syscr = lp->io_syscr;
+   lp->io_last_scan_syscw = lp->io_syscw;
    lp->io_last_scan_time_ms = host->realtimeMs;
+}
+
+static void NetRateWindow_update(NetRateWindow* w, unsigned long long now, unsigned long long curRx, unsigned long long curTx, unsigned long long decayMs) {
+   if (!w->seen) {
+      /* First observation: record the cumulative counters and the current
+       * time as the baseline, so the rate starts at zero rather than
+       * absorbing bytes accumulated since tracking began. */
+      w->seen = true;
+      w->last_rx_bytes = curRx;
+      w->last_tx_bytes = curTx;
+      w->last_scan_ms = now;
+      w->rx_bps = 0;
+      w->tx_bps = 0;
+      return;
+   }
+
+   /* A cumulative counter that went backwards means the tracking state was
+    * reset elsewhere (dropped map entry, PID reuse, readahead counted in
+    * read_bytes before the corresponding rchar). The previous baseline no
+    * longer applies, so re-seed instead of trusting a bogus delta that would
+    * surface as a huge rate. */
+   if (curRx < w->last_rx_bytes || curTx < w->last_tx_bytes) {
+      w->last_rx_bytes = curRx;
+      w->last_tx_bytes = curTx;
+      w->last_scan_ms = now;
+      w->rx_bps = 0;
+      w->tx_bps = 0;
+      return;
+   }
+
+   /* Exponential moving average of the instantaneous rate between scans. A
+    * new value is emitted on every scan, so updates start at the second scan
+    * of a fresh row and the display never keeps a stale rate. The smoothing
+    * factor is derived from the elapsed scan interval and the update period
+    * (decayMs), so a finished burst decays over a few UI updates regardless
+    * of the scan rate. */
+   const unsigned long long dt = saturatingSub(now, w->last_scan_ms);
+   if (!dt) {
+      /* No time elapsed since the last scan; keep the previously displayed rate. */
+      return;
+   }
+
+   const double instRx = saturatingSub(curRx, w->last_rx_bytes) * /*ms to s*/1000. / (double) dt;
+   const double instTx = saturatingSub(curTx, w->last_tx_bytes) * /*ms to s*/1000. / (double) dt;
+   const double alpha = 1.0 - exp(-(double) dt / (double) decayMs);
+   w->rx_bps += alpha * (instRx - w->rx_bps);
+   w->tx_bps += alpha * (instTx - w->tx_bps);
+
+   /* A finished burst leaves a long exponential tail of sub-displayable
+    * values; once the counters stop moving and the smoothed rate is below
+    * the display floor, it is snapped to zero. */
+   if (instRx <= 0.0 && w->rx_bps < NET_RATE_ZERO_FLOOR_BPS)
+      w->rx_bps = 0;
+   if (instTx <= 0.0 && w->tx_bps < NET_RATE_ZERO_FLOOR_BPS)
+      w->tx_bps = 0;
+
+   w->last_rx_bytes = curRx;
+   w->last_tx_bytes = curTx;
+   w->last_scan_ms = now;
+}
+
+/* Per-process network rates come from three sources, applied in priority
+ * order:
+ *
+ *   1. eBPF kprobes (exact, no marker)     - LinuxProcessTable_readNetIO
+ *   2. NETLINK_SOCK_DIAG (concise, "+")    - NetLinkNet
+ *   3. read(2)/write(2) guesstimate ("~")  - LinuxProcessTable_readIoFile
+ *
+ * LinuxProcessTable_readIoFile has already stored the lowest-priority
+ * estimate in lp->net_rate_*; each higher tier below overrides it only if it
+ * is actually available. Therefore every scan attributes a process from
+ * exactly one source, reflecting the fallback chain. All tiers feed their
+ * cumulative counters through the shared exponential moving average
+ * (LinuxProcess_updateNetRateWindow), so the produced rates use the same
+ * time base and are directly comparable in magnitude. */
+static void LinuxProcessTable_readNetIO(LinuxProcess* lp, const Machine* host) {
+   if (NetMonitor_isActive()) {
+      /* Tier 1, eBPF: exact tcp_recvmsg/tcp_sendmsg counters. Map entries are
+       * keyed by thread group id, so every row of a process (main task and
+       * userland threads) shows the same process-level rate; a missing entry
+       * means the process has not sent or received anything. */
+      NetIOData netData;
+      if (!NetMonitor_getNetIO(Process_getThreadGroup(&lp->super), &netData)) {
+         lp->net_rate_rx_bps = 0;
+         lp->net_rate_tx_bps = 0;
+         return;
+      }
+
+      LinuxProcess_updateNetRateWindow(&lp->netBpf, host, netData.rxBytes, netData.txBytes);
+      lp->net_rate_rx_bps = lp->netBpf.rx_bps;
+      lp->net_rate_tx_bps = lp->netBpf.tx_bps;
+      return;
+   }
+
+   if (NetLinkNet_isActive()) {
+      /* Tier 2, NETLINK_SOCK_DIAG: socket-level tcp_info byte counters, used
+       * when eBPF is unavailable. TCP bandwidth matches the eBPF scale; the
+       * UDP/ICMP socket-buffer queue levels only give a lower bound. */
+      pid_t tgid = Process_getThreadGroup(&lp->super);
+      unsigned long long rx, tx;
+      if (!NetLinkNet_getNetBytes(tgid, &rx, &tx)) {
+         if (NetLinkNet_isProcessUnreadable(tgid)) {
+            lp->net_rate_rx_bps = NAN;
+            lp->net_rate_tx_bps = NAN;
+         } else {
+            lp->net_rate_rx_bps = 0;
+            lp->net_rate_tx_bps = 0;
+         }
+         return;
+      }
+
+      LinuxProcess_updateNetRateWindow(&lp->netNl, host, rx, tx);
+      lp->net_rate_rx_bps = lp->netNl.rx_bps;
+      lp->net_rate_tx_bps = lp->netNl.tx_bps;
+   }
+
+   /* Tier 3, read(2)/write(2) guesstimate: the value stored by
+    * LinuxProcessTable_readIoFile is kept unchanged. */
 }
 
 typedef struct LibraryData_ {
@@ -1739,6 +1910,10 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
          LinuxProcessTable_readIoFile(lp, procFd, scanMainThread);
       }
 
+      if (ss->flags & PROCESS_FLAG_LINUX_NETIO) {
+         LinuxProcessTable_readNetIO(lp, host);
+      }
+
       #ifdef HAVE_DELAYACCT
       if (ss->flags & PROCESS_FLAG_LINUX_DELAYACCT) {
          LibNl_readDelayAcctData(this, lp);
@@ -1849,6 +2024,13 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
       this->haveAutogroup = LinuxProcess_isAutogroupEnabled();
    } else {
       this->haveAutogroup = false;
+   }
+
+   if (settings->ss->flags & PROCESS_FLAG_LINUX_NETIO) {
+      /* Only load/refresh the network data when a NET rate column is shown. */
+      NetMonitor_update();
+      if (!NetMonitor_isActive())
+         NetLinkNet_update();
    }
 
    /* Shift GPU values */
