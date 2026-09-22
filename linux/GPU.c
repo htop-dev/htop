@@ -83,6 +83,7 @@ void GPU_readProcessData(LinuxProcessTable* lpt, LinuxProcess* lp, openat_arg_t 
    DIR* fdinfoDir = NULL;
    ClientInfo* parsed_ids = NULL;
    unsigned long long int new_gpu_time = 0;
+   unsigned long long int new_gpu_memory = 0;
 
    /* check only if active in last check or last scan was more than 5s ago */
    if (lp->gpu_activityMs != 0 && host->monotonicMs - lp->gpu_activityMs < 5000) {
@@ -193,6 +194,45 @@ void GPU_readProcessData(LinuxProcessTable* lpt, LinuxProcess* lp, openat_arg_t 
                   update_machine_gpu(lpt, value, engineStart, delim - engineStart);
                }
             }
+         } else if ((line[0] == 'm' && String_startsWith(line, "memory-")) ||
+                    (line[0] == 'r' && String_startsWith(line, "resident-"))) {
+            /*
+             * "drm-resident-<region>" is the current key for backing-store size;
+             * "drm-memory-<region>" is its deprecated alias (amdgpu only). A given
+             * driver emits only one of the two per region, so summing both is safe.
+             */
+            if (sstate == SECST_DUPLICATE)
+               continue;
+
+            const char* delim = strchr(line, ':');
+            if (!delim)
+               continue;
+
+            char* endptr;
+            errno = 0;
+            unsigned long long int value = strtoull(delim + 1, &endptr, 10);
+            while (*endptr == ' ')
+               endptr++;
+
+            unsigned long long int bytesValue;
+            if (errno != 0)
+               continue;
+            else if (String_startsWith(endptr, "KiB"))
+               bytesValue = value * 1024ULL;
+            else if (String_startsWith(endptr, "MiB"))
+               bytesValue = value * 1024ULL * 1024ULL;
+            else
+               continue;
+
+            if (sstate == SECST_UNKNOWN) {
+               if (client_id != INVALID_CLIENT_ID && !is_duplicate_client(parsed_ids, client_id, pdev))
+                  sstate = SECST_NEW;
+               else
+                  sstate = SECST_DUPLICATE;
+            }
+
+            if (sstate == SECST_NEW)
+               new_gpu_memory += bytesValue;
          }
       } /* finished parsing lines */
 
@@ -228,6 +268,7 @@ void GPU_readProcessData(LinuxProcessTable* lpt, LinuxProcess* lp, openat_arg_t 
 out:
 
    lp->gpu_time = new_gpu_time;
+   lp->gpu_memory = new_gpu_memory;
 
    while (parsed_ids) {
       ClientInfo* next = parsed_ids->next;
