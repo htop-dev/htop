@@ -463,6 +463,8 @@ void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt) {
 
       if (hideUserlandThreads) {
          tprocess->super.show = false;
+         if (!preExisting)
+            ProcessTable_add(&dpt->super, tprocess);
          continue;
       }
 
