@@ -13,8 +13,10 @@ in the source distribution for its full text.
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
+#include <limits.h>
 #include <sys/types.h>
 
+#include "XUtils.h"
 #include "linux/Compat.h"
 #include "linux/LinuxMachine.h"
 
@@ -43,6 +45,42 @@ static bool is_duplicate_client(const ClientInfo* parsed, ClientID id, const cha
    }
 
    return false;
+}
+
+/*
+ * Parses the value of a "drm-resident-<region>" / "drm-memory-<region>" fdinfo
+ * line (the text right after the ':') into a byte count. Rejects malformed or
+ * unrecognized unit suffixes and multiplications that would overflow.
+ */
+static bool parse_drm_memory_value(const char* text, unsigned long long int* outBytes) {
+   char* endptr;
+   errno = 0;
+   unsigned long long int value = strtoull(text, &endptr, 10);
+   if (errno != 0)
+      return false;
+
+   while (*endptr == ' ')
+      endptr++;
+
+   unsigned long long int multiplier;
+   if (*endptr == '\0')
+      multiplier = 1;
+   else if (String_eq(endptr, "KiB"))
+      multiplier = 1024ULL;
+   else if (String_eq(endptr, "MiB"))
+      multiplier = 1024ULL * 1024ULL;
+   else if (String_eq(endptr, "GiB"))
+      multiplier = 1024ULL * 1024ULL * 1024ULL;
+   else if (String_eq(endptr, "TiB"))
+      multiplier = 1024ULL * 1024ULL * 1024ULL * 1024ULL;
+   else
+      return false;
+
+   if (multiplier > 1 && value > ULLONG_MAX / multiplier)
+      return false;
+
+   *outBytes = value * multiplier;
+   return true;
 }
 
 static void update_machine_gpu(LinuxProcessTable* lpt, unsigned long long int time, const char* engine, size_t engine_len) {
@@ -208,20 +246,8 @@ void GPU_readProcessData(LinuxProcessTable* lpt, LinuxProcess* lp, openat_arg_t 
             if (!delim)
                continue;
 
-            char* endptr;
-            errno = 0;
-            unsigned long long int value = strtoull(delim + 1, &endptr, 10);
-            while (*endptr == ' ')
-               endptr++;
-
             unsigned long long int bytesValue;
-            if (errno != 0)
-               continue;
-            else if (String_startsWith(endptr, "KiB"))
-               bytesValue = value * 1024ULL;
-            else if (String_startsWith(endptr, "MiB"))
-               bytesValue = value * 1024ULL * 1024ULL;
-            else
+            if (!parse_drm_memory_value(delim + 1, &bytesValue))
                continue;
 
             if (sstate == SECST_UNKNOWN) {
