@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include <stddef.h>
 
 #include "Machine.h"
+#include "linux/CGroupMem.h"
 #include "linux/ZramStats.h"
 #include "linux/ZswapStats.h"
 #include "zfs/ZfsArcStats.h"
@@ -99,6 +100,7 @@ typedef struct LinuxMachine_ {
    ZfsArcStats zfs;
    ZramStats zram;
    ZswapStats zswap;
+   CGroupMemData cgroupMem;
 } LinuxMachine;
 
 #ifndef PROCDIR
