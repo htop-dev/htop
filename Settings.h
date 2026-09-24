@@ -106,6 +106,7 @@ typedef struct Settings_ {
    bool screenTabs;
    int keepColumnsVisible;  // number of leading columns kept in view when scrolling horizontally (0 - off). Higher values than the number of columns fall back to pinning all but the last.
    bool showCachedMemory;
+   char* scriptLocation;
    #ifdef HAVE_GETMOUSE
    bool enableMouse;
    #endif
