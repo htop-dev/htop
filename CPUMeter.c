@@ -325,7 +325,7 @@ static bool CPUMeter_commonMapCPUs(Meter* this) {
 
 static void CPUMeter_commonUpdateHeight(Meter* this) {
    const CPUMeterData* data = this->meterData;
-   if (!data->shownCount) {
+   if (!data->shownCount || !data->shown[0]) {
       this->h = 1;
       return;
    }
