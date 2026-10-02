@@ -150,7 +150,10 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
       this->state->failedUpdate = Platform_getFailedState();
 
       // always update header, especially to avoid gaps in graph meters
-      Header_updateData(this->header);
+      if (Header_updateData(this->header)) {
+         ScreenManager_resize(this);
+         *force_redraw = true;
+      }
 
       // force redraw if the number of UID/PID digits changed
       if (Process_uidDigits != oldUidDigits || Process_pidDigits != oldPidDigits)
