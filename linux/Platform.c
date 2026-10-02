@@ -69,7 +69,9 @@ in the source distribution for its full text.
 #endif
 
 #ifdef HAVE_SENSORS_SENSORS_H
+#include "DynamicMeter.h"
 #include "LibSensors.h"
+#include "LibSensorsMeter.h"
 #endif
 
 #ifndef O_PATH
@@ -258,6 +260,9 @@ const MeterClass* const Platform_meterTypes[] = {
    &LeftCPUs8Meter_class,
    &RightCPUs8Meter_class,
    &BlankMeter_class,
+#ifdef HAVE_SENSORS_SENSORS_H
+   &DynamicMeter_class,
+#endif
    &PressureStallCPUSomeMeter_class,
    &PressureStallIOSomeMeter_class,
    &PressureStallIOFullMeter_class,
@@ -1127,6 +1132,28 @@ static int dropCapabilities(enum CapMode mode) {
    cap_free(caps);
 
    return 0;
+}
+#endif
+
+#ifdef HAVE_SENSORS_SENSORS_H
+Hashtable* Platform_dynamicMeters(void) {
+   return LibSensorsMeter_new();
+}
+
+void Platform_dynamicMetersDone(Hashtable* table) {
+   LibSensorsMeter_done(table);
+}
+
+void Platform_dynamicMeterInit(Meter* meter) {
+   LibSensorsMeter_init(meter);
+}
+
+void Platform_dynamicMeterUpdateValues(Meter* meter) {
+   LibSensorsMeter_updateValues(meter);
+}
+
+void Platform_dynamicMeterDisplay(const Meter* meter, RichString* out) {
+   LibSensorsMeter_display(meter, out);
 }
 #endif
 

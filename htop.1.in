@@ -838,6 +838,50 @@ and
 .B pcp-htop
 is only saved when a clean exit is performed. Sending any signal will cause
 .I all configuration changes to be lost.
+.LP
+.nh
+On Linux systems with libsensors support,
+.B htop
+can use custom labels for hardware sensor meters.
+System-wide labels are read from
+.IR @sysconfdir@/htop/sensor-labels.conf .
+User labels are read from the
+.B htop
+configuration directory, usually
+.IR ~/.config/htop/sensor-labels.conf .
+User labels override system-wide labels.
+.LP
+Each line maps a sensor ID to a label:
+.LP
+.ft CR
+.nf
+sensor-id = label
+.fi
+.ft 1
+.LP
+To find a sensor ID, open Setup (F2) and look in Available Meters.
+The full sensor ID is shown there.
+Alternatively, run
+.B sensors -u
+and combine the chip name and feature name with a colon.
+.LP
+For example:
+.LP
+.ft CR
+.nf
+pwmfan-isa-000c:fan1 = Fan 1
+rp1_adc-isa-c8000:temp1 = RPI ADC
+cpu_thermal-virtual-0:temp1 = CPU
+.fi
+.ft 1
+.LP
+Displayed sensor labels are limited to 31 bytes.
+UTF-8 labels are truncated at a character boundary.
+If no htop label is set,
+.B htop
+uses the libsensors label, the sensor chip prefix,
+or finally the sensor ID.
+.hy 1
 .SH "MEMORY SIZES"
 Memory sizes in
 .B htop
