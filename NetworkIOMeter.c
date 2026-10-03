@@ -45,6 +45,7 @@ static void NetworkIOMeter_updateValues(Meter* this) {
 
    /* update only every 500ms to have a sane span for rate calculation */
    if (passedTimeInMs > 500) {
+      data.ignoreVirtualIntf = host->settings->ignoreVirtualNetworkInterfaces;
       hasNewData = Platform_getNetworkIO(&data);
       if (!hasNewData) {
          status = RATESTATUS_NODATA;

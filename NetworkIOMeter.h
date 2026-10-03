@@ -17,6 +17,7 @@ typedef struct NetworkIOData_ {
    uint64_t packetsReceived;
    uint64_t bytesTransmitted;
    uint64_t packetsTransmitted;
+   bool ignoreVirtualIntf;
 } NetworkIOData;
 
 extern const MeterClass NetworkIOMeter_class;
