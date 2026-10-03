@@ -189,6 +189,7 @@ linux_platform_headers = \
 	generic/hostname.h \
 	generic/uname.h \
 	linux/CGroupUtils.h \
+	linux/DockerMgr.h \
 	linux/Compat.h \
 	linux/GPU.h \
 	linux/HugePageMeter.h \
@@ -218,6 +219,7 @@ linux_platform_sources = \
 	generic/hostname.c \
 	generic/uname.c \
 	linux/CGroupUtils.c \
+	linux/DockerMgr.c \
 	linux/Compat.c \
 	linux/GPU.c \
 	linux/HugePageMeter.c \
