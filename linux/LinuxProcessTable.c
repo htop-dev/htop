@@ -40,6 +40,7 @@ in the source distribution for its full text.
 #include "Table.h"
 #include "UsersTable.h"
 #include "linux/CGroupUtils.h"
+#include "linux/DockerMgr.h"
 #include "linux/Compat.h"
 #include "linux/GPU.h"
 #include "linux/LinuxMachine.h"
@@ -1005,6 +1006,15 @@ static void LinuxProcessTable_readCGroupFile(LinuxProcess* process, openat_arg_t
 
    char* container_short = CGroup_filterContainer(process->cgroup);
    if (container_short) {
+      /* If this is a Docker container, try to resolve the real name via the Docker API */
+      static const char* dockerPrefix = "!docker:";
+      if (String_startsWith(container_short, dockerPrefix)) {
+         char* resolved = DockerMgr_getContainerName(container_short + strlen(dockerPrefix));
+         if (resolved) {
+            free(container_short);
+            container_short = resolved;
+         }
+      }
       Row_updateFieldWidth(CONTAINER, strlen(container_short));
       free_and_xStrdup(&process->container_short, container_short);
       free(container_short);
