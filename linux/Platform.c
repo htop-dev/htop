@@ -161,7 +161,7 @@ const MemoryClass Platform_memoryClasses[] = {
 
 const unsigned int Platform_numberOfMemoryClasses = ARRAYSIZE(Platform_memoryClasses);
 
-static enum { BAT_PROC, BAT_SYS, BAT_ERR } Platform_Battery_method = BAT_PROC;
+static enum { BAT_PROC, BAT_SYS, BAT_ERR } Platform_Battery_method = BAT_SYS;
 static time_t Platform_Battery_cacheTime;
 static BatteryInfo Platform_Battery_cache = {
    .ac = AC_ERROR,
@@ -1096,13 +1096,13 @@ void Platform_getBattery(BatteryInfo* info) {
       .energyFull = NAN,
    };
 
-   if (Platform_Battery_method == BAT_PROC) {
-      Platform_Battery_getProcData(&Platform_Battery_cache);
-      if (!isNonnegative(Platform_Battery_cache.percent))
-         Platform_Battery_method = BAT_SYS;
-   }
    if (Platform_Battery_method == BAT_SYS) {
       Platform_Battery_getSysData(&Platform_Battery_cache);
+      if (!isNonnegative(Platform_Battery_cache.percent))
+         Platform_Battery_method = BAT_PROC;
+   }
+   if (Platform_Battery_method == BAT_PROC) {
+      Platform_Battery_getProcData(&Platform_Battery_cache);
       if (!isNonnegative(Platform_Battery_cache.percent))
          Platform_Battery_method = BAT_ERR;
    }
