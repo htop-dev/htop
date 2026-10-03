@@ -725,7 +725,8 @@ static void LinuxProcessTable_calcLibSize_helper(ATTR_UNUSED ht_key_t key, void*
 static void LinuxProcessTable_readMaps(LinuxProcess* process, openat_arg_t procFd, const LinuxMachine* host, bool calcSize, bool checkDeletedLib) {
    Process* proc = (Process*)process;
 
-   proc->usesDeletedLib = false;
+   if (checkDeletedLib)
+      proc->usesDeletedLib = false;
 
    FILE* mapsfile = fopenat(procFd, "maps", "r");
    if (!mapsfile)
@@ -1597,17 +1598,39 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       {
          bool prev = proc->usesDeletedLib;
 
-         if (!proc->isKernelThread && !proc->isUserlandThread &&
-             ((ss->flags & PROCESS_FLAG_LINUX_LRS_FIX) || (settings->highlightDeletedExe && !proc->procExeDeleted && isOlderThan(proc, 10)))) {
+         if (!proc->isKernelThread && !proc->isUserlandThread) {
+            bool checkLrs = false;
+            bool checkDeletedLib = false;
+            const bool checkForDeletedLib = settings->highlightDeletedExe && !proc->procExeDeleted && isOlderThan(proc, 10);
 
-            // Check if we really should recalculate the M_LRS value for this process
-            uint64_t passedTimeInMs = host->realtimeMs - lp->last_mlrs_calctime;
+            if (ss->flags & PROCESS_FLAG_LINUX_LRS_FIX) {
+               // Check if we really should recalculate the M_LRS value for this process
+               uint64_t passedTimeInMs = host->realtimeMs - lp->last_mlrs_calctime;
 
-            uint64_t recheck = ((uint64_t)rand()) % 2048;
+               uint64_t recheck = ((uint64_t)rand()) % 2048;
 
-            if (passedTimeInMs > recheck) {
-               lp->last_mlrs_calctime = host->realtimeMs;
-               LinuxProcessTable_readMaps(lp, procFd, lhost, ss->flags & PROCESS_FLAG_LINUX_LRS_FIX, settings->highlightDeletedExe);
+               checkLrs = passedTimeInMs > recheck;
+            }
+
+            if (checkForDeletedLib) {
+               uint64_t passedTimeInMs = host->realtimeMs - lp->last_deleted_lib_calctime;
+
+               uint64_t recheck = ((uint64_t)rand()) % 2048;
+
+               checkDeletedLib = passedTimeInMs > 10000 + recheck;
+            }
+
+            if (checkLrs || checkDeletedLib) {
+               if (checkLrs)
+                  lp->last_mlrs_calctime = host->realtimeMs;
+               if (checkDeletedLib)
+                  lp->last_deleted_lib_calctime = host->realtimeMs;
+               LinuxProcessTable_readMaps(lp, procFd, lhost, checkLrs, checkDeletedLib);
+            } else if (!checkForDeletedLib) {
+               proc->usesDeletedLib = false;
+            }
+            if (!(ss->flags & PROCESS_FLAG_LINUX_LRS_FIX)) {
+               lp->m_lrs = 0;
             }
          } else {
             /* Copy from process structure in threads and reset if setting got disabled */
