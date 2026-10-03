@@ -30,6 +30,8 @@ in the source distribution for its full text.
 #include "linux/Compat.h"
 #include "linux/IOPriority.h"
 #include "linux/LinuxMachine.h"
+#include "linux/NetLinkNet.h"
+#include "linux/NetMonitor.h"
 
 
 const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
@@ -80,6 +82,9 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [IO_READ_RATE] = { .name = "IO_READ_RATE", .title = "  DISK READ ", .description = "The I/O rate of read(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
    [IO_WRITE_RATE] = { .name = "IO_WRITE_RATE", .title = " DISK WRITE ", .description = "The I/O rate of write(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
    [IO_RATE] = { .name = "IO_RATE", .title = "   DISK R/W ", .description = "Total I/O rate in bytes per second", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
+   [NET_RX] = { .name = "NET_RX", .title = "  NET RX    ", .description = "Network receive rate in bytes per second (eBPF exact; + netlink socket counters; ~ read(2)/write(2) estimate)", .flags = PROCESS_FLAG_IO | PROCESS_FLAG_LINUX_NETIO, .defaultSortDesc = true, },
+   [NET_TX] = { .name = "NET_TX", .title = "  NET TX    ", .description = "Network transmit rate in bytes per second (eBPF exact; + netlink socket counters; ~ read(2)/write(2) estimate)", .flags = PROCESS_FLAG_IO | PROCESS_FLAG_LINUX_NETIO, .defaultSortDesc = true, },
+   [NET_TOTAL] = { .name = "NET_TOTAL", .title = "  NET TOTAL ", .description = "Total network rate in bytes per second (eBPF exact; + netlink socket counters; ~ read(2)/write(2) estimate)", .flags = PROCESS_FLAG_IO | PROCESS_FLAG_LINUX_NETIO, .defaultSortDesc = true, },
    [CGROUP] = { .name = "CGROUP", .title = "CGROUP (raw)", .description = "Which cgroup the process is in", .flags = PROCESS_FLAG_LINUX_CGROUP, .autoWidth = true, },
    [CCGROUP] = { .name = "CCGROUP", .title = "CGROUP (compressed)", .description = "Which cgroup the process is in (condensed to essentials)", .flags = PROCESS_FLAG_LINUX_CGROUP, .autoWidth = true, },
    [CONTAINER] = { .name = "CONTAINER", .title = "CONTAINER", .description = "Name of the container the process is in (guessed by heuristics)", .flags = PROCESS_FLAG_LINUX_CGROUP, .autoWidth = true, },
@@ -223,6 +228,16 @@ static double LinuxProcess_totalIORate(const LinuxProcess* lp) {
    return totalRate;
 }
 
+/* Marker for the NET columns: none for exact eBPF counters, '+' for the
+ * netlink sock_diag counters, '~' for the rchar/wchar estimate. */
+static char LinuxProcess_netMarker(void) {
+   if (NetMonitor_isActive())
+      return '\0';
+   if (NetLinkNet_isActive())
+      return '+';
+   return '~';
+}
+
 static void LinuxProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
    const Process* this = (const Process*) super;
    const LinuxProcess* lp = (const LinuxProcess*) super;
@@ -267,9 +282,21 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
    case RBYTES: Row_printBytes(str, lp->io_read_bytes, coloring); return;
    case WBYTES: Row_printBytes(str, lp->io_write_bytes, coloring); return;
    case CNCLWB: Row_printBytes(str, lp->io_cancelled_write_bytes, coloring); return;
-   case IO_READ_RATE:  Row_printRate(str, lp->io_rate_read_bps, coloring); return;
-   case IO_WRITE_RATE: Row_printRate(str, lp->io_rate_write_bps, coloring); return;
-   case IO_RATE: Row_printRate(str, LinuxProcess_totalIORate(lp), coloring); return;
+   case IO_READ_RATE:  Row_printRate(str, lp->io_rate_read_bps, coloring, '\0', 0); return;
+   case IO_WRITE_RATE: Row_printRate(str, lp->io_rate_write_bps, coloring, '\0', 0); return;
+   case IO_RATE: Row_printRate(str, LinuxProcess_totalIORate(lp), coloring, '\0', 0); return;
+   case NET_RX: {
+      Row_printRate(str, lp->net_rate_rx_bps, coloring, LinuxProcess_netMarker(), CRT_colors[PROCESS_SHADOW]);
+      return;
+   }
+   case NET_TX: {
+      Row_printRate(str, lp->net_rate_tx_bps, coloring, LinuxProcess_netMarker(), CRT_colors[PROCESS_SHADOW]);
+      return;
+   }
+   case NET_TOTAL: {
+      Row_printRate(str, lp->net_rate_rx_bps + lp->net_rate_tx_bps, coloring, LinuxProcess_netMarker(), CRT_colors[PROCESS_SHADOW]);
+      return;
+   }
    case CGROUP:
       xSnprintf(buffer, n, "%-*.*s ", Row_fieldWidths[CGROUP], Row_fieldWidths[CGROUP], lp->cgroup ? lp->cgroup : "N/A");
       RichString_appendWide(str, attr, buffer);
@@ -414,6 +441,12 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
       return compareRealNumbers(p1->io_rate_write_bps, p2->io_rate_write_bps);
    case IO_RATE:
       return compareRealNumbers(LinuxProcess_totalIORate(p1), LinuxProcess_totalIORate(p2));
+   case NET_RX:
+      return compareRealNumbers(p1->net_rate_rx_bps, p2->net_rate_rx_bps);
+   case NET_TX:
+      return compareRealNumbers(p1->net_rate_tx_bps, p2->net_rate_tx_bps);
+   case NET_TOTAL:
+      return compareRealNumbers(p1->net_rate_rx_bps + p1->net_rate_tx_bps, p2->net_rate_rx_bps + p2->net_rate_tx_bps);
    case CGROUP:
       return SPACESHIP_NULLSTR(p1->cgroup, p2->cgroup);
    case CCGROUP:

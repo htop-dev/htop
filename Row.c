@@ -492,7 +492,7 @@ void Row_printNanoseconds(RichString* str, unsigned long long totalNanoseconds, 
    Row_printTime(str, totalHundredths, coloring);
 }
 
-void Row_printRate(RichString* str, double rate, bool coloring) {
+void Row_printRate(RichString* str, double rate, bool coloring, char marker, int markerColor) {
    char buffer[16];
 
    int largeNumberColor = CRT_colors[LARGE_NUMBER];
@@ -506,7 +506,9 @@ void Row_printRate(RichString* str, double rate, bool coloring) {
    }
 
    if (!isNonnegative(rate)) {
-      RichString_appendAscii(str, shadowColor, "        N/A ");
+      if (marker != '\0')
+         RichString_appendChr(str, markerColor, marker, 1);
+      RichString_appendAscii(str, shadowColor, marker != '\0' ? "       N/A " : "        N/A ");
       return;
    }
 
@@ -527,6 +529,11 @@ void Row_printRate(RichString* str, double rate, bool coloring) {
 
    char prefix = (i == 0) ? 'B' : unitPrefixes[i - 1];
    int len = xSnprintf(buffer, sizeof(buffer), "%7.2f %c/s ", scaled, prefix);
+   if (marker != '\0') {
+      RichString_appendChr(str, markerColor, marker, 1);
+      RichString_appendnAscii(str, color, buffer + 1, len - 1);
+      return;
+   }
    RichString_appendnAscii(str, color, buffer, len);
 }
 
