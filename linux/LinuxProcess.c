@@ -107,6 +107,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
 #endif
    [GPU_TIME] = { .name = "GPU_TIME", .title = "GPU_TIME ", .description = "Total GPU time", .flags = PROCESS_FLAG_LINUX_GPU, .defaultSortDesc = true, },
    [GPU_PERCENT] = { .name = "GPU_PERCENT", .title = " GPU% ", .description = "Percentage of the GPU time the process used in the last sampling", .flags = PROCESS_FLAG_LINUX_GPU, .defaultSortDesc = true, },
+   [GPU_MEMORY] = { .name = "GPU_MEMORY", .title = "GPU_MEM ", .description = "GPU memory used by the process", .flags = PROCESS_FLAG_LINUX_GPU, .defaultSortDesc = true, },
 };
 
 Process* LinuxProcess_new(const Machine* host) {
@@ -239,6 +240,7 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
    case CMAJFLT: Row_printCount(str, lp->cmajflt, coloring); return;
    case GPU_PERCENT: Row_printPercentage(lp->gpu_percent, buffer, n, 5, &attr); break;
    case GPU_TIME: Row_printNanoseconds(str, lp->gpu_time, coloring); return;
+   case GPU_MEMORY: Row_printBytes(str, lp->gpu_memory, coloring); return;
    case M_DRS: Row_printBytes(str, lp->m_drs * lhost->pageSize, coloring); return;
    case M_LRS:
       if (lp->m_lrs) {
@@ -449,6 +451,8 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
    }
    case GPU_TIME:
       return SPACESHIP_NUMBER(p1->gpu_time, p2->gpu_time);
+   case GPU_MEMORY:
+      return SPACESHIP_NUMBER(p1->gpu_memory, p2->gpu_memory);
    case ISCONTAINER:
       return SPACESHIP_NUMBER(v1->isRunningInContainer, v2->isRunningInContainer);
    default:
