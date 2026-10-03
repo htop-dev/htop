@@ -138,7 +138,8 @@ static int Instance_compareByKey(const Row* v1, const Row* v2, int key) {
    return 0;
 }
 
-static int Instance_compare(const void* v1, const void* v2) {
+static int Instance_compare(const void* v1, const void* v2, void* context) {
+   (void)context;
    const Instance* i1 = (const Instance*)v1;
    const Instance* i2 = (const Instance*)v2;
    const ScreenSettings* ss = i1->super.host->settings->ss;
