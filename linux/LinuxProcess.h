@@ -102,6 +102,12 @@ typedef struct LinuxProcess_ {
 
    /* Total GPU time used in nano seconds */
    unsigned long long int gpu_time;
+   /* Last raw sum of the drm-engine-* counters in nano seconds */
+   unsigned long long int gpu_timeRaw;
+   /* Last raw sum of the drm-cycles-* counters */
+   unsigned long long int gpu_cycles;
+   /* Last raw value of the drm-total-cycles-* counters */
+   unsigned long long int gpu_totalCycles;
    /* GPU utilization in percent */
    float gpu_percent;
    /* Activity of GPU: 0 if active, otherwise time of last scan in milliseconds */

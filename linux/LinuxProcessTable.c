@@ -1859,6 +1859,10 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
       for (GPUEngineData* engine = lhost->gpuEngineData; engine; engine = engine->next) {
          engine->prevTime = engine->curTime;
          engine->curTime = 0;
+         engine->prevCycles = engine->curCycles;
+         engine->curCycles = 0;
+         engine->prevTotalCycles = engine->curTotalCycles;
+         engine->curTotalCycles = 0;
       }
    }
 

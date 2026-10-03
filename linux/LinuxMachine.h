@@ -61,7 +61,9 @@ typedef struct CPUData_ {
 } CPUData;
 
 typedef struct GPUEngineData_ {
-   unsigned long long int prevTime, curTime;  /* absolute GPU time in nano seconds */
+   unsigned long long int prevTime, curTime;              /* absolute GPU time in nano seconds (drm-engine-*) */
+   unsigned long long int prevCycles, curCycles;          /* absolute busy cycles (drm-cycles-*) */
+   unsigned long long int prevTotalCycles, curTotalCycles; /* absolute elapsed cycles (drm-total-cycles-*) */
    char* key;                                 /* engine name */
    struct GPUEngineData_* next;
 } GPUEngineData;

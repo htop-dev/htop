@@ -45,7 +45,7 @@ static bool is_duplicate_client(const ClientInfo* parsed, ClientID id, const cha
    return false;
 }
 
-static void update_machine_gpu(LinuxProcessTable* lpt, unsigned long long int time, const char* engine, size_t engine_len) {
+static GPUEngineData* get_machine_gpu_engine(LinuxProcessTable* lpt, const char* engine, size_t engine_len) {
    Machine* host = lpt->super.super.host;
    LinuxMachine* lhost = (LinuxMachine*) host;
    GPUEngineData** engineData = &lhost->gpuEngineData;
@@ -60,17 +60,86 @@ static void update_machine_gpu(LinuxProcessTable* lpt, unsigned long long int ti
    if (!*engineData) {
       GPUEngineData* newData = xMalloc(sizeof(*newData));
       *newData = (GPUEngineData) {
-         .prevTime = 0,
-         .curTime  = 0,
-         .key      = xStrndup(engine, engine_len),
-         .next     = NULL,
+         .prevTime        = 0,
+         .curTime         = 0,
+         .prevCycles      = 0,
+         .curCycles       = 0,
+         .prevTotalCycles = 0,
+         .curTotalCycles  = 0,
+         .key             = xStrndup(engine, engine_len),
+         .next            = NULL,
       };
 
       *engineData = newData;
    }
 
-   (*engineData)->curTime += time;
+   return *engineData;
+}
+
+static void update_machine_gpu(LinuxProcessTable* lpt, unsigned long long int time, const char* engine, size_t engine_len) {
+   LinuxMachine* lhost = (LinuxMachine*) lpt->super.super.host;
+
+   get_machine_gpu_engine(lpt, engine, engine_len)->curTime += time;
    lhost->curGpuTime += time;
+}
+
+static void update_machine_gpu_cycles(LinuxProcessTable* lpt, unsigned long long int cycles, const char* engine, size_t engine_len) {
+   get_machine_gpu_engine(lpt, engine, engine_len)->curCycles += cycles;
+}
+
+/* drm-total-cycles-* is a device global counter, all clients of a device
+ * report the same value, so aggregate by taking the maximum. */
+static void update_machine_gpu_total_cycles(LinuxProcessTable* lpt, unsigned long long int totalCycles, const char* engine, size_t engine_len) {
+   GPUEngineData* engineData = get_machine_gpu_engine(lpt, engine, engine_len);
+
+   if (totalCycles > engineData->curTotalCycles)
+      engineData->curTotalCycles = totalCycles;
+}
+
+static bool count_section(enum section_state* sstate, ClientID client_id, const char* pdev, const ClientInfo* parsed_ids) {
+   if (*sstate == SECST_UNKNOWN) {
+      if (client_id != INVALID_CLIENT_ID && !is_duplicate_client(parsed_ids, client_id, pdev))
+         *sstate = SECST_NEW;
+      else
+         *sstate = SECST_DUPLICATE;
+   }
+
+   return *sstate == SECST_NEW;
+}
+
+/*
+ * Parses a "<prefix><engine>: <value><unit>" line, e.g. "engine-rcs: 1234 ns".
+ * An empty unit requires the value to be the last item on the line.
+ */
+static bool parse_engine_value(const char* line, const char* prefix, const char* unit,
+                               const char** engine, size_t* engine_len, unsigned long long int* value) {
+   const char* engineStart = line + strlen(prefix);
+
+   const char* delim = strchr(engineStart, ':');
+   if (!delim)
+      return false;
+
+   const char* numStart = delim + 1;
+   while (isspace((unsigned char)*numStart))
+      numStart++;
+
+   /* strtoull() would accept a sign and wrap the result around */
+   if (!isdigit((unsigned char)*numStart))
+      return false;
+
+   char* endptr;
+   errno = 0;
+   unsigned long long int parsed = strtoull(numStart, &endptr, 10);
+   if (errno != 0)
+      return false;
+
+   if (unit[0] ? !String_startsWith(endptr, unit) : *endptr != '\0')
+      return false;
+
+   *engine = engineStart;
+   *engine_len = delim - engineStart;
+   *value = parsed;
+   return true;
 }
 
 /*
@@ -83,6 +152,8 @@ void GPU_readProcessData(LinuxProcessTable* lpt, LinuxProcess* lp, openat_arg_t 
    DIR* fdinfoDir = NULL;
    ClientInfo* parsed_ids = NULL;
    unsigned long long int new_gpu_time = 0;
+   unsigned long long int new_gpu_cycles = 0;
+   unsigned long long int new_gpu_totalCycles = 0;
 
    /* check only if active in last check or last scan was more than 5s ago */
    if (lp->gpu_activityMs != 0 && host->monotonicMs - lp->gpu_activityMs < 5000) {
@@ -170,27 +241,48 @@ void GPU_readProcessData(LinuxProcessTable* lpt, LinuxProcess* lp, openat_arg_t 
             if (sstate == SECST_DUPLICATE)
                continue;
 
-            const char* engineStart = line + strlen("engine-");
-
-            if (String_startsWith(engineStart, "capacity-"))
+            if (String_startsWith(line + strlen("engine-"), "capacity-"))
                continue;
 
-            const char* delim = strchr(line, ':');
-
-            char* endptr;
-            errno = 0;
-            unsigned long long int value = strtoull(delim + 1, &endptr, 10);
-            if (errno == 0 && String_startsWith(endptr, " ns")) {
-               if (sstate == SECST_UNKNOWN) {
-                  if (client_id != INVALID_CLIENT_ID && !is_duplicate_client(parsed_ids, client_id, pdev))
-                     sstate = SECST_NEW;
-                  else
-                     sstate = SECST_DUPLICATE;
-               }
-
-               if (sstate == SECST_NEW) {
+            const char* engine;
+            size_t engine_len;
+            unsigned long long int value;
+            if (parse_engine_value(line, "engine-", " ns", &engine, &engine_len, &value)) {
+               if (count_section(&sstate, client_id, pdev, parsed_ids)) {
                   new_gpu_time += value;
-                  update_machine_gpu(lpt, value, engineStart, delim - engineStart);
+                  update_machine_gpu(lpt, value, engine, engine_len);
+               }
+            }
+         } else if (line[0] == 'c' && String_startsWith(line, "cycles-")) {
+            /* Drivers that cannot provide a nanosecond resolution timestamp
+             * (e.g. Intel Xe) export the busy cycles of an engine together with
+             * the cycles elapsed on that engine. */
+            if (sstate == SECST_DUPLICATE)
+               continue;
+
+            const char* engine;
+            size_t engine_len;
+            unsigned long long int value;
+            if (parse_engine_value(line, "cycles-", "", &engine, &engine_len, &value)) {
+               if (count_section(&sstate, client_id, pdev, parsed_ids)) {
+                  new_gpu_cycles += value;
+                  update_machine_gpu_cycles(lpt, value, engine, engine_len);
+               }
+            }
+         } else if (line[0] == 't' && String_startsWith(line, "total-cycles-")) {
+            if (sstate == SECST_DUPLICATE)
+               continue;
+
+            const char* engine;
+            size_t engine_len;
+            unsigned long long int value;
+            if (parse_engine_value(line, "total-cycles-", "", &engine, &engine_len, &value)) {
+               if (count_section(&sstate, client_id, pdev, parsed_ids)) {
+                  /* The same free running counter is reported for all engines
+                   * of a device, so don't accumulate it. */
+                  if (value > new_gpu_totalCycles)
+                     new_gpu_totalCycles = value;
+                  update_machine_gpu_total_cycles(lpt, value, engine, engine_len);
                }
             }
          }
@@ -213,21 +305,44 @@ void GPU_readProcessData(LinuxProcessTable* lpt, LinuxProcess* lp, openat_arg_t 
       free(pdev);
    } /* finished parsing fdinfo entries */
 
-   if (new_gpu_time > 0) {
-      unsigned long long int gputimeDelta;
-      uint64_t monotonicTimeDelta;
+   {
+      uint64_t monotonicTimeDelta = host->monotonicMs - host->prevMonotonicMs;
+      unsigned long long int gputimeDelta = saturatingSub(new_gpu_time, lp->gpu_timeRaw);
 
-      gputimeDelta = saturatingSub(new_gpu_time, lp->gpu_time);
-      monotonicTimeDelta = host->monotonicMs - host->prevMonotonicMs;
-      lp->gpu_percent = 100.0F * gputimeDelta / (1000 * 1000) / monotonicTimeDelta;
+      /* Cycle based accounting only yields a ratio of busy to elapsed cycles,
+       * which is turned into a busy time using the sampling interval. */
+      unsigned long long int cyclesDelta = saturatingSub(new_gpu_cycles, lp->gpu_cycles);
+      unsigned long long int totalCyclesDelta = lp->gpu_totalCycles ? saturatingSub(new_gpu_totalCycles, lp->gpu_totalCycles) : 0;
+      if (cyclesDelta > 0 && totalCyclesDelta > 0)
+         gputimeDelta += (unsigned long long int)((double)cyclesDelta / totalCyclesDelta * monotonicTimeDelta * (1000 * 1000));
 
-      lp->gpu_activityMs = 0;
-   } else
-      lp->gpu_percent = 0.0F;
+      if (gputimeDelta > 0 && monotonicTimeDelta > 0) {
+         lp->gpu_time += gputimeDelta;
+         lp->gpu_percent = 100.0F * gputimeDelta / (1000 * 1000) / monotonicTimeDelta;
+      } else {
+         lp->gpu_percent = 0.0F;
+      }
+
+      /* Keep visiting a process as long as it holds a counter, even while it is
+       * idle: the machine wide totals are summed up from the counters of the
+       * processes seen in this pass, so skipping one makes the sum drop. */
+      if (new_gpu_time > 0 || new_gpu_cycles > 0)
+         lp->gpu_activityMs = 0;
+
+      lp->gpu_timeRaw = new_gpu_time;
+      lp->gpu_cycles = new_gpu_cycles;
+      lp->gpu_totalCycles = new_gpu_totalCycles;
+   }
+
+   goto cleanup;
 
 out:
+   /* Hold on to the counters of the last successful read: failing to look at a
+    * process is not the same as it having released the GPU, and starting over
+    * from zero would account for the whole counter a second time. */
+   lp->gpu_percent = 0.0F;
 
-   lp->gpu_time = new_gpu_time;
+cleanup:
 
    while (parsed_ids) {
       ClientInfo* next = parsed_ids->next;
