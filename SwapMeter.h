@@ -8,6 +8,9 @@ in the source distribution for its full text.
 */
 
 #include "Meter.h"
+#include "Object.h"
+#include "RichString.h"
+
 
 typedef enum {
    SWAP_METER_USED = 0,
@@ -17,5 +20,11 @@ typedef enum {
 } SwapMeterValues;
 
 extern const MeterClass SwapMeter_class;
+
+extern const int SwapMeter_attributes[];
+
+void SwapMeter_display(const Object* cast, RichString* out);
+
+void SwapMeter_updateValuesWith(Meter* this, void (*setValues)(Meter*));
 
 #endif
