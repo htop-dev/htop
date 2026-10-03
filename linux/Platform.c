@@ -49,12 +49,16 @@ in the source distribution for its full text.
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "linux/Compat.h"
+#include "linux/DinitMeter.h"
 #include "linux/IOPriority.h"
 #include "linux/IOPriorityPanel.h"
 #include "linux/LinuxMachine.h"
 #include "linux/LinuxProcess.h"
 #include "linux/OpenRCMeter.h"
+#include "linux/RunitMeter.h"
+#include "linux/S6Meter.h"
 #include "linux/SELinuxMeter.h"
+#include "linux/SysVInitMeter.h"
 #include "linux/SystemdMeter.h"
 #include "linux/ZramMeter.h"
 #include "linux/ZramStats.h"
@@ -278,6 +282,10 @@ const MeterClass* const Platform_meterTypes[] = {
    &SystemdUserMeter_class,
    &OpenRCMeter_class,
    &OpenRCUserMeter_class,
+   &SysVInitMeter_class,
+   &RunitMeter_class,
+   &S6Meter_class,
+   &DinitMeter_class,
    &FileDescriptorMeter_class,
    &GPUMeter_class,
    NULL

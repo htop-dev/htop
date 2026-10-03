@@ -198,11 +198,15 @@ linux_platform_headers = \
 	linux/LinuxMachine.h \
 	linux/LinuxProcess.h \
 	linux/LinuxProcessTable.h \
+	linux/DinitMeter.h \
 	linux/OpenRCMeter.h \
 	linux/Platform.h \
+	linux/RunitMeter.h \
+	linux/S6Meter.h \
 	linux/PressureStallMeter.h \
 	linux/ProcessField.h \
 	linux/SELinuxMeter.h \
+	linux/SysVInitMeter.h \
 	linux/SystemdMeter.h \
 	linux/ZramMeter.h \
 	linux/ZramStats.h \
@@ -226,10 +230,14 @@ linux_platform_sources = \
 	linux/LinuxMachine.c \
 	linux/LinuxProcess.c \
 	linux/LinuxProcessTable.c \
+	linux/DinitMeter.c \
 	linux/OpenRCMeter.c \
 	linux/Platform.c \
 	linux/PressureStallMeter.c \
+	linux/RunitMeter.c \
+	linux/S6Meter.c \
 	linux/SELinuxMeter.c \
+	linux/SysVInitMeter.c \
 	linux/SystemdMeter.c \
 	linux/ZramMeter.c \
 	linux/ZswapMeter.c \
