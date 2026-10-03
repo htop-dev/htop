@@ -167,10 +167,61 @@ static void insertionSort(Object** array, int left, int right, Object_Compare co
    }
 }
 
+static void insertionSortWithContext(Object** array, int left, int right, Object_CompareWithContext compare, void* context) {
+   for (int i = left + 1; i <= right; i++) {
+      Object* t = array[i];
+      int j = i - 1;
+      while (j >= left) {
+         if (compare(array[j], t, context) <= 0)
+            break;
+         array[j + 1] = array[j];
+         j--;
+      }
+      array[j + 1] = t;
+   }
+}
+
+static int partitionWithContext(Object** array, int left, int right, int pivotIndex, Object_CompareWithContext compare, void* context) {
+   const Object* pivotValue = array[pivotIndex];
+   swap(array, pivotIndex, right);
+   int storeIndex = left;
+   for (int i = left; i < right; i++) {
+      if (compare(array[i], pivotValue, context) <= 0) {
+         swap(array, i, storeIndex);
+         storeIndex++;
+      }
+   }
+   swap(array, storeIndex, right);
+   return storeIndex;
+}
+
+static void quickSortWithContext(Object** array, int left, int right, Object_CompareWithContext compare, void* context) {
+   if (left >= right)
+      return;
+
+   int pivotIndex = left + (right - left) / 2;
+   int pivotNewIndex = partitionWithContext(array, left, right, pivotIndex, compare, context);
+   quickSortWithContext(array, left, pivotNewIndex - 1, compare, context);
+   quickSortWithContext(array, pivotNewIndex + 1, right, compare, context);
+}
+
 void Vector_quickSortCustomCompare(Vector* this, Object_Compare compare) {
    assert(compare);
    assert(Vector_isConsistent(this));
    quickSort(this->array, 0, this->items - 1, compare);
+   assert(Vector_isConsistent(this));
+}
+
+void Vector_sort(Vector* this, Object_CompareWithContext compare, void* context) {
+   assert(compare);
+   assert(Vector_isConsistent(this));
+   
+   if (this->items <= 16) {
+      insertionSortWithContext(this->array, 0, this->items - 1, compare, context);
+   } else {
+      quickSortWithContext(this->array, 0, this->items - 1, compare, context);
+   }
+   
    assert(Vector_isConsistent(this));
 }
 
