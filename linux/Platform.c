@@ -1058,6 +1058,7 @@ static int dropCapabilities(enum CapMode mode) {
    const cap_value_t keepcapsBasic[] = {
       CAP_DAC_READ_SEARCH,   /* read non world-readable process files of other users, like /proc/[pid]/io */
       CAP_KILL,              /* send signals to processes of other users */
+      CAP_PERFMON,           /* read /proc/[pid]/{smaps,smaps_rollup,maps} */
       CAP_SYS_NICE,          /* lower process nice value / change nice value for arbitrary processes */
       CAP_SYS_PTRACE,        /* read /proc/[pid]/exe */
 #ifdef HAVE_DELAYACCT
