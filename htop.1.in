@@ -103,7 +103,7 @@ This can be used to force a tree view when requesting a sort order with -s.
 The optional MODE can used to set the stable tree mode (0/classic ;
 1/soft/stable ; 2/hard/STABLE).
 Soft mode will try to stabilize the current PID line visually on the screen.
-Hard mode will additionally allow to move the whole tree down, creating
+Hard mode will additionally allow one to move the whole tree down, creating
 empty space above the root when necessary.
 .TP
 \fB\-H \-\-highlight-changes[=DELAY]\fR
