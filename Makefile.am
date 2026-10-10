@@ -78,6 +78,7 @@ myhtopsources = \
 	Row.c \
 	RichString.c \
 	RunitMeter.c \
+	S6Meter.c \
 	Scheduling.c \
 	ScreenManager.c \
 	ScreensPanel.c \
@@ -153,6 +154,7 @@ myhtopheaders = \
 	Row.h \
 	RowField.h \
 	RunitMeter.h \
+	S6Meter.h \
 	Scheduling.h \
 	ScreenManager.h \
 	ScreensPanel.h \

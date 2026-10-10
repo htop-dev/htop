@@ -45,6 +45,7 @@ in the source distribution for its full text.
 #include "PressureStallMeter.h"
 #include "ProvideCurses.h"
 #include "RunitMeter.h"
+#include "S6Meter.h"
 #include "Settings.h"
 #include "SwapMeter.h"
 #include "SysArchMeter.h"
@@ -281,6 +282,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &OpenRCMeter_class,
    &OpenRCUserMeter_class,
    &RunitMeter_class,
+   &S6Meter_class,
    &DinitMeter_class,
    &FileDescriptorMeter_class,
    &GPUMeter_class,

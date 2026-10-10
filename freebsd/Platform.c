@@ -40,6 +40,7 @@ in the source distribution for its full text.
 #include "Meter.h"
 #include "NetworkIOMeter.h"
 #include "RunitMeter.h"
+#include "S6Meter.h"
 #include "Settings.h"
 #include "SwapMeter.h"
 #include "SysArchMeter.h"
@@ -155,6 +156,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &FileDescriptorMeter_class,
    &NetworkIOMeter_class,
    &RunitMeter_class,
+   &S6Meter_class,
    &DinitMeter_class,
    NULL
 };
