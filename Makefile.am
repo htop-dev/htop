@@ -87,6 +87,7 @@ myhtopsources = \
 	SignalsPanel.c \
 	SwapMeter.c \
 	SysArchMeter.c \
+	SysVInitMeter.c \
 	Table.c \
 	TasksMeter.c \
 	TraceScreen.c \
@@ -163,6 +164,7 @@ myhtopheaders = \
 	SignalsPanel.h \
 	SwapMeter.h \
 	SysArchMeter.h \
+	SysVInitMeter.h \
 	Table.h \
 	TasksMeter.h \
 	TraceScreen.h \

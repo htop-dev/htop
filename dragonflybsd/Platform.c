@@ -36,6 +36,7 @@ in the source distribution for its full text.
 #include "S6Meter.h"
 #include "SwapMeter.h"
 #include "SysArchMeter.h"
+#include "SysVInitMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
@@ -146,6 +147,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &NetworkIOMeter_class,
    &FileDescriptorMeter_class,
    &BlankMeter_class,
+   &SysVInitMeter_class,
    &RunitMeter_class,
    &S6Meter_class,
    &DinitMeter_class,

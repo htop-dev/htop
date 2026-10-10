@@ -49,6 +49,7 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "SwapMeter.h"
 #include "SysArchMeter.h"
+#include "SysVInitMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "linux/Compat.h"
@@ -281,6 +282,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &SystemdUserMeter_class,
    &OpenRCMeter_class,
    &OpenRCUserMeter_class,
+   &SysVInitMeter_class,
    &RunitMeter_class,
    &S6Meter_class,
    &DinitMeter_class,
