@@ -24,6 +24,7 @@ in the source distribution for its full text.
 
 #include "CPUMeter.h"
 #include "DateTimeMeter.h"
+#include "DinitMeter.h"
 #include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
@@ -143,6 +144,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &NetworkIOMeter_class,
    &FileDescriptorMeter_class,
    &BlankMeter_class,
+   &DinitMeter_class,
    NULL
 };
 

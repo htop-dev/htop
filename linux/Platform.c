@@ -26,6 +26,7 @@ in the source distribution for its full text.
 #include "BatteryMeter.h"
 #include "CPUMeter.h"
 #include "DateTimeMeter.h"
+#include "DinitMeter.h"
 #include "DiskIOMeter.h"
 #include "FileDescriptorMeter.h"
 #include "GPUMeter.h"
@@ -278,6 +279,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &SystemdUserMeter_class,
    &OpenRCMeter_class,
    &OpenRCUserMeter_class,
+   &DinitMeter_class,
    &FileDescriptorMeter_class,
    &GPUMeter_class,
    NULL
