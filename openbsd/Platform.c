@@ -36,6 +36,7 @@ in the source distribution for its full text.
 #include "MemoryMeter.h"
 #include "MemorySwapMeter.h"
 #include "Meter.h"
+#include "RunitMeter.h"
 #include "Settings.h"
 #include "SignalsPanel.h"
 #include "SwapMeter.h"
@@ -147,6 +148,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &RightCPUs8Meter_class,
    &FileDescriptorMeter_class,
    &BlankMeter_class,
+   &RunitMeter_class,
    &DinitMeter_class,
    NULL
 };

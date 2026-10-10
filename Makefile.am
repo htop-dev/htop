@@ -77,6 +77,7 @@ myhtopsources = \
 	ProcessTable.c \
 	Row.c \
 	RichString.c \
+	RunitMeter.c \
 	Scheduling.c \
 	ScreenManager.c \
 	ScreensPanel.c \
@@ -151,6 +152,7 @@ myhtopheaders = \
 	RichString.h \
 	Row.h \
 	RowField.h \
+	RunitMeter.h \
 	Scheduling.h \
 	ScreenManager.h \
 	ScreensPanel.h \

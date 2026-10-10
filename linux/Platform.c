@@ -44,6 +44,7 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "PressureStallMeter.h"
 #include "ProvideCurses.h"
+#include "RunitMeter.h"
 #include "Settings.h"
 #include "SwapMeter.h"
 #include "SysArchMeter.h"
@@ -279,6 +280,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &SystemdUserMeter_class,
    &OpenRCMeter_class,
    &OpenRCUserMeter_class,
+   &RunitMeter_class,
    &DinitMeter_class,
    &FileDescriptorMeter_class,
    &GPUMeter_class,
