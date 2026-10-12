@@ -105,7 +105,7 @@ static void AvailableMetersPanel_addCPUMeters(Panel* super, const MeterClass* ty
       Panel_add(super, (Object*) ListItem_new("CPU average", 0));
       for (unsigned int i = 1; i <= host->existingCPUs; i++) {
          char buffer[50];
-         xSnprintf(buffer, sizeof(buffer), "%s %d", type->uiName, Settings_cpuId(host->settings, i - 1));
+         xSnprintf(buffer, sizeof(buffer), "%s %u", type->uiName, Settings_cpuId(host->settings, i - 1));
          Panel_add(super, (Object*) ListItem_new(buffer, i));
       }
    } else {

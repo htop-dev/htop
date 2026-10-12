@@ -1432,13 +1432,13 @@ static char* LinuxProcessTable_updateTtyDevice(TtyDriver* ttyDrivers, unsigned l
 
       for (;;) {
          char* fullPath = NULL;
-         size_t fullPathLen = xAsprintf(&fullPath, "%s/%d", ttyDrivers[i].path, idx);
+         size_t fullPathLen = xAsprintf(&fullPath, "%s/%u", ttyDrivers[i].path, idx);
          int err = stat(fullPath, &sb);
          if (err == 0 && major(sb.st_rdev) == maj && minor(sb.st_rdev) == min) {
             return fullPath;
          }
 
-         xSnprintf(fullPath, fullPathLen + 1, "%s%d", ttyDrivers[i].path, idx);
+         xSnprintf(fullPath, fullPathLen + 1, "%s%u", ttyDrivers[i].path, idx);
          err = stat(fullPath, &sb);
          if (err == 0 && major(sb.st_rdev) == maj && minor(sb.st_rdev) == min) {
             return fullPath;
