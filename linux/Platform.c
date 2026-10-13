@@ -530,22 +530,25 @@ char* Platform_getProcessEnv(pid_t pid) {
 
    size_t capacity = 0;
    size_t size = 0;
-   ssize_t bytes = 0;
 
-   do {
-      size += bytes;
+   for (;;) {
       capacity += 4096;
       env = xRealloc(env, capacity);
-   } while (!ferror(fp) && !feof(fp) && (bytes = fread(env + size, 1, capacity - size, fp)) > 0);
 
-   fclose(fp);
+      size_t n = capacity - size;
+      size_t bytes = fread(env + size, 1, n, fp);
+      size += bytes;
+      if (bytes < n)
+         break;
+   }
 
-   if (bytes < 0) {
+   if (ferror(fp)) {
+      fclose(fp);
       free(env);
       return NULL;
    }
 
-   size += bytes;
+   fclose(fp);
 
    env = xRealloc(env, size + 2);
 
