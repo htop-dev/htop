@@ -46,6 +46,8 @@ void* xReallocArray(void* ptr, size_t nmemb, size_t size);
 ATTR_RETNONNULL ATTR_ALLOC_SIZE2(3, 4)
 void* xReallocArrayZero(void* ptr, size_t prevmemb, size_t newmemb, size_t size);
 
+void xTrimMemory(void);
+
 /*
  * String_startsWith gives better performance if strlen(match) can be computed
  * at compile time (e.g. when they are immutable string literals). :)
@@ -120,6 +122,16 @@ char* xStrdup(const char* str);
 
 ATTR_NONNULL
 void free_and_xStrdup(char** ptr, const char* str);
+
+char* RefString_new(const char* s);
+
+char* RefString_ref(char* s);
+
+void RefString_unref(char* s);
+
+void RefString_assign(char** dest, char* src);
+
+void RefString_assignNew(char** dest, const char* src);
 
 ATTR_NONNULL ATTR_RETNONNULL ATTR_MALLOC ATTR_ACCESS3_R(1, 2)
 char* xStrndup(const char* str, size_t len);

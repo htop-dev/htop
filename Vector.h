@@ -57,6 +57,8 @@ Object* Vector_softRemove(Vector* this, int idx);
 /* Vector_compact reclaims space free'd up by Vector_softRemove, if any. */
 void Vector_compact(Vector* this, int dirtyIndex);
 
+void Vector_shrink(Vector* this);
+
 void Vector_moveUp(Vector* this, int idx);
 
 void Vector_moveDown(Vector* this, int idx);
