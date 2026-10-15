@@ -50,7 +50,7 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
 
    const Settings* settings = super->super.host->settings;
    if (settings->ss->flags & PROCESS_FLAG_CWD) {
-      free_and_xStrdup(&proc->procCwd, "/current/working/directory");
+      Process_updateCwd(proc, "/current/working/directory");
    }
 
    proc->super.updated = true;
