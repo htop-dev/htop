@@ -545,8 +545,6 @@ char* Platform_getProcessEnv(pid_t pid) {
       return NULL;
    }
 
-   size += bytes;
-
    env = xRealloc(env, size + 2);
 
    env[size] = '\0';
