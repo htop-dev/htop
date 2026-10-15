@@ -129,12 +129,6 @@ static int fast_strtoi_dec(char** str, size_t maxlen) {
    return (int)result;
 }
 
-static long fast_strtol_dec(char** str, size_t maxlen) {
-   long long result = fast_strtoll_dec(str, maxlen);
-   assert(result <= LONG_MAX);
-   assert(result >= LONG_MIN);
-   return (long)result;
-}
 
 static unsigned long fast_strtoul_dec(char** str, size_t maxlen) {
    unsigned long long result = fast_strtoull_dec(str, maxlen);
@@ -360,7 +354,7 @@ static bool LinuxProcessTable_readStatFile(LinuxProcess* lp, openat_arg_t procFd
    location = end + 2;
 
    /* (3) state  -  %c */
-   process->state = LinuxProcessTable_getProcessState(location[0]);
+   process->state = (uint8_t)LinuxProcessTable_getProcessState(location[0]);
 
    if (!location[0] || !location[1])
       return false;
@@ -408,7 +402,9 @@ static bool LinuxProcessTable_readStatFile(LinuxProcess* lp, openat_arg_t procFd
    location += 1;
 
    /* (9) flags  -  %u */
-   lp->flags = fast_strtoul_dec(&location, 0);
+   unsigned long flags = fast_strtoul_dec(&location, 0);
+   if (flags & PF_KTHREAD)
+      process->isKernelThread = true;
 
    if (!location[0])
       return false;
@@ -480,7 +476,7 @@ static bool LinuxProcessTable_readStatFile(LinuxProcess* lp, openat_arg_t procFd
    location += 1;
 
    /* (18) priority  -  %ld */
-   process->priority = fast_strtol_dec(&location, 0);
+   process->priority = fast_strtoi_dec(&location, 0);
 
    if (!location[0])
       return false;
@@ -496,7 +492,7 @@ static bool LinuxProcessTable_readStatFile(LinuxProcess* lp, openat_arg_t procFd
    location += 1;
 
    /* (20) num_threads  -  %ld */
-   process->nlwp = fast_strtol_dec(&location, 0);
+   process->nlwp = fast_strtoi_dec(&location, 0);
 
    if (!location[0])
       return false;
@@ -596,7 +592,8 @@ static bool LinuxProcessTable_readStatusFile(Process* process, openat_arg_t proc
 
    fclose(statusfile);
 
-   lp->ctxt_diff = (ctxt > lp->ctxt_total) ? (ctxt - lp->ctxt_total) : 0;
+   uint64_t diff = (ctxt > lp->ctxt_total) ? (ctxt - lp->ctxt_total) : 0;
+   lp->ctxt_diff = (diff > UINT32_MAX) ? UINT32_MAX : (uint32_t)diff;
    lp->ctxt_total = ctxt;
 
    return true;
@@ -915,21 +912,19 @@ static bool LinuxProcessTable_readSmapsFile(LinuxProcess* process, openat_arg_t 
 /*
  * Read /proc/<pid>/cgroup (thread-specific data)
  */
-static void LinuxProcessTable_readCGroupFile(LinuxProcess* process, openat_arg_t procFd) {
+static void LinuxProcessTable_readCGroupFile(LinuxProcess* process, openat_arg_t procFd, const LinuxProcess* mainTask) {
+   if (mainTask) {
+      RefString_assign(&process->cgroup, mainTask->cgroup);
+      RefString_assign(&process->cgroup_short, mainTask->cgroup_short);
+      RefString_assign(&process->container_short, mainTask->container_short);
+      return;
+   }
+
    FILE* file = fopenat(procFd, "cgroup", "r");
    if (!file) {
-      if (process->cgroup) {
-         free(process->cgroup);
-         process->cgroup = NULL;
-      }
-      if (process->cgroup_short) {
-         free(process->cgroup_short);
-         process->cgroup_short = NULL;
-      }
-      if (process->container_short) {
-         free(process->container_short);
-         process->container_short = NULL;
-      }
+      RefString_assign(&process->cgroup, NULL);
+      RefString_assign(&process->cgroup_short, NULL);
+      RefString_assign(&process->container_short, NULL);
       return;
    }
    char output[PROC_LINE_LENGTH + 1];
@@ -974,7 +969,9 @@ static void LinuxProcessTable_readCGroupFile(LinuxProcess* process, openat_arg_t
    bool changed = !process->cgroup || !String_eq(process->cgroup, output);
 
    Row_updateFieldWidth(CGROUP, strlen(output));
-   free_and_xStrdup(&process->cgroup, output);
+   if (changed) {
+      RefString_assignNew(&process->cgroup, output);
+   }
 
    if (!changed) {
       if (process->cgroup_short) {
@@ -994,25 +991,23 @@ static void LinuxProcessTable_readCGroupFile(LinuxProcess* process, openat_arg_t
    char* cgroup_short = CGroup_filterName(process->cgroup);
    if (cgroup_short) {
       Row_updateFieldWidth(CCGROUP, strlen(cgroup_short));
-      free_and_xStrdup(&process->cgroup_short, cgroup_short);
+      RefString_assignNew(&process->cgroup_short, cgroup_short);
       free(cgroup_short);
    } else {
       //CCGROUP is alias to normal CGROUP if shortening fails
       Row_updateFieldWidth(CCGROUP, strlen(process->cgroup));
-      free(process->cgroup_short);
-      process->cgroup_short = NULL;
+      RefString_assign(&process->cgroup_short, NULL);
    }
 
    char* container_short = CGroup_filterContainer(process->cgroup);
    if (container_short) {
       Row_updateFieldWidth(CONTAINER, strlen(container_short));
-      free_and_xStrdup(&process->container_short, container_short);
+      RefString_assignNew(&process->container_short, container_short);
       free(container_short);
    } else {
       //CONTAINER is just "N/A" if shortening fails
       Row_updateFieldWidth(CONTAINER, strlen("N/A"));
-      free(process->container_short);
-      process->container_short = NULL;
+      RefString_assign(&process->container_short, NULL);
    }
 }
 
@@ -1076,13 +1071,7 @@ static void LinuxProcessTable_readAutogroup(LinuxProcess* process, openat_arg_t 
  */
 static void LinuxProcessTable_readSecattrData(LinuxProcess* process, openat_arg_t procFd, const LinuxProcess* mainTask) {
    if (mainTask) {
-      const char* mainSecAttr = mainTask->secattr;
-      if (mainSecAttr) {
-         free_and_xStrdup(&process->secattr, mainSecAttr);
-      } else {
-         free(process->secattr);
-         process->secattr = NULL;
-      }
+      RefString_assign(&process->secattr, mainTask->secattr);
       return;
    }
 
@@ -1090,7 +1079,7 @@ static void LinuxProcessTable_readSecattrData(LinuxProcess* process, openat_arg_
 
    ssize_t attrdata = Compat_readfileat(procFd, "attr/current", buffer, sizeof(buffer));
    if (attrdata < 1) {
-      free(process->secattr);
+      RefString_unref(process->secattr);
       process->secattr = NULL;
       return;
    }
@@ -1102,7 +1091,7 @@ static void LinuxProcessTable_readSecattrData(LinuxProcess* process, openat_arg_
 
    Row_updateFieldWidth(SECATTR, strlen(buffer));
 
-   free_and_xStrdup(&process->secattr, buffer);
+   RefString_assignNew(&process->secattr, buffer);
 }
 
 /*
@@ -1110,13 +1099,7 @@ static void LinuxProcessTable_readSecattrData(LinuxProcess* process, openat_arg_
  */
 static void LinuxProcessTable_readCwd(LinuxProcess* process, openat_arg_t procFd, const LinuxProcess* mainTask) {
    if (mainTask) {
-      const char* mainCwd = mainTask->super.procCwd;
-      if (mainCwd) {
-         free_and_xStrdup(&process->super.procCwd, mainCwd);
-      } else {
-         free(process->super.procCwd);
-         process->super.procCwd = NULL;
-      }
+      Process_updateCwdShared(&process->super, mainTask->super.procCwd);
       return;
    }
 
@@ -1129,14 +1112,13 @@ static void LinuxProcessTable_readCwd(LinuxProcess* process, openat_arg_t procFd
 #endif
 
    if (r < 0) {
-      free(process->super.procCwd);
-      process->super.procCwd = NULL;
+      Process_updateCwd(&process->super, NULL);
       return;
    }
 
    pathBuffer[r] = '\0';
 
-   free_and_xStrdup(&process->super.procCwd, pathBuffer);
+   Process_updateCwd(&process->super, pathBuffer);
 }
 
 /*
@@ -1144,7 +1126,7 @@ static void LinuxProcessTable_readCwd(LinuxProcess* process, openat_arg_t procFd
  */
 static void LinuxProcessList_readExe(Process* process, openat_arg_t procFd, const LinuxProcess* mainTask) {
    if (mainTask) {
-      Process_updateExe(process, mainTask->super.procExe);
+      Process_updateExeShared(process, mainTask->super.procExe, mainTask->super.procExeBasenameOffset);
       process->procExeDeleted = mainTask->super.procExeDeleted;
       return;
    }
@@ -1187,22 +1169,28 @@ static void LinuxProcessList_readExe(Process* process, openat_arg_t procFd, cons
 }
 
 /*
- * Helper function to read a file with dynamic buffer allocation.
- * Returns the buffer and sets *amtRead to bytes read. Caller must free the buffer in the success case.
+ * Helper function to read /proc/<pid>/cmdline.
+ * Uses the caller's stackBuf if the contents fit, or allocates dynamically
+ * if the contents exceed stackBufSize.
+ * Returns the buffer and sets *amtRead to bytes read. Caller must free if returned buffer != stackBuf.
  * Returns NULL on error.
  */
-static char* readFileDynamic(openat_arg_t procFd, const char* filename, ssize_t* amtRead) {
-   size_t bufferSize = 512;
+static char* readCmdlineFileBuffer(openat_arg_t procFd, ssize_t* amtRead, char* stackBuf, size_t stackBufSize) {
+   *amtRead = Compat_readfileat(procFd, "cmdline", stackBuf, stackBufSize);
+   if (*amtRead <= 0)
+      return NULL;
+
+   if ((size_t)*amtRead < stackBufSize - 1)
+      return stackBuf;
+
+   size_t bufferSize = stackBufSize * 2;
    char* buffer = xMalloc(bufferSize);
+   *amtRead = Compat_readfileat(procFd, "cmdline", buffer, bufferSize);
 
-   *amtRead = Compat_readfileat(procFd, filename, buffer, bufferSize);
-
-   // If buffer was full, the file might be larger, so retry with a bigger buffer
-   // Limit to MAX_CMDLINE_BUFFER_SIZE to prevent excessive memory allocation
    while (*amtRead > 0 && (size_t)*amtRead == bufferSize - 1 && bufferSize < MAX_CMDLINE_BUFFER_SIZE) {
       bufferSize *= 2;
       buffer = xRealloc(buffer, bufferSize);
-      *amtRead = Compat_readfileat(procFd, filename, buffer, bufferSize);
+      *amtRead = Compat_readfileat(procFd, "cmdline", buffer, bufferSize);
    }
 
    if (*amtRead <= 0) {
@@ -1219,8 +1207,14 @@ static char* readFileDynamic(openat_arg_t procFd, const char* filename, ssize_t*
 static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t procFd, const LinuxProcess* mainTask) {
    LinuxProcessList_readExe(process, procFd, mainTask);
 
+   if (mainTask) {
+      Process_updateCmdlineShared(process, mainTask->super.cmdline, mainTask->super.cmdlineBasenameStart, mainTask->super.cmdlineBasenameEnd);
+      return true;
+   }
+
+   char stackBuf[1024];
    ssize_t amtRead;
-   char* command = readFileDynamic(procFd, "cmdline", &amtRead);
+   char* command = readCmdlineFileBuffer(procFd, &amtRead, stackBuf, sizeof(stackBuf));
    if (!command)
       return false;
 
@@ -1386,7 +1380,8 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
 
    Process_updateCmdline(process, command, tokenStart, tokenEnd);
 
-   free(command);
+   if (command != stackBuf)
+      free(command);
    return true;
 }
 
@@ -1394,13 +1389,15 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
  * Read /proc/<pid>/comm (thread-specific data)
  */
 static void LinuxProcessList_readComm(Process* process, openat_arg_t procFd) {
-   ssize_t amtRead;
-   char* command = readFileDynamic(procFd, "comm", &amtRead);
+   char buffer[32];
+   ssize_t amtRead = Compat_readfileat(procFd, "comm", buffer, sizeof(buffer) - 1);
 
-   if (command) {
-      command[amtRead - 1] = '\0';
-      Process_updateComm(process, command);
-      free(command);
+   if (amtRead > 0) {
+      if (buffer[amtRead - 1] == '\n')
+         buffer[amtRead - 1] = '\0';
+      else
+         buffer[amtRead] = '\0';
+      Process_updateComm(process, buffer);
    } else {
       Process_updateComm(process, NULL);
    }
@@ -1553,13 +1550,6 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       proc->isUserlandThread = Process_getPid(proc) != Process_getThreadGroup(proc);
       assert(proc->isUserlandThread == (mainTask != NULL));
 
-      if (!mainTask) {
-         // As the list of tasks/threads is presented as a flat view in procfs
-         // below each directories main entry, it makes no sense to
-         // look for further directories that will not be there.
-         LinuxProcessTable_recurseProcTree(this, procFd, lhost, "task", lp);
-      }
-
       /*
        * These conditions will not trigger on first occurrence, cause we need to
        * add the process to the ProcessTable and do all one time scans
@@ -1597,7 +1587,7 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       {
          bool prev = proc->usesDeletedLib;
 
-         if (!proc->isKernelThread && !proc->isUserlandThread &&
+         if (!host->inBackground && !proc->isKernelThread && !proc->isUserlandThread &&
              ((ss->flags & PROCESS_FLAG_LINUX_LRS_FIX) || (settings->highlightDeletedExe && !proc->procExeDeleted && isOlderThan(proc, 10)))) {
 
             // Check if we really should recalculate the M_LRS value for this process
@@ -1625,13 +1615,14 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       if (!LinuxProcessTable_readStatFile(lp, procFd, lhost, scanMainThread, statCommand, sizeof(statCommand)))
          goto errorReadingProcess;
 
-      if (lp->flags & PF_KTHREAD) {
-         proc->isKernelThread = true;
-      }
-
-      if (last_tty_nr != proc->tty_nr && this->ttyDrivers) {
-         free(proc->tty_name);
-         proc->tty_name = LinuxProcessTable_updateTtyDevice(this->ttyDrivers, proc->tty_nr);
+      if (mainTask) {
+         if (last_tty_nr != proc->tty_nr) {
+            Process_updateTtyShared(proc, mainTask->super.tty_name);
+         }
+      } else if (last_tty_nr != proc->tty_nr && this->ttyDrivers) {
+         char* ttyDevice = LinuxProcessTable_updateTtyDevice(this->ttyDrivers, proc->tty_nr);
+         Process_updateTty(proc, ttyDevice);
+         free(ttyDevice);
       }
 
       proc->percent_cpu = NAN;
@@ -1661,7 +1652,7 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
          }
       }
 
-      if (ss->flags & PROCESS_FLAG_LINUX_CTXT
+      if ((!host->inBackground && (ss->flags & PROCESS_FLAG_LINUX_CTXT))
          || ((hideRunningInContainer || ss->flags & PROCESS_FLAG_LINUX_CONTAINER) && proc->isRunningInContainer == TRI_INITIAL)
       ) {
          proc->isRunningInContainer = TRI_OFF;
@@ -1684,7 +1675,7 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
 
          ProcessTable_add(pt, proc);
       } else {
-         if (settings->updateProcessNames && proc->state != ZOMBIE) {
+         if (!host->inBackground && settings->updateProcessNames && proc->state != ZOMBIE) {
             if (proc->isKernelThread) {
                Process_updateCmdline(proc, NULL, 0, 0);
             } else {
@@ -1702,7 +1693,7 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
        */
 
       /* Gather permitted capabilities (thread-specific data) for non-root process. */
-      if (proc->st_uid != 0 && proc->elevated_priv != TRI_OFF) {
+      if (!host->inBackground && proc->st_uid != 0 && proc->elevated_priv != TRI_OFF) {
          struct __user_cap_header_struct header = { .version = _LINUX_CAPABILITY_VERSION_3, .pid = Process_getPid(proc) };
          struct __user_cap_data_struct data;
 
@@ -1714,10 +1705,10 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
          }
       }
 
-      if (ss->flags & PROCESS_FLAG_LINUX_CGROUP)
-         LinuxProcessTable_readCGroupFile(lp, procFd);
+      if ((!host->inBackground || !preExisting || !lp->cgroup) && (ss->flags & PROCESS_FLAG_LINUX_CGROUP))
+         LinuxProcessTable_readCGroupFile(lp, procFd, mainTask);
 
-      if ((ss->flags & PROCESS_FLAG_LINUX_SMAPS) && !Process_isKernelThread(proc)) {
+      if (!host->inBackground && (ss->flags & PROCESS_FLAG_LINUX_SMAPS) && !Process_isKernelThread(proc)) {
          if (!mainTask) {
             // Read smaps file of each process only every second pass to improve performance
             static int smaps_flag = 0;
@@ -1735,47 +1726,49 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
          }
       }
 
-      if (ss->flags & PROCESS_FLAG_IO) {
+      if ((!host->inBackground || !preExisting) && (ss->flags & PROCESS_FLAG_IO)) {
          LinuxProcessTable_readIoFile(lp, procFd, scanMainThread);
       }
 
-      #ifdef HAVE_DELAYACCT
-      if (ss->flags & PROCESS_FLAG_LINUX_DELAYACCT) {
-         LibNl_readDelayAcctData(this, lp);
-      }
-      #endif
+      if (!host->inBackground) {
+         #ifdef HAVE_DELAYACCT
+         if (ss->flags & PROCESS_FLAG_LINUX_DELAYACCT) {
+            LibNl_readDelayAcctData(this, lp);
+         }
+         #endif
 
-      if (ss->flags & PROCESS_FLAG_LINUX_OOM) {
-         LinuxProcessTable_readOomData(lp, procFd, mainTask);
-      }
+         if (ss->flags & PROCESS_FLAG_LINUX_OOM) {
+            LinuxProcessTable_readOomData(lp, procFd, mainTask);
+         }
 
-      if (ss->flags & PROCESS_FLAG_LINUX_IOPRIO) {
-         LinuxProcess_updateIOPriority(proc);
-      }
+         if (ss->flags & PROCESS_FLAG_LINUX_IOPRIO) {
+            LinuxProcess_updateIOPriority(proc);
+         }
 
-      if (ss->flags & PROCESS_FLAG_LINUX_SECATTR) {
-         LinuxProcessTable_readSecattrData(lp, procFd, mainTask);
-      }
+         if (ss->flags & PROCESS_FLAG_LINUX_SECATTR) {
+            LinuxProcessTable_readSecattrData(lp, procFd, mainTask);
+         }
 
-      if (ss->flags & PROCESS_FLAG_CWD) {
-         LinuxProcessTable_readCwd(lp, procFd, mainTask);
-      }
+         if (ss->flags & PROCESS_FLAG_CWD) {
+            LinuxProcessTable_readCwd(lp, procFd, mainTask);
+         }
 
-      if ((ss->flags & PROCESS_FLAG_LINUX_AUTOGROUP) && this->haveAutogroup) {
-         LinuxProcessTable_readAutogroup(lp, procFd, mainTask);
-      }
+         if ((ss->flags & PROCESS_FLAG_LINUX_AUTOGROUP) && this->haveAutogroup) {
+            LinuxProcessTable_readAutogroup(lp, procFd, mainTask);
+         }
 
-      #ifdef SCHEDULER_SUPPORT
-      if (ss->flags & PROCESS_FLAG_SCHEDPOL) {
-         Scheduling_readProcessPolicy(proc);
-      }
-      #endif
+         #ifdef SCHEDULER_SUPPORT
+         if (ss->flags & PROCESS_FLAG_SCHEDPOL) {
+            Scheduling_readProcessPolicy(proc);
+         }
+         #endif
 
-      if (ss->flags & PROCESS_FLAG_LINUX_GPU || GPUMeter_active()) {
-         if (mainTask) {
-            lp->gpu_time = mainTask->gpu_time;
-         } else {
-            GPU_readProcessData(this, lp, procFd);
+         if (ss->flags & PROCESS_FLAG_LINUX_GPU || GPUMeter_active()) {
+            if (mainTask) {
+               lp->gpu_time = mainTask->gpu_time;
+            } else {
+               GPU_readProcessData(this, lp, procFd);
+            }
          }
       }
 
@@ -1786,6 +1779,13 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
       if (!proc->cmdline && statCommand[0] &&
           (proc->state == ZOMBIE || Process_isKernelThread(proc) || settings->showThreadNames)) {
          Process_updateCmdline(proc, statCommand, 0, strlen(statCommand));
+      }
+
+      if (!mainTask) {
+         // As the list of tasks/threads is presented as a flat view in procfs
+         // below each directories main entry, it makes no sense to
+         // look for further directories that will not be there.
+         LinuxProcessTable_recurseProcTree(this, procFd, lhost, "task", lp);
       }
 
       proc->super.updated = true;
