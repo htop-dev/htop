@@ -1263,6 +1263,7 @@ IGNORE_WCASTQUAL_BEGIN
       }
       define_key("\033[I", KEY_FOCUS_IN);
       define_key("\033[O", KEY_FOCUS_OUT);
+      full_write_str(STDOUT_FILENO, "\033[?1004h");
 #ifdef HTOP_NETBSD
 IGNORE_WCASTQUAL_END
 #undef define_key
@@ -1317,6 +1318,11 @@ void CRT_done(void) {
 
    curs_set(1);
    endwin();
+
+   const char* termType = getenv("TERM");
+   if (terminalSupportsDefinedKeys(termType)) {
+      full_write_str(STDOUT_FILENO, "\033[?1004l");
+   }
 
    dumpStderr();
 }

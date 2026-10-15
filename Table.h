@@ -91,9 +91,6 @@ void Table_cleanupEntries(Table* this);
 
 Row* Table_cleanupRow(Table* this, Row* row, int idx);
 
-static inline void Table_compact(Table* this, int dirtyIndex) {
-   Vector_compact(this->rows, dirtyIndex);
-   this->needsSort = true;
-}
+void Table_compact(Table* this, int dirtyIndex);
 
 #endif
