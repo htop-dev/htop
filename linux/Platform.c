@@ -520,10 +520,11 @@ void Platform_setZfsCompressedArcValues(Meter* this) {
 }
 
 char* Platform_getProcessEnv(pid_t pid) {
-   char procname[128];
-   xSnprintf(procname, sizeof(procname), PROCDIR "/%d/environ", pid);
-   FILE* fp = fopen(procname, "r");
-   if (!fp)
+   char procname[sizeof(PROCDIR) + 32];
+   xSnprintf(procname, sizeof(procname), "%s/%"PRIi64"/environ", PROCDIR, (int64_t)pid);
+
+   int fd = open(procname, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+   if (fd < 0)
       return NULL;
 
    char* env = NULL;
@@ -532,20 +533,32 @@ char* Platform_getProcessEnv(pid_t pid) {
    size_t size = 0;
    ssize_t bytes = 0;
 
-   do {
-      size += bytes;
-      capacity += 4096;
+   while (true) {
+      capacity += CLAMP(capacity, 8192, 131072);
       env = xRealloc(env, capacity);
-   } while (!ferror(fp) && !feof(fp) && (bytes = fread(env + size, 1, capacity - size, fp)) > 0);
 
-   fclose(fp);
+      errno = 0;
+      bytes = read(fd, env + size, capacity - size);
+      if (bytes < 0) {
+         if (errno == EINTR) {
+            continue;
+         }
+         break;
+      }
+
+      if (!bytes) {
+         break;
+      }
+
+      size += bytes;
+   }
+
+   close(fd);
 
    if (bytes < 0) {
       free(env);
       return NULL;
    }
-
-   size += bytes;
 
    env = xRealloc(env, size + 2);
 
