@@ -22,6 +22,21 @@ typedef struct DarwinProcess_ {
    uint64_t stime;
    bool taskAccess;
    bool translated;
+
+   /* Storage data read (in bytes) */
+   uint64_t io_read_bytes;
+
+   /* Storage data written (in bytes) */
+   uint64_t io_write_bytes;
+
+   /* Point in time of last io scan (monotonic milliseconds) */
+   uint64_t io_last_scan_time_ms;
+
+   /* Storage data read (in bytes per second) */
+   double io_rate_read_bps;
+
+   /* Storage data written (in bytes per second) */
+   double io_rate_write_bps;
 } DarwinProcess;
 
 extern const ProcessClass DarwinProcess_class;

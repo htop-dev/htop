@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include <errno.h>
 #include <libproc.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,7 +20,9 @@ in the source distribution for its full text.
 #include <sys/sysctl.h>
 
 #include "CRT.h"
+#include "Macros.h"
 #include "ProcessTable.h"
+#include "Settings.h"
 #include "darwin/DarwinMachine.h"
 #include "darwin/DarwinProcess.h"
 #include "darwin/Platform.h"
@@ -69,6 +72,51 @@ void ProcessTable_delete(Object* cast) {
    free(this);
 }
 
+/*
+ * Read per-process disk I/O counters (proc_pid_rusage).
+ *
+ * Unlike Linux, macOS does not expose separate char/syscall counters; it only
+ * provides cumulative storage bytes read and written. Rates are computed from
+ * the difference between consecutive scans, mirroring LinuxProcessTable_readIoFile.
+ */
+static void DarwinProcessTable_readProcRusage(DarwinProcess* proc) {
+   const Machine* host = proc->super.super.host;
+
+   struct rusage_info_v2 ri;
+   if (proc_pid_rusage(Process_getPid(&proc->super), RUSAGE_INFO_V2, (rusage_info_t *)&ri) != 0) {
+      proc->io_rate_read_bps = NAN;
+      proc->io_rate_write_bps = NAN;
+      proc->io_read_bytes = ULLONG_MAX;
+      proc->io_write_bytes = ULLONG_MAX;
+      proc->io_last_scan_time_ms = host->monotonicMs;
+      return;
+   }
+
+   uint64_t last_read = proc->io_read_bytes;
+   uint64_t last_write = proc->io_write_bytes;
+
+   /* Only compute a rate once a previous valid sample exists; otherwise the
+    * delta is meaningless on the first scan and zero after a failed scan.
+    * Machine_scanTables seeds monotonicMs with 1 on its first scan, so treat
+    * that sentinel as "no timestamp yet". Use the monotonic clock so that
+    * wall-clock adjustments cannot produce a zero or inflated time delta. */
+   bool haveBaseline = proc->io_last_scan_time_ms > 1 && last_read != ULLONG_MAX;
+   uint64_t time_delta = saturatingSub(host->monotonicMs, proc->io_last_scan_time_ms);
+
+   proc->io_read_bytes = ri.ri_diskio_bytesread;
+   proc->io_write_bytes = ri.ri_diskio_byteswritten;
+
+   if (haveBaseline && time_delta) {
+      proc->io_rate_read_bps = saturatingSub(proc->io_read_bytes, last_read) * /*ms to s*/1000. / time_delta;
+      proc->io_rate_write_bps = saturatingSub(proc->io_write_bytes, last_write) * /*ms to s*/1000. / time_delta;
+   } else {
+      proc->io_rate_read_bps = NAN;
+      proc->io_rate_write_bps = NAN;
+   }
+
+   proc->io_last_scan_time_ms = host->monotonicMs;
+}
+
 void ProcessTable_goThroughEntries(ProcessTable* super) {
    const Machine* host = super->super.host;
    const DarwinMachine* dhost = (const DarwinMachine*) host;
@@ -102,6 +150,10 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
 
       DarwinProcess_setFromKInfoProc(&proc->super, &ps[i], preExisting);
       DarwinProcess_setFromLibprocPidinfo(proc, dpt, time_interval_ns);
+
+      if (host->settings->ss->flags & PROCESS_FLAG_IO) {
+         DarwinProcessTable_readProcRusage(proc);
+      }
 
       // Deduce further process states not covered in the libproc call above
       if (ps[i].kp_proc.p_stat == SZOMB) {
