@@ -8,6 +8,7 @@ in the source distribution for its full text.
 */
 
 #include <stdbool.h>
+#include <sys/time.h>
 
 #include "Object.h"
 #include "Process.h"
@@ -30,6 +31,13 @@ typedef struct FreeBSDProcess_ {
    char* jname;
    char* emul;
    FreeBSDSchedClass sched_class;
+
+   unsigned long long io_last_inblock;      /* cumulative block read ops at last sample */
+   unsigned long long io_last_oublock;      /* cumulative block write ops at last sample */
+   unsigned long long io_last_scan_time_ms; /* time of last I/O sample, ms since the Epoch */
+   struct timeval io_process_start;         /* start time of the sampled process, to detect PID reuse */
+   double io_read_ops;                      /* block read operations per second */
+   double io_write_ops;                     /* block write operations per second */
 } FreeBSDProcess;
 
 extern const ProcessClass FreeBSDProcess_class;

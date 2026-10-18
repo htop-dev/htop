@@ -306,6 +306,25 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
          default:     proc->state = UNKNOWN;
       }
 
+      /* Storage I/O rates, derived from the rusage block-operation counters
+       * (same source as the FreeBSD top(1) "-m io" mode). */
+      unsigned long long ioIn = (unsigned long long)kproc->ki_rusage.ru_inblock;
+      unsigned long long ioOut = (unsigned long long)kproc->ki_rusage.ru_oublock;
+      unsigned long long ioTimeDelta = saturatingSub(host->realtimeMs, fp->io_last_scan_time_ms);
+      bool sameProcess = fp->io_process_start.tv_sec == kproc->ki_start.tv_sec &&
+         fp->io_process_start.tv_usec == kproc->ki_start.tv_usec;
+      if (preExisting && sameProcess && fp->io_last_scan_time_ms && ioTimeDelta) {
+         fp->io_read_ops = saturatingSub(ioIn, fp->io_last_inblock) * /*ms to s*/1000.0 / ioTimeDelta;
+         fp->io_write_ops = saturatingSub(ioOut, fp->io_last_oublock) * /*ms to s*/1000.0 / ioTimeDelta;
+      } else {
+         fp->io_read_ops = NAN;
+         fp->io_write_ops = NAN;
+      }
+      fp->io_last_inblock = ioIn;
+      fp->io_last_oublock = ioOut;
+      fp->io_last_scan_time_ms = host->realtimeMs;
+      fp->io_process_start = kproc->ki_start;
+
       if (Process_isKernelThread(proc))
          super->kernelThreads++;
 
