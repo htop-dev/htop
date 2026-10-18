@@ -26,6 +26,7 @@ in the source distribution for its full text.
 #include "BatteryMeter.h"
 #include "CPUMeter.h"
 #include "DateTimeMeter.h"
+#include "DinitMeter.h"
 #include "DiskIOMeter.h"
 #include "FileDescriptorMeter.h"
 #include "GPUMeter.h"
@@ -43,9 +44,12 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "PressureStallMeter.h"
 #include "ProvideCurses.h"
+#include "RunitMeter.h"
+#include "S6Meter.h"
 #include "Settings.h"
 #include "SwapMeter.h"
 #include "SysArchMeter.h"
+#include "SysVInitMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "linux/Compat.h"
@@ -278,6 +282,10 @@ const MeterClass* const Platform_meterTypes[] = {
    &SystemdUserMeter_class,
    &OpenRCMeter_class,
    &OpenRCUserMeter_class,
+   &SysVInitMeter_class,
+   &RunitMeter_class,
+   &S6Meter_class,
+   &DinitMeter_class,
    &FileDescriptorMeter_class,
    &GPUMeter_class,
    NULL
