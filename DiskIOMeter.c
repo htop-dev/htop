@@ -288,6 +288,10 @@ static void DiskIOMeter_updateMode(Meter* this, MeterModeId mode) {
    this->mode = mode;
 
    Meter_setMode(data->diskIORateMeter, mode);
+
+   // DiskIOTimeMeter does not support "Graph2" mode
+   if (mode == GRAPH2_METERMODE)
+      mode = GRAPH_METERMODE;
    Meter_setMode(data->diskIOTimeMeter, mode);
 
    this->h = MAXIMUM(data->diskIORateMeter->h, data->diskIOTimeMeter->h);
@@ -310,7 +314,7 @@ const MeterClass DiskIORateMeter_class = {
    },
    .updateValues = DiskIORateMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
-   .supportedModes = METERMODE_DEFAULT_SUPPORTED,
+   .supportedModes = METERMODE_DEFAULT_SUPPORTED | (1 << GRAPH2_METERMODE),
    .maxItems = 2,
    .isPercentChart = false,
    .total = 1.0,
@@ -348,7 +352,7 @@ const MeterClass DiskIOMeter_class = {
    },
    .updateValues = DiskIOMeter_updateValues,
    .defaultMode = TEXT_METERMODE,
-   .supportedModes = METERMODE_DEFAULT_SUPPORTED,
+   .supportedModes = METERMODE_DEFAULT_SUPPORTED | (1 << GRAPH2_METERMODE),
    .isMultiColumn = true,
    .name = "DiskIO",
    .uiName = "Disk IO",
