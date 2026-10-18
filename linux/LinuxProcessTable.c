@@ -938,7 +938,7 @@ static void LinuxProcessTable_readCGroupFile(LinuxProcess* process, openat_arg_t
    size_t left = PROC_LINE_LENGTH;
    while (!feof(file) && left > 0) {
       char buffer[PROC_LINE_LENGTH + 1];
-      const char* ok = fgets(buffer, PROC_LINE_LENGTH, file);
+      const char* ok = fgets(buffer, sizeof(buffer), file);
       if (!ok)
          break;
 
