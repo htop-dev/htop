@@ -468,8 +468,9 @@ static int Platform_getFanSpeedFromHwmonDevice(openat_arg_t parent_dfd, const ch
 
    struct dirent* dir;
    while ((dir = readdir(dirp)) != NULL) {
-      int fan_num;
-      if (sscanf(dir->d_name, "fan%d_input", &fan_num) != 1)
+      int fan_num = 0, scan_len = 0;
+      if (sscanf(dir->d_name, "fan%d%n", &fan_num, &scan_len) != 1 ||
+          !String_eq(&dir->d_name[scan_len], "_input"))
          continue;
 
       char buffer[32];
