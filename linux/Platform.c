@@ -443,11 +443,11 @@ void Platform_setGPUValues(Meter* this, double* totalUsage, unsigned long long* 
    this->values[residueIndex] = residuePercentage;
 }
 
-static int Platform_getFanSpeedFromHwmonDevice(int parent_dfd, const char *hwmon_device) {
+static int Platform_getFanSpeedFromHwmonDevice(openat_arg_t parent_dfd, const char *hwmon_device) {
    DIR* dirp;
-   int dfd;
 
-   dfd = Compat_openat(parent_dfd, hwmon_device, O_RDONLY | O_CLOEXEC | O_DIRECTORY);
+#ifdef HAVE_OPENAT
+   openat_arg_t dfd = Compat_openat(parent_dfd, hwmon_device, O_RDONLY | O_CLOEXEC | O_DIRECTORY);
    if (dfd == -1)
       return -1;
 
@@ -456,6 +456,15 @@ static int Platform_getFanSpeedFromHwmonDevice(int parent_dfd, const char *hwmon
       close(dfd);
       return -1;
    }
+#else
+   char dfd[4096];
+   if (xSnprintf(dfd, sizeof(dfd), "%s/%s", parent_dfd, hwmon_device) < 0)
+      return -1;
+
+   dirp = opendir(dfd);
+   if (!dirp)
+      return -1;
+#endif
 
    struct dirent* dir;
    while ((dir = readdir(dirp)) != NULL) {
@@ -483,17 +492,21 @@ static int Platform_getFanSpeedFromHwmonDevice(int parent_dfd, const char *hwmon
 /* Traverse hwmon sensors, find first fan, read and return its speed. */
 int Platform_getFanSpeed(void) {
    DIR* dirp;
-   int dfd;
+   openat_arg_t dfd;
 
    dirp = opendir(HWMONDIR);
    if (!dirp)
       return -1;
 
+#ifdef HAVE_OPENAT
    dfd = dirfd(dirp);
    if (dfd == -1) {
       closedir(dirp);
       return -1;
    }
+#else
+   dfd = HWMONDIR;
+#endif
 
    struct dirent* dir;
    while ((dir = readdir(dirp)) != NULL) {
