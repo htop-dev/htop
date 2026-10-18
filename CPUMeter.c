@@ -36,13 +36,6 @@ static const int CPUMeter_attributes[] = {
    CPU_IOWAIT
 };
 
-static const int CPUMeter_attributes_summary[] = {
-   CPU_NICE,
-   CPU_NORMAL,
-   CPU_SYSTEM,
-   CPU_GUEST
-};
-
 typedef struct CPUMeterData_ {
    unsigned int ncol;         /* columns the shown sub-meters are laid out in */
    unsigned int cpus;         /* size of meters: one slot per existing CPU */
@@ -94,11 +87,6 @@ static void CPUMeter_updateValues(Meter* this) {
 
    const Machine* host = this->host;
    const Settings* settings = host->settings;
-   if (settings->detailedCPUTime) {
-      this->curAttributes = CPUMeter_attributes;
-   } else {
-      this->curAttributes = CPUMeter_attributes_summary;
-   }
 
    unsigned int cpu = this->param;
    if (cpu > host->existingCPUs) {
