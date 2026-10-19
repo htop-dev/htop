@@ -33,6 +33,10 @@ in the source distribution for its full text.
 #define SPACESHIP_NUMBER(a, b)         (((a) > (b)) - ((a) < (b)))
 #endif
 
+#ifndef SPACESHIP_NUMBER_NA
+#define SPACESHIP_NUMBER_NA(a, b, na)  (((a) == (na)) ? (((b) == (na)) ? 0 : -1) : (((b) == (na)) ? 1 : SPACESHIP_NUMBER(a, b)))
+#endif
+
 #ifndef SPACESHIP_NULLSTR
 #define SPACESHIP_NULLSTR(a, b)        strcmp((a) ? (a) : "", (b) ? (b) : "")
 #endif
