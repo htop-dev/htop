@@ -212,9 +212,9 @@ static void PCPProcessTable_updateMemory(PCPProcess* pp, int pid, int offset) {
 }
 
 static void PCPProcessTable_updateSmaps(PCPProcess* pp, pid_t pid, int offset) {
-   pp->m_pss = Metric_instance_u64(PCP_PROC_SMAPS_PSS, pid, offset, 0);
-   pp->m_swap = Metric_instance_u64(PCP_PROC_SMAPS_SWAP, pid, offset, 0);
-   pp->m_psswp = Metric_instance_u64(PCP_PROC_SMAPS_SWAPPSS, pid, offset, 0);
+   pp->m_pss = Metric_instance_u64(PCP_PROC_SMAPS_PSS, pid, offset, ULLONG_MAX);
+   pp->m_swap = Metric_instance_u64(PCP_PROC_SMAPS_SWAP, pid, offset, ULLONG_MAX);
+   pp->m_psswp = Metric_instance_u64(PCP_PROC_SMAPS_SWAPPSS, pid, offset, ULLONG_MAX);
 }
 
 static void PCPProcessTable_readOomData(PCPProcess* pp, int pid, int offset) {
