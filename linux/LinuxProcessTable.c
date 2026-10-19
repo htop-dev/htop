@@ -878,8 +878,13 @@ static bool LinuxProcessTable_readSmapsFile(LinuxProcess* process, openat_arg_t 
    //http://elixir.free-electrons.com/linux/v4.10/source/fs/proc/task_mmu.c#L719
    //kernel will return data in chunks of size PAGE_SIZE or less.
    FILE* fp = fopenat(procFd, haveSmapsRollup ? "smaps_rollup" : "smaps", "r");
-   if (!fp)
+   if (!fp) {
+      process->m_pss   = ULLONG_MAX;
+      process->m_swap  = ULLONG_MAX;
+      process->m_psswp = ULLONG_MAX;
+      process->m_epss  = ULLONG_MAX;
       return false;
+   }
 
    process->m_pss   = 0;
    process->m_swap  = 0;
@@ -891,6 +896,10 @@ static bool LinuxProcessTable_readSmapsFile(LinuxProcess* process, openat_arg_t 
       if (!strchr(buffer, '\n')) {
          // Partial line, skip to end of this line
          if (!skipEndOfLine(fp)) {
+            process->m_pss   = ULLONG_MAX;
+            process->m_swap  = ULLONG_MAX;
+            process->m_psswp = ULLONG_MAX;
+            process->m_epss  = ULLONG_MAX;
             fclose(fp);
             return false;
          }
@@ -898,12 +907,21 @@ static bool LinuxProcessTable_readSmapsFile(LinuxProcess* process, openat_arg_t 
       }
 
       if (String_startsWith(buffer, "Pss:")) {
-         process->m_pss += strtol(buffer + 4, NULL, 10);
+         process->m_pss += strtoull(buffer + 4, NULL, 10);
       } else if (String_startsWith(buffer, "Swap:")) {
-         process->m_swap += strtol(buffer + 5, NULL, 10);
+         process->m_swap += strtoull(buffer + 5, NULL, 10);
       } else if (String_startsWith(buffer, "SwapPss:")) {
-         process->m_psswp += strtol(buffer + 8, NULL, 10);
+         process->m_psswp += strtoull(buffer + 8, NULL, 10);
       }
+   }
+
+   if (ferror(fp)) {
+      process->m_pss   = ULLONG_MAX;
+      process->m_swap  = ULLONG_MAX;
+      process->m_psswp = ULLONG_MAX;
+      process->m_epss  = ULLONG_MAX;
+      fclose(fp);
+      return false;
    }
 
    process->m_epss = process->m_pss + process->m_psswp;

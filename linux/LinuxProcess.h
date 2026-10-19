@@ -41,10 +41,10 @@ typedef struct LinuxProcess_ {
    unsigned long long int cstime;
    long m_share;
    long m_priv;
-   long m_pss;
-   long m_swap;
-   long m_psswp;
-   long m_epss;
+   unsigned long long m_pss;
+   unsigned long long m_swap;
+   unsigned long long m_psswp;
+   unsigned long long m_epss;
    long m_trs;
    long m_drs;
    long m_lrs;

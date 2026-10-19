@@ -113,6 +113,10 @@ Process* LinuxProcess_new(const Machine* host) {
    LinuxProcess* this = xCalloc(1, sizeof(LinuxProcess));
    Object_setClass(this, Class(LinuxProcess));
    Process_init(&this->super, host);
+   this->m_pss   = ULLONG_MAX;
+   this->m_swap  = ULLONG_MAX;
+   this->m_psswp = ULLONG_MAX;
+   this->m_epss  = ULLONG_MAX;
    return (Process*)this;
 }
 
@@ -379,13 +383,13 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
    case M_PRIV:
       return SPACESHIP_NUMBER(p1->m_priv, p2->m_priv);
    case M_PSS:
-      return SPACESHIP_NUMBER(p1->m_pss, p2->m_pss);
+      return SPACESHIP_NUMBER_NA(p1->m_pss, p2->m_pss, ULLONG_MAX);
    case M_SWAP:
-      return SPACESHIP_NUMBER(p1->m_swap, p2->m_swap);
+      return SPACESHIP_NUMBER_NA(p1->m_swap, p2->m_swap, ULLONG_MAX);
    case M_PSSWP:
-      return SPACESHIP_NUMBER(p1->m_psswp, p2->m_psswp);
+      return SPACESHIP_NUMBER_NA(p1->m_psswp, p2->m_psswp, ULLONG_MAX);
    case M_EPSS:
-      return SPACESHIP_NUMBER(p1->m_epss, p2->m_epss);
+      return SPACESHIP_NUMBER_NA(p1->m_epss, p2->m_epss, ULLONG_MAX);
    case UTIME:
       return SPACESHIP_NUMBER(p1->utime, p2->utime);
    case CUTIME:
