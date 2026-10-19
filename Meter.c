@@ -64,16 +64,21 @@ static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
    assert(w <= INT_MAX - x);
 
    const char* caption = Meter_getCaption(this);
-   if (w > 0) {
-      attrset(CRT_colors[METER_TEXT]);
-      mvaddnstr(y, x, caption, w);
+   int captionWidth = 0;
+
+   if (w > 0 && caption[0]) {
+      RichString_begin(captionText);
+      captionWidth = w;
+      RichString_appendnWideColumns(&captionText, CRT_colors[METER_TEXT], caption, strlen(caption), &captionWidth);
+      RichString_printVal(captionText, y, x);
+      RichString_delete(&captionText);
    }
+
    attrset(CRT_colors[RESET_COLOR]);
 
-   int captionWidth = w > 0 ? (int)strnlen(caption, w) : 0;
-   if (w <= captionWidth) {
+   if (w <= captionWidth)
       return;
-   }
+
    w -= captionWidth;
    x += captionWidth;
 

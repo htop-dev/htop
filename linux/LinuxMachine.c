@@ -35,6 +35,7 @@ in the source distribution for its full text.
 
 #ifdef HAVE_SENSORS_SENSORS_H
 #include "LibSensors.h"
+#include "LibSensorsMeter.h"
 #endif
 
 #ifndef O_PATH
@@ -861,6 +862,16 @@ static void LinuxMachine_scanCPUFrequency(LinuxMachine* this) {
    scanCPUFrequencyFromCPUinfo(this);
 }
 
+#ifdef HAVE_SENSORS_SENSORS_H
+static void LinuxMachine_updateHardwareSensors(LinuxMachine* this) {
+   if (LibSensors_updateHardwareSensors(this->sensors, this->sensorCount))
+      return;
+
+   LibSensors_freeHardwareSensors(this->sensors, this->sensorCount);
+   this->sensors = LibSensors_getHardwareSensors(&this->sensorCount);
+}
+#endif
+
 void Machine_scan(Machine* super) {
    LinuxMachine* this = (LinuxMachine*) super;
 
@@ -879,10 +890,13 @@ void Machine_scan(Machine* super) {
    )
       LinuxMachine_scanCPUFrequency(this);
 
-   #ifdef HAVE_SENSORS_SENSORS_H
+#ifdef HAVE_SENSORS_SENSORS_H
+   if (LibSensorsMeter_consumeSamplingRequest())
+      LinuxMachine_updateHardwareSensors(this);
+
    if (settings->showCPUTemperature)
       LibSensors_getCPUTemperatures(this->cpuData, super->existingCPUs, super->activeCPUs);
-   #endif
+#endif
 }
 
 Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
@@ -930,9 +944,10 @@ Machine* Machine_new(UsersTable* usersTable, uid_t userId) {
    // Fetch CPU topology
    int ccds = 0;
    LinuxMachine_fetchCPUTopologyFromCPUinfo(this);
-   #ifdef HAVE_SENSORS_SENSORS_H
+#ifdef HAVE_SENSORS_SENSORS_H
+   this->sensors = LibSensors_getHardwareSensors(&this->sensorCount);
    ccds = LibSensors_countCCDs();
-   #endif
+#endif
    LinuxMachine_assignCCDs(this, ccds);
    LinuxMachine_computeThreadIndices(this);
 
@@ -944,6 +959,10 @@ void Machine_delete(Machine* super) {
    GPUEngineData* gpuEngineData = this->gpuEngineData;
 
    Machine_done(super);
+
+#ifdef HAVE_SENSORS_SENSORS_H
+   LibSensors_freeHardwareSensors(this->sensors, this->sensorCount);
+#endif
 
    while (gpuEngineData) {
       GPUEngineData* next = gpuEngineData->next;

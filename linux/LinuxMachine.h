@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "HardwareSensor.h"
 #include "Machine.h"
 #include "linux/ZramStats.h"
 #include "linux/ZswapStats.h"
@@ -86,6 +87,11 @@ typedef struct LinuxMachine_ {
    memory_t availableMem;
 
    CPUData* cpuData;
+
+#ifdef HAVE_SENSORS_SENSORS_H
+   HardwareSensor* sensors;
+   size_t sensorCount;
+#endif
 
    int maxPhysicalID;
    int maxCoreID;
