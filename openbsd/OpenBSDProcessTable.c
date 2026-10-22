@@ -55,20 +55,12 @@ static void OpenBSDProcessTable_updateCwd(const struct kinfo_proc* kproc, Proces
    const int mib[] = { CTL_KERN, KERN_PROC_CWD, kproc->p_pid };
    char buffer[2048];
    size_t size = sizeof(buffer);
-   if (sysctl(mib, 3, buffer, &size, NULL, 0) != 0) {
-      free(proc->procCwd);
-      proc->procCwd = NULL;
+   if (sysctl(mib, 3, buffer, &size, NULL, 0) != 0 || buffer[0] == '\0') {
+      Process_updateCwd(proc, NULL);
       return;
    }
 
-   /* Kernel threads return an empty buffer */
-   if (buffer[0] == '\0') {
-      free(proc->procCwd);
-      proc->procCwd = NULL;
-      return;
-   }
-
-   free_and_xStrdup(&proc->procCwd, buffer);
+   Process_updateCwd(proc, buffer);
 }
 
 static void OpenBSDProcessTable_updateProcessName(kvm_t* kd, const struct kinfo_proc* kproc, Process* proc) {
@@ -178,12 +170,10 @@ static void OpenBSDProcessTable_scanProcs(OpenBSDProcessTable* this) {
 
          proc->tty_nr = kproc->p_tdev;
          const char* name = ((dev_t)kproc->p_tdev != NODEV) ? devname(kproc->p_tdev, S_IFCHR) : NULL;
-         if (!name || String_eq(name, "??")) {
-            free(proc->tty_name);
-            proc->tty_name = NULL;
-         } else {
-            free_and_xStrdup(&proc->tty_name, name);
+         if (name && String_eq(name, "??")) {
+            name = NULL;
          }
+         Process_updateTty(proc, name);
       } else {
          if (settings->updateProcessNames) {
             OpenBSDProcessTable_updateProcessName(ohost->kd, kproc, proc);

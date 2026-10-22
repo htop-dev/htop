@@ -865,24 +865,27 @@ void Machine_scan(Machine* super) {
    LinuxMachine* this = (LinuxMachine*) super;
 
    LinuxMachine_scanMemoryInfo(this);
-   LinuxMachine_scanZswapInfo(this);
-   LinuxMachine_scanHugePages(this);
-   LinuxMachine_scanZfsArcstats(this);
-   LinuxMachine_scanZramInfo(this);
    LinuxMachine_scanCPUTime(this);
 
-   const Settings* settings = super->settings;
-   if (settings->showCPUFrequency
-#ifdef HAVE_SENSORS_SENSORS_H
-       || settings->showCPUTemperature
-#endif
-   )
-      LinuxMachine_scanCPUFrequency(this);
+   if (!super->inBackground) {
+      LinuxMachine_scanZswapInfo(this);
+      LinuxMachine_scanHugePages(this);
+      LinuxMachine_scanZfsArcstats(this);
+      LinuxMachine_scanZramInfo(this);
 
-   #ifdef HAVE_SENSORS_SENSORS_H
-   if (settings->showCPUTemperature)
-      LibSensors_getCPUTemperatures(this->cpuData, super->existingCPUs, super->activeCPUs);
-   #endif
+      const Settings* settings = super->settings;
+      if (settings->showCPUFrequency
+#ifdef HAVE_SENSORS_SENSORS_H
+          || settings->showCPUTemperature
+#endif
+      )
+         LinuxMachine_scanCPUFrequency(this);
+
+      #ifdef HAVE_SENSORS_SENSORS_H
+      if (settings->showCPUTemperature)
+         LibSensors_getCPUTemperatures(this->cpuData, super->existingCPUs, super->activeCPUs);
+      #endif
+   }
 }
 
 Machine* Machine_new(UsersTable* usersTable, uid_t userId) {

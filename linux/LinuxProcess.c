@@ -123,10 +123,14 @@ Process* LinuxProcess_new(const Machine* host) {
 void Process_delete(Object* cast) {
    LinuxProcess* this = (LinuxProcess*) cast;
    Process_done((Process*)cast);
-   free(this->container_short);
-   free(this->cgroup_short);
-   free(this->cgroup);
-   free(this->secattr);
+   RefString_unref(this->container_short);
+   this->container_short = NULL;
+   RefString_unref(this->cgroup_short);
+   this->cgroup_short = NULL;
+   RefString_unref(this->cgroup);
+   this->cgroup = NULL;
+   RefString_unref(this->secattr);
+   this->secattr = NULL;
    free(this);
 }
 
@@ -321,7 +325,7 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
       if (lp->ctxt_diff > 1000) {
          attr |= A_BOLD;
       }
-      xSnprintf(buffer, n, "%5lu ", lp->ctxt_diff);
+      xSnprintf(buffer, n, "%5u ", lp->ctxt_diff);
       break;
    case SECATTR:
       snprintf(buffer, n, "%-*.*s ", Row_fieldWidths[SECATTR], Row_fieldWidths[SECATTR], lp->secattr ? lp->secattr : "N/A");

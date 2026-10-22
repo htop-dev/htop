@@ -169,19 +169,12 @@ static void DarwinProcess_updateCwd(pid_t pid, Process* proc) {
    struct proc_vnodepathinfo vpi;
 
    int r = proc_pidinfo(pid, PROC_PIDVNODEPATHINFO, 0, &vpi, sizeof(vpi));
-   if (r <= 0) {
-      free(proc->procCwd);
-      proc->procCwd = NULL;
+   if (r <= 0 || !vpi.pvi_cdir.vip_path[0]) {
+      Process_updateCwd(proc, NULL);
       return;
    }
 
-   if (!vpi.pvi_cdir.vip_path[0]) {
-      free(proc->procCwd);
-      proc->procCwd = NULL;
-      return;
-   }
-
-   free_and_xStrdup(&proc->procCwd, vpi.pvi_cdir.vip_path);
+   Process_updateCwd(proc, vpi.pvi_cdir.vip_path);
 }
 
 static void DarwinProcess_updateCmdLine(const struct kinfo_proc* k, Process* proc) {
@@ -392,7 +385,9 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
        * field is enabled in the settings.
        */
       if (settings->ss->flags & PROCESS_FLAG_TTY) {
-         proc->tty_name = DarwinProcess_getDevname((dev_t)proc->tty_nr);
+         char* devname = DarwinProcess_getDevname((dev_t)proc->tty_nr);
+         Process_updateTty(proc, devname);
+         free(devname);
          if (!proc->tty_name) {
             /* devname failed: prevent us from calling it again */
             proc->tty_nr = NODEV;
@@ -404,7 +399,7 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
    proc->nice = ep->p_nice;
    proc->priority = ep->p_priority;
 
-   proc->state = (ep->p_stat == SZOMB) ? ZOMBIE : UNKNOWN;
+   proc->state = (uint8_t)((ep->p_stat == SZOMB) ? ZOMBIE : UNKNOWN);
 
    /* Make sure the updated flag is set */
    proc->super.updated = true;
@@ -556,10 +551,10 @@ void DarwinProcess_scanThreads(DarwinProcess* dp, DarwinProcessTable* dpt) {
 
       // TODO: depend on setting
 #ifdef HAVE_THREAD_EXTENDED_INFO_DATA_T
-      const char* name = extended_info.pth_name[0] != '\0' ? extended_info.pth_name : proc->procComm;
+      const char* name = extended_info.pth_name[0] != '\0' ? extended_info.pth_name : (proc->procComm[0] ? proc->procComm : NULL);
 #else
       // Not provided in thread_basic_info_data_t; fall back to the process name
-      const char* name = proc->procComm;
+      const char* name = proc->procComm[0] ? proc->procComm : NULL;
 #endif
       Process_updateCmdline(tprocess, name, 0, name ? strlen(name) : 0);
 

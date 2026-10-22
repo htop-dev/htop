@@ -279,6 +279,20 @@ void Vector_compact(Vector* this, int dirtyIndex) {
    assert(Vector_isConsistent(this));
 }
 
+void Vector_shrink(Vector* this) {
+   assert(Vector_isConsistent(this));
+   if (this->arraySize <= VECTOR_DEFAULT_SIZE)
+      return;
+
+   int targetSize = this->items ? MAXIMUM(this->items + this->growthRate, VECTOR_DEFAULT_SIZE) : VECTOR_DEFAULT_SIZE;
+   if (this->arraySize > targetSize) {
+      this->array = (Object**) xRealloc(this->array, targetSize * sizeof(Object*));
+      this->arraySize = targetSize;
+   }
+
+   assert(Vector_isConsistent(this));
+}
+
 void Vector_moveUp(Vector* this, int idx) {
    assert(idx >= 0 && idx < this->items);
    assert(Vector_isConsistent(this));

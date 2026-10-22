@@ -19,7 +19,7 @@ in the source distribution for its full text.
 #include "Object.h"
 
 
-#define METER_TXTBUFFER_LEN 256
+#define METER_TXTBUFFER_LEN 127
 #define MAX_METER_GRAPHDATA_VALUES 32768
 
 #define METER_BUFFER_CHECK(buffer, size, written)          \
@@ -118,17 +118,18 @@ struct Meter_ {
    const Machine* host;
 
    char* caption;
-   MeterModeId mode;
-   unsigned int param;
-   GraphData drawData;
-   int h;
-   int columnWidthCount;      /**< only used internally by the Header */
-   uint8_t curItems;
    const int* curAttributes;
-   char txtBuffer[METER_TXTBUFFER_LEN];
    double* values;
    double total;
    void* meterData;
+   GraphData drawData;
+
+   MeterModeId mode;
+   unsigned int param;
+   int h;
+   int columnWidthCount;      /**< only used internally by the Header */
+   uint8_t curItems;
+   char txtBuffer[METER_TXTBUFFER_LEN];
 };
 
 typedef enum {

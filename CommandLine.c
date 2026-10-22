@@ -513,6 +513,8 @@ int CommandLine_run(int argc, char** argv) {
    if (settings->ss->allBranchesCollapsed)
       Table_collapseAllBranches(&pt->super);
 
+   xTrimMemory();
+
    ScreenManager_run(scr, NULL, NULL, NULL);
 
    Platform_done();

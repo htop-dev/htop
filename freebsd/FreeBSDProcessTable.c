@@ -81,22 +81,14 @@ static void FreeBSDProcessTable_updateCwd(const struct kinfo_proc* kproc, Proces
    const int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_CWD, kproc->ki_pid };
    char buffer[2048];
    size_t size = sizeof(buffer);
-   if (sysctl(mib, 4, buffer, &size, NULL, 0) != 0) {
-      free(proc->procCwd);
-      proc->procCwd = NULL;
+   if (sysctl(mib, 4, buffer, &size, NULL, 0) != 0 || buffer[0] == '\0') {
+      Process_updateCwd(proc, NULL);
       return;
    }
 
-   /* Kernel threads return an empty buffer */
-   if (buffer[0] == '\0') {
-      free(proc->procCwd);
-      proc->procCwd = NULL;
-      return;
-   }
-
-   free_and_xStrdup(&proc->procCwd, buffer);
+   Process_updateCwd(proc, buffer);
 #else
-   proc->procCwd = NULL;
+   Process_updateCwd(proc, NULL);
 #endif
 }
 
@@ -204,12 +196,7 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
 
          proc->tty_nr = kproc->ki_tdev;
          const char* name = (kproc->ki_tdev != NODEV) ? devname(kproc->ki_tdev, S_IFCHR) : NULL;
-         if (!name) {
-            free(proc->tty_name);
-            proc->tty_name = NULL;
-         } else {
-            free_and_xStrdup(&proc->tty_name, name);
-         }
+         Process_updateTty(proc, name);
       } else {
          if (fp->jid != kproc->ki_jid) {
             // process can enter jail anytime

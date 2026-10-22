@@ -61,44 +61,28 @@ struct Settings_; // IWYU pragma: keep
 /* Holds information about regions of the cmdline that should be
  * highlighted (e.g. program basename, delimiter, comm). */
 typedef struct ProcessCmdlineHighlight_ {
-   size_t offset; /* first character to highlight */
-   size_t length; /* How many characters to highlight, zero if unused */
-   int attr;      /* The attributes used to highlight */
-   int flags;     /* Special flags used for selective highlighting, zero for always */
+   uint32_t offset; /* first character to highlight */
+   uint32_t length; /* How many characters to highlight, zero if unused */
+   int attr;        /* The attributes used to highlight */
+   int flags;       /* Special flags used for selective highlighting, zero for always */
 } ProcessCmdlineHighlight;
+
+#define PROCESS_MAX_HIGHLIGHTS 8
 
 /* ProcessMergedCommand is populated by Process_makeCommandStr: It
  * contains the merged Command string, and the information needed by
  * Process_writeCommand to color the string. str will be NULL for kernel
  * threads and zombies */
 typedef struct ProcessMergedCommand_ {
-   uint64_t lastUpdate;                        /* Marker based on settings->lastUpdate to track when the rendering needs refreshing */
    char* str;                                  /* merged Command string */
-   size_t highlightCount;                      /* how many portions of cmdline to highlight */
-   ProcessCmdlineHighlight highlights[8];      /* which portions of cmdline to highlight */
+   ProcessCmdlineHighlight* highlights;        /* which portions of cmdline to highlight */
+   uint32_t lastUpdate;                        /* Marker based on settings->lastUpdate to track when the rendering needs refreshing */
+   uint32_t highlightCount;                    /* how many portions of cmdline to highlight */
 } ProcessMergedCommand;
 
 typedef struct Process_ {
    /* Super object for emulated OOP */
    Row super;
-
-   /* Process group identifier */
-   int pgrp;
-
-   /* Session identifier */
-   int session;
-
-   /* Foreground group identifier of the controlling terminal */
-   int tpgid;
-
-   /* This is a kernel (helper) task */
-   bool isKernelThread;
-
-   /* This is a userland thread / LWP */
-   bool isUserlandThread;
-
-   /* This process is running inside a container */
-   Tristate isRunningInContainer;
 
    /* Controlling terminal identifier of the process */
    unsigned long int tty_nr;
@@ -106,18 +90,8 @@ typedef struct Process_ {
    /* Controlling terminal name of the process */
    char* tty_name;
 
-   /* User identifier */
-   uid_t st_uid;
-
    /* User name */
    const char* user;
-
-   /* Non root owned process with elevated privileges
-    * Linux:
-    *   - from file capabilities
-    *   - inherited from the ambient set
-    */
-   Tristate elevated_priv;
 
    /* Process runtime (in hundredth of a second) */
    unsigned long long int time;
@@ -128,53 +102,14 @@ typedef struct Process_ {
     */
    char* cmdline;
 
-   /* End Offset in cmdline of the process basename */
-   size_t cmdlineBasenameEnd;
-
-   /* Start Offset in cmdline of the process basename */
-   size_t cmdlineBasenameStart;
-
-   /* The process' "command" name */
-   char* procComm;
-
    /* The main process executable */
    char* procExe;
 
    /* The process/thread working directory */
    char* procCwd;
 
-   /* Offset in procExe of the process basename */
-   size_t procExeBasenameOffset;
-
-   /* Tells if the executable has been replaced in the filesystem since start */
-   bool procExeDeleted;
-
-   /* Tells if the process uses replaced shared libraries since start */
-   bool usesDeletedLib;
-
-   /* CPU number last executed on */
-   int processor;
-
-   /* CPU usage during last cycle (in percent) */
-   float percent_cpu;
-
-   /* Memory usage during last cycle (in percent) */
-   float percent_mem;
-
-   /* Scheduling priority */
-   long int priority;
-
-   /* Nice value */
-   int nice;
-
-   /* Number of threads in this process */
-   long int nlwp;
-
    /* Process start time (in seconds elapsed since the Epoch) */
    time_t starttime_ctime;
-
-   /* Process start time (cached formatted string) */
-   char starttime_show[8];
 
    /* Total program size (in kilobytes) */
    long m_virt;
@@ -188,16 +123,80 @@ typedef struct Process_ {
    /* Number of major faults the process has made which have required loading a memory page from disk */
    unsigned long int majflt;
 
-   /* Process state enum field (platform dependent) */
-   ProcessState state;
-
-   /* Current scheduling policy */
-   int scheduling_policy;
+   /* The process' "command" name */
+   char procComm[24];
 
    /*
     * Internal state for merged Command display
     */
    ProcessMergedCommand mergedCommand;
+
+   /* End Offset in cmdline of the process basename */
+   uint32_t cmdlineBasenameEnd;
+
+   /* Start Offset in cmdline of the process basename */
+   uint32_t cmdlineBasenameStart;
+
+   /* Offset in procExe of the process basename */
+   uint32_t procExeBasenameOffset;
+
+   /* Scheduling priority */
+   int priority;
+
+   /* Number of threads in this process */
+   int nlwp;
+
+   /* Process group identifier */
+   int pgrp;
+
+   /* Session identifier */
+   int session;
+
+   /* Foreground group identifier of the controlling terminal */
+   int tpgid;
+
+   /* CPU number last executed on */
+   int processor;
+
+   /* User identifier */
+   uid_t st_uid;
+
+   /* CPU usage during last cycle (in percent) */
+   float percent_cpu;
+
+   /* Memory usage during last cycle (in percent) */
+   float percent_mem;
+
+   /* Nice value */
+   int nice;
+
+   /* Current scheduling policy */
+   int scheduling_policy;
+
+   /* This process is running inside a container */
+   int8_t isRunningInContainer;
+
+   /* Non root owned process with elevated privileges
+    * Linux:
+    *   - from file capabilities
+    *   - inherited from the ambient set
+    */
+   int8_t elevated_priv;
+
+   /* Process state enum field (platform dependent) */
+   uint8_t state;
+
+   /* This is a kernel (helper) task */
+   bool isKernelThread;
+
+   /* This is a userland thread / LWP */
+   bool isUserlandThread;
+
+   /* Tells if the executable has been replaced in the filesystem since start */
+   bool procExeDeleted;
+
+   /* Tells if the process uses replaced shared libraries since start */
+   bool usesDeletedLib;
 } Process;
 
 typedef struct ProcessFieldData_ {
@@ -327,7 +326,15 @@ const char* Process_getCommand(const Process* this);
 
 void Process_updateComm(Process* this, const char* comm);
 void Process_updateCmdline(Process* this, const char* cmdline, size_t basenameStart, size_t basenameEnd);
+void Process_updateCmdlineShared(Process* this, char* cmdline, size_t basenameStart, size_t basenameEnd);
 void Process_updateExe(Process* this, const char* exe);
+void Process_updateExeShared(Process* this, char* exe, size_t basenameOffset);
+void Process_updateTty(Process* this, const char* tty_name);
+void Process_updateTtyShared(Process* this, char* tty_name);
+void Process_updateCwd(Process* this, const char* cwd);
+void Process_updateCwdShared(Process* this, char* cwd);
+
+void Process_cleanMergedCommand(Process* this);
 
 /* This function constructs the string that is displayed by
  * Process_writeCommand and also returned by Process_getCommand */
