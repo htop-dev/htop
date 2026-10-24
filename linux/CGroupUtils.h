@@ -8,7 +8,11 @@ in the source distribution for its full text.
 */
 
 
+#include <stdbool.h>
+
+
 char* CGroup_filterName(const char* cgroup);
 char* CGroup_filterContainer(const char* cgroup);
+bool CGroup_looksLikeContainer(const char* cgroup);
 
 #endif /* HEADER_CGroupUtils */
