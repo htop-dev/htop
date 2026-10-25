@@ -13,9 +13,11 @@ in the source distribution for its full text.
 #include <errno.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <linux/bpf.h>
 
 #include "XUtils.h"
 
@@ -30,10 +32,15 @@ typedef int (*BpfLinkDestroyFn)(void*);
 typedef void* (*BpfObjectFindMapByNameFn)(const void*, const char*);
 typedef int (*BpfMapFdFn)(const void*);
 typedef int (*BpfMapLookupElemFn)(int, const void*, void*);
+typedef int (*BpfMapUpdateElemFn)(int, const void*, const void*, uint64_t);
 typedef int (*BpfMapDeleteElemFn)(int, const void*);
 typedef int (*BpfMapGetNextKeyFn)(int, const void*, void*);
 typedef void (*BpfObjectCloseFn)(void*);
 typedef long (*BpfGetErrorFn)(const void*);
+typedef void* (*RingBufferNewFn)(int, LibBpf_RingBufferSampleFn, void*, const void*);
+typedef int (*RingBufferConsumeFn)(void*);
+typedef int (*RingBufferEpollFdFn)(const void*);
+typedef void (*RingBufferFreeFn)(void*);
 
 static BpfObjectOpenMemFn sym_bpf_object__open_mem;
 static BpfObjectLoadFn sym_bpf_object__load;
@@ -44,10 +51,18 @@ static BpfLinkDestroyFn sym_bpf_link__destroy;
 static BpfObjectFindMapByNameFn sym_bpf_object__find_map_by_name;
 static BpfMapFdFn sym_bpf_map__fd;
 static BpfMapLookupElemFn sym_bpf_map_lookup_elem;
+static BpfMapUpdateElemFn sym_bpf_map_update_elem;
 static BpfMapDeleteElemFn sym_bpf_map_delete_elem;
 static BpfMapGetNextKeyFn sym_bpf_map_get_next_key;
 static BpfObjectCloseFn sym_bpf_object__close;
 static BpfGetErrorFn sym_libbpf_get_error;
+
+/* The ring buffer API appeared in libbpf 0.0.9; it is optional, so that
+ * monitors not using it keep working with older libbpf releases. */
+static RingBufferNewFn sym_ring_buffer__new;
+static RingBufferConsumeFn sym_ring_buffer__consume;
+static RingBufferEpollFdFn sym_ring_buffer__epoll_fd;
+static RingBufferFreeFn sym_ring_buffer__free;
 
 static void* dlopenHandle = NULL;
 static const char* dlopenName = NULL;
@@ -131,12 +146,23 @@ static bool LibBpf_resolveLibbpf(const char* name) {
    resolve(bpf_object__find_map_by_name);
    resolve(bpf_map__fd);
    resolve(bpf_map_lookup_elem);
+   resolve(bpf_map_update_elem);
    resolve(bpf_map_delete_elem);
    resolve(bpf_map_get_next_key);
    resolve(bpf_object__close);
    resolve(libbpf_get_error);
 
    #undef resolve
+
+   dlerror();
+   *((void **)(&sym_ring_buffer__new)) = dlsym(dlopenHandle, "ring_buffer__new");
+   *((void **)(&sym_ring_buffer__consume)) = dlsym(dlopenHandle, "ring_buffer__consume");
+   *((void **)(&sym_ring_buffer__epoll_fd)) = dlsym(dlopenHandle, "ring_buffer__epoll_fd");
+   *((void **)(&sym_ring_buffer__free)) = dlsym(dlopenHandle, "ring_buffer__free");
+   if (!sym_ring_buffer__new || !sym_ring_buffer__consume || !sym_ring_buffer__epoll_fd || !sym_ring_buffer__free) {
+      LibBpf_debug(name, "%s lacks the ring buffer API (libbpf >= 0.0.9)\n", dlopenName);
+      sym_ring_buffer__new = NULL;
+   }
 
    dlerror();
    *((void **)(&sym_libbpf_set_print)) = dlsym(dlopenHandle, "libbpf_set_print");
@@ -332,12 +358,41 @@ int LibBpf_mapLookupElem(int fd, const void* key, void* value) {
    return sym_bpf_map_lookup_elem(fd, key, value);
 }
 
+int LibBpf_mapUpdateElem(int fd, const void* key, const void* value) {
+   return sym_bpf_map_update_elem(fd, key, value, BPF_ANY);
+}
+
 int LibBpf_mapDeleteElem(int fd, const void* key) {
    return sym_bpf_map_delete_elem(fd, key);
 }
 
 int LibBpf_mapGetNextKey(int fd, const void* key, void* nextKey) {
    return sym_bpf_map_get_next_key(fd, key, nextKey);
+}
+
+void* LibBpf_ringBufferNew(int mapFd, LibBpf_RingBufferSampleFn sample, void* ctx) {
+   if (!sym_ring_buffer__new || mapFd < 0)
+      return NULL;
+
+   void* rb = sym_ring_buffer__new(mapFd, sample, ctx, NULL);
+   /* libbpf 0.x may return ERR_PTR, 1.x returns NULL on failure */
+   if (sym_libbpf_get_error(rb) != 0)
+      return NULL;
+
+   return rb;
+}
+
+int LibBpf_ringBufferConsume(void* rb) {
+   return sym_ring_buffer__consume(rb);
+}
+
+int LibBpf_ringBufferEpollFd(void* rb) {
+   return sym_ring_buffer__epoll_fd(rb);
+}
+
+void LibBpf_ringBufferFree(void* rb) {
+   if (rb)
+      sym_ring_buffer__free(rb);
 }
 
 void LibBpf_done(void) {

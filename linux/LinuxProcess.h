@@ -155,6 +155,9 @@ typedef struct LinuxProcess_ {
    /* Autogroup scheduling (CFS) information */
    long int autogroup_id;
    int autogroup_nice;
+
+   /* Added or changed from eBPF process events since the last scan of /proc */
+   bool fromEvent;
 } LinuxProcess;
 
 extern int pageSize;

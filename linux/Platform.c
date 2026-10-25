@@ -56,6 +56,7 @@ in the source distribution for its full text.
 #include "linux/NetLinkNet.h"
 #include "linux/NetMonitor.h"
 #include "linux/OpenRCMeter.h"
+#include "linux/ProcMonitor.h"
 #include "linux/SELinuxMeter.h"
 #include "linux/SystemdMeter.h"
 #include "linux/ZramMeter.h"
@@ -1086,13 +1087,17 @@ static int dropCapabilities(enum CapMode mode, ATTR_UNUSED bool keepEBPFCaps) {
 #ifdef HAVE_DELAYACCT
       KEEP(CAP_NET_ADMIN);      /* communicate over netlink socket for delay accounting */
 #endif
-#ifdef HAVE_EBPF_NETIO
+#if defined(HAVE_EBPF_NETIO) || defined(HAVE_EBPF_PROCMON)
       if (keepEBPFCaps) {
+#ifdef HAVE_EBPF_NETIO
          if (keepSysAdmin)
             KEEP(CAP_SYS_ADMIN);   /* perf_event_open() kprobe attach requires it when perf_event_paranoid>2 */
-         KEEP(CAP_BPF);            /* bpf() syscall to load eBPF programs for the NET columns */
-         KEEP(CAP_PERFMON);        /* perf_event_open() to attach the kprobes/kretprobes */
+#endif
+         KEEP(CAP_BPF);            /* bpf() syscall to load the eBPF programs (NET columns, process events) */
+         KEEP(CAP_PERFMON);        /* attach the kprobes/kretprobes and the BTF tracepoints */
+#ifdef HAVE_EBPF_NETIO
          KEEP(CAP_SYSLOG);         /* resolve kernel symbols for the kprobe targets */
+#endif
       }
 #endif
    }
@@ -1162,15 +1167,19 @@ static int dropCapabilities(enum CapMode mode, ATTR_UNUSED bool keepEBPFCaps) {
 }
 #endif
 
-#ifdef HAVE_EBPF_NETIO
-/* After the one-time eBPF load attempt the load-time capabilities are no
- * longer required: map lookup, iteration and deletion all go through the
- * already-open map file descriptor. */
+#if defined(HAVE_EBPF_NETIO) || defined(HAVE_EBPF_PROCMON)
+/* After every eBPF monitor had its one-time load attempt the load-time
+ * capabilities are no longer required: map lookup, iteration and deletion
+ * as well as ring buffer consumption go through already-open file
+ * descriptors. Repeated calls are no-ops. */
 int Platform_dropEBPFCapabilities(void) {
 #ifdef HAVE_LIBCAP
-   if (Platform_capabilitiesMode != CAP_MODE_BASIC)
+   static bool dropped = false;
+
+   if (dropped || Platform_capabilitiesMode != CAP_MODE_BASIC)
       return 0;
 
+   dropped = true;
    return dropCapabilities(CAP_MODE_BASIC, false);
 #else
    return 0;
@@ -1195,6 +1204,7 @@ bool Platform_init(void) {
 
    NetLinkNet_init();
    NetMonitor_init();
+   ProcMonitor_init();
 
    char target[PATH_MAX];
    ssize_t ret = readlink(PROCDIR "/self/ns/pid", target, sizeof(target) - 1);
@@ -1230,6 +1240,7 @@ void Platform_done(void) {
 
    NetLinkNet_done();
    NetMonitor_done();
+   ProcMonitor_done();
 #ifdef HAVE_EBPF
    LibBpf_done();
 #endif

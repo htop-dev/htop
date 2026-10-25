@@ -18,7 +18,6 @@ in the source distribution for its full text.
 
 #include "XUtils.h"
 #include "linux/LibBpf.h"
-#include "linux/Platform.h"
 
 
 /* eBPF object embedded into the binary by objcopy */
@@ -113,22 +112,19 @@ bool NetMonitor_isActive(void) {
    return eBPFActive;
 }
 
+bool NetMonitor_loadAttempted(void) {
+   return eBPFLoadAttempted;
+}
+
 void NetMonitor_update(void) {
    if (!eBPFActive) {
       if (eBPFLoadAttempted)
          return;
       eBPFLoadAttempted = true;
-      bool loaded = NetMonitor_loadBPF();
-      /* Load-time-only privileges (CAP_BPF, CAP_PERFMON, CAP_SYSLOG,
-       * CAP_SYS_ADMIN) are no longer needed once the maps exist, whether the
-       * attempt succeeded or not. dropCapabilities() already kills htop, so
-       * the below is mostly cosmetics / debugging and should go when the
-       * feature is being committed to main.
-       * !!!TODO DL260913 */
-      int capResult = Platform_dropEBPFCapabilities();
-      if (capResult != 0)
-         LibBpf_debug(bpf.name, "could not drop the eBPF load-time capabilities\n");
-      if (!loaded)
+      /* The load-time capabilities are dropped by the caller once every
+       * eBPF monitor has had its load attempt, see
+       * ProcessTable_goThroughEntries(). */
+      if (!NetMonitor_loadBPF())
          return;
    }
 

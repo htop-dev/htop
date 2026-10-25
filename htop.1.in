@@ -705,6 +705,42 @@ The autogroup nice value for the process autogroup. Requires Linux CFS to be ena
 .TP
 .B All other flags
 Currently unsupported (always displays '-').
+.SH "PROCESS START AND EXIT TRACKING"
+On Linux, when built with
+.BR \-\-enable-ebpf-procmon ,
+.B htop
+can follow process creation, exec and termination through an eBPF program
+attached to the scheduler tracepoints sched_process_fork, sched_process_exec
+and sched_process_exit. It is enabled in the setup screen (F2, Display
+options) with "Track process start and exit via eBPF" and is off by default.
+Unless "Hide userland process threads" is set, threads are tracked as well.
+
+The regular update interval is not affected. Instead,
+.B htop
+reads the events as soon as they arrive and applies them to the process list
+right away: started processes and threads are added as if a scan had found
+them (with the information the event carries: PID, parent, user, start time,
+command line as far as captured; the next scan fills in the rest), and ended
+ones are marked as gone, for processes that started and ended within one
+update interval with the CPU time they consumed. Ended processes are shown in state X (dead); with "Highlight
+new and old processes" enabled they stay in the list for the highlight time,
+otherwise until the next scan. The display is redrawn for such changes at
+most every 100 milliseconds, so bursts of short-lived processes (for example
+parallel builds) do not keep
+.B htop
+redrawing continuously.
+
+Loading the program requires the libbpf runtime library with ring buffer
+support (libbpf 0.0.9 or later), a kernel of version 5.8 or later with BTF type
+information (CONFIG_DEBUG_INFO_BTF, i.e. /sys/kernel/btf/vmlinux), and root or
+CAP_BPF together with CAP_PERFMON.
+.B htop
+must run in the initial PID namespace, as the PIDs reported by the kernel
+would not match /proc otherwise. The load-time capabilities are dropped once
+every eBPF feature has made its first attempt to load; if the tracking is
+disabled during the first scan, enabling it later works only as long as
+.B htop
+still holds them (for example, with \-\-drop-capabilities=off).
 .SH "METERS"
 Header meters (configured in Setup, F2) show live host statistics. The
 .B CPU
@@ -815,6 +851,23 @@ optional runtime dependency on
 .B libnl-3-200
 and
 .B libnl-genl-3-200
+via dynamic loading.
+.TP
+.B libbpf
+The bindings for libbpf are used to load the eBPF programs for the NET
+columns and for process start and exit tracking. Support must be compiled in
+with the
+.B \-\-enable-ebpf-netio
+and
+.B \-\-enable-ebpf-procmon
+configure flags, respectively; the eBPF programs themselves are compiled at
+build time and embedded into the binary.
+
+Summary: build time dependency on
+.B libbpf
+C header files and clang or bpf-unknown-none-gcc, optional runtime dependency
+on
+.B libbpf
 via dynamic loading.
 .SH "CONFIG FILES"
 By default

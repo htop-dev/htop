@@ -56,7 +56,7 @@ extern const MeterClass* const Platform_meterTypes[];
 bool Platform_init(void);
 void Platform_done(void);
 
-#ifdef HAVE_EBPF_NETIO
+#if defined(HAVE_EBPF_NETIO) || defined(HAVE_EBPF_PROCMON)
 int Platform_dropEBPFCapabilities(void);
 #endif
 

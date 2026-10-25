@@ -171,6 +171,10 @@ To install on the local system run `make install`. By default `make install` ins
     enable eBPF based per-process network bandwidth columns; implies `--enable-ebpf`, conflicts with `--disable-ebpf`
     - dependencies: as for `--enable-ebpf`; at runtime *libbpf* is loaded via `dlopen(3)` if available
     - default: *check*
+  * `--enable-ebpf-procmon`:
+    enable eBPF based tracking of process and thread start and exit; implies `--enable-ebpf`, conflicts with `--disable-ebpf`
+    - dependencies: as for `--enable-ebpf`; at runtime *libbpf* is loaded via `dlopen(3)` if available, and the kernel needs BTF type information (Linux >= 5.8)
+    - default: *check*
   * `--enable-libnl-net`:
     enable Linux socket-level network statistics via the kernel `NETLINK_SOCK_DIAG` interface, used for the network rate columns when eBPF is unavailable
     - dependencies: *libnl-3-dev*(build-time), at runtime *libnl-3* is loaded via `dlopen(3)` if available
@@ -190,7 +194,7 @@ To install on the local system run `make install`. By default `make install` ins
 * `libsystemd` is optional when `--enable-static` was not used to configure `htop`. If building statically and `libsystemd` is not found by `configure`, support for the systemd meter is disabled entirely.
 * `libnl-3` and `libnl-genl-3`, if `htop` was configured with `--enable-delayacct` and delay accounting process fields are active.
 * `libnl-3`, for the socket-level network statistics columns when `htop` was configured with `--enable-libnl-net`.
-* `libbpf`, for the eBPF-based network statistics columns when `htop` was configured with `--enable-ebpf-netio`.
+* `libbpf`, for the eBPF-based network statistics columns when `htop` was configured with `--enable-ebpf-netio`, and for process start/exit tracking when configured with `--enable-ebpf-procmon`.
 * I/O counters are available when the kernel is compiled with `CONFIG_TASK_IO_ACCOUNTING=Y`.
 
 `htop` checks for the availability of the actual runtime libraries as `htop` runs.

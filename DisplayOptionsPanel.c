@@ -315,6 +315,9 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) NumberItem_newByRef("Update interval (in seconds)", &(settings->delay), -1, 1, 255));
    Panel_add(super, (Object*) CheckItem_newByRef("Highlight new and old processes", &(settings->highlightChanges)));
    Panel_add(super, (Object*) NumberItem_newByRef("- Highlight time (in seconds)", &(settings->highlightDelaySecs), 0, 1, 24 * 60 * 60));
+   #ifdef HAVE_EBPF_PROCMON
+   Panel_add(super, (Object*) CheckItem_newByRef("Track process start and exit via eBPF (needs CAP_BPF and CAP_PERFMON)", &(settings->ebpfProcessEvents)));
+   #endif
    Panel_add(super, (Object*) NumberItem_newByRef("Hide main function bar (0 - off, 1 - on ESC until next input, 2 - permanently)", &(settings->hideFunctionBar), 0, 0, 2));
    Panel_add(super, (Object*) NumberItem_newByRef("Keep columns visible (0 - off, number of leading columns kept in view)", &(settings->keepColumnsVisible), 0, 0, 100));
    Panel_add(super, (Object*) CheckItem_newByRef("Sticky follow", &(settings->stickyFollow)));

@@ -47,6 +47,7 @@ in the source distribution for its full text.
 #include "linux/NetLinkNet.h"
 #include "linux/NetMonitor.h"
 #include "linux/Platform.h" // needed for GNU/hurd to get PATH_MAX  // IWYU pragma: keep
+#include "linux/ProcMonitor.h"
 
 #ifdef HAVE_DELAYACCT
 #include "linux/LibNl.h"
@@ -1385,16 +1386,11 @@ static char* readFileDynamic(openat_arg_t procFd, const char* filename, ssize_t*
 }
 
 /*
- * Read /proc/<pid>/cmdline (process-shared data)
+ * Turn a raw, NUL separated argument vector into the command line of the
+ * process, locating the basename of argv[0] for highlighting.
+ * The buffer is modified in place and must have room for amtRead + 1 bytes.
  */
-static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t procFd, const LinuxProcess* mainTask) {
-   LinuxProcessList_readExe(process, procFd, mainTask);
-
-   ssize_t amtRead;
-   char* command = readFileDynamic(procFd, "cmdline", &amtRead);
-   if (!command)
-      return false;
-
+static void LinuxProcessTable_updateCmdlineFromBuffer(Process* process, char* command, ssize_t amtRead) {
    size_t tokenEnd = (size_t)-1;
    size_t tokenStart = (size_t)-1;
    size_t lastChar = 0;
@@ -1556,6 +1552,20 @@ static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t pro
    }
 
    Process_updateCmdline(process, command, tokenStart, tokenEnd);
+}
+
+/*
+ * Read /proc/<pid>/cmdline (process-shared data)
+ */
+static bool LinuxProcessTable_readCmdlineFile(Process* process, openat_arg_t procFd, const LinuxProcess* mainTask) {
+   LinuxProcessList_readExe(process, procFd, mainTask);
+
+   ssize_t amtRead;
+   char* command = readFileDynamic(procFd, "cmdline", &amtRead);
+   if (!command)
+      return false;
+
+   LinuxProcessTable_updateCmdlineFromBuffer(process, command, amtRead);
 
    free(command);
    return true;
@@ -1855,7 +1865,8 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
 
          ProcessTable_add(pt, proc);
       } else {
-         if (settings->updateProcessNames && proc->state != ZOMBIE) {
+         /* Rows added from eBPF events only know a possibly truncated command line */
+         if ((settings->updateProcessNames || lp->fromEvent) && proc->state != ZOMBIE) {
             if (proc->isKernelThread) {
                Process_updateCmdline(proc, NULL, 0, 0);
             } else {
@@ -1865,6 +1876,7 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
                LinuxProcessList_readComm(proc, procFd);
             }
          }
+         lp->fromEvent = false;
       }
 
       /*
@@ -2010,6 +2022,220 @@ errorReadingProcess:
    return true;
 }
 
+static time_t LinuxProcessTable_eventStartTime(const LinuxMachine* lhost, uint64_t startBootNs) {
+   return lhost->boottime + (time_t)(startBootNs / 1000000000ULL);
+}
+
+/* Whether the row describes the task that started at startBootNs */
+static bool LinuxProcessTable_isStartedAt(const LinuxMachine* lhost, const Process* proc, uint64_t startBootNs) {
+   const time_t started = LinuxProcessTable_eventStartTime(lhost, startBootNs);
+
+   /* Both sides truncate to full seconds; allow for rounding at the edge */
+   return proc->starttime_ctime >= started - 1 && proc->starttime_ctime <= started + 1;
+}
+
+/* Marks a row as gone, the same way Table_cleanupRow() does for rows that a
+ * scan no longer finds: with highlighting it stays for the highlight time,
+ * otherwise the tomb expires at once and the next cleanup removes the row. */
+static void LinuxProcessTable_tombRow(const Machine* host, Process* proc) {
+   const Settings* settings = host->settings;
+
+   if (proc->super.tombStampMs > 0)
+      return;
+
+   proc->super.tombStampMs = host->monotonicMs;
+   if (settings->highlightChanges)
+      proc->super.tombStampMs += 1000 * (uint64_t)settings->highlightDelaySecs;
+}
+
+/* Takes over command line and program of the row a task was forked from */
+static void LinuxProcessTable_copyCommand(Process* proc, const Process* from) {
+   if (from->cmdline)
+      Process_updateCmdline(proc, from->cmdline, from->cmdlineBasenameStart, from->cmdlineBasenameEnd);
+   Process_updateExe(proc, from->procExe);
+}
+
+static void LinuxProcessTable_updateCommandFromExec(Process* proc, const ProcMonitorEvent* ev) {
+   char filename[PROCMONITOR_FILENAME_LEN];
+   String_safeStrncpy(filename, ev->filename, sizeof(filename));
+   Process_updateExe(proc, filename[0] == '/' ? filename : NULL);
+
+   const size_t argsLen = MINIMUM(ev->argsLen, sizeof(ev->args));
+   if (argsLen) {
+      char* command = xMalloc(argsLen + 1);
+      memcpy(command, ev->args, argsLen);
+      command[argsLen] = '\0';
+      LinuxProcessTable_updateCmdlineFromBuffer(proc, command, (ssize_t)argsLen);
+      free(command);
+   } else {
+      /* Like for zombies, the task name stands in for the command line */
+      Process_updateCmdline(proc, proc->procComm, 0, proc->procComm ? strlen(proc->procComm) : 0);
+   }
+}
+
+/*
+ * A task started (fork, exec or new thread): it is added to the list the way
+ * a scan of /proc would have found it, as far as the event tells. The
+ * flag fromEvent makes the next scan read its command line in full.
+ */
+static void LinuxProcessTable_startTask(LinuxProcessTable* this, const ProcMonitorEvent* ev) {
+   ProcessTable* pt = &this->super;
+   Machine* host = pt->super.host;
+   const LinuxMachine* lhost = (const LinuxMachine*) host;
+   const Settings* settings = host->settings;
+
+   const bool isThread = ev->type == PROCMONITOR_EVENT_THREAD_START;
+   const bool isExec = ev->type == PROCMONITOR_EVENT_EXEC;
+   const pid_t id = (pid_t) ev->tid;
+
+   Process* proc = ProcessTable_findProcess(pt, id);
+   const bool known = proc && proc->super.tombStampMs == 0 && LinuxProcessTable_isStartedAt(lhost, proc, ev->startBootNs);
+
+   char comm[PROCMONITOR_COMM_LEN];
+   String_safeStrncpy(comm, ev->comm, sizeof(comm));
+
+   if (known) {
+      /* A scan or an earlier event knows the task already; only an exec changes it */
+      if (isExec) {
+         LinuxProcess* lp = (LinuxProcess*) proc;
+         Process_updateComm(proc, comm[0] ? comm : NULL);
+         LinuxProcessTable_updateCommandFromExec(proc, ev);
+         Process_makeCommandStr(proc, settings);
+         lp->fromEvent = true;
+      }
+      return;
+   }
+
+   const bool reused = proc != NULL;
+   if (!reused) {
+      proc = LinuxProcess_new(host);
+      Process_setPid(proc, id);
+   } else {
+      /* The PID now belongs to a new task: the row is taken over the way a
+       * scan reuses it, resetting what the event cannot tell until the next
+       * scan fills it in */
+      proc->super.tombStampMs = 0;
+      proc->super.seenStampMs = host->monotonicMs;
+      proc->m_virt = 0;
+      proc->m_resident = 0;
+      proc->nlwp = 1;
+      proc->minflt = 0;
+      proc->majflt = 0;
+   }
+
+   LinuxProcess* lp = (LinuxProcess*) proc;
+
+   Process_setThreadGroup(proc, (pid_t) ev->pid);
+   Process_setParent(proc, (pid_t) ev->ppid);
+   proc->isUserlandThread = isThread;
+   lp->flags = ev->flags;
+   proc->isKernelThread = (ev->flags & PF_KTHREAD) != 0;
+   proc->state = UNKNOWN;
+
+   proc->st_uid = ev->uid;
+   proc->user = UsersTable_getRef(host->usersTable, ev->uid);
+
+   proc->starttime_ctime = LinuxProcessTable_eventStartTime(lhost, ev->startBootNs);
+   Process_fillStarttimeBuffer(proc);
+
+   proc->time = 0;
+   proc->percent_cpu = NAN;
+   proc->percent_mem = 0.0;
+
+   Process_updateComm(proc, comm[0] ? comm : NULL);
+   if (isExec) {
+      LinuxProcessTable_updateCommandFromExec(proc, ev);
+   } else {
+      /* A forked child runs its parent's program, a thread that of its process */
+      const Process* from = ProcessTable_findProcess(pt, (pid_t)(isThread ? ev->pid : ev->ppid));
+      if (from) {
+         LinuxProcessTable_copyCommand(proc, from);
+      } else {
+         Process_updateExe(proc, NULL);
+         Process_updateCmdline(proc, comm, 0, strlen(comm));
+      }
+   }
+   lp->fromEvent = true;
+
+   proc->super.updated = true;
+   proc->super.show = !((settings->hideKernelThreads && Process_isKernelThread(proc)) || (settings->hideUserlandThreads && Process_isUserlandThread(proc)));
+   if (!reused)
+      ProcessTable_add(pt, proc);
+
+   Process_makeCommandStr(proc, settings);
+}
+
+/* A task ended: it is marked as gone, adding it first
+ * if it started and ended before it could be shown */
+static void LinuxProcessTable_endTask(LinuxProcessTable* this, const ProcMonitorEvent* ev, pid_t id, bool groupTotals) {
+   ProcessTable* pt = &this->super;
+   Machine* host = pt->super.host;
+   const LinuxMachine* lhost = (const LinuxMachine*) host;
+
+   Process* proc = ProcessTable_findProcess(pt, id);
+   if (proc && proc->super.tombStampMs > 0)
+      return;
+
+   /* For a process, the event comes from its last thread: compare the start
+    * time only when it is the thread group leader */
+   if (proc && (pid_t) ev->tid == id && !LinuxProcessTable_isStartedAt(lhost, proc, ev->startBootNs))
+      return;
+
+   if (!proc) {
+      ProcMonitorEvent start = *ev;
+      start.type = (id == (pid_t) ev->pid) ? PROCMONITOR_EVENT_FORK : PROCMONITOR_EVENT_THREAD_START;
+      start.tid = (__u32) id;
+      LinuxProcessTable_startTask(this, &start);
+      proc = ProcessTable_findProcess(pt, id);
+      if (!proc)
+         return;
+   }
+
+   proc->state = DEFUNCT;
+
+   /* The final CPU time; a row that never saw a scan gets its CPU usage
+    * over the current interval, as all of it was consumed in there */
+   if (groupTotals || (pid_t) ev->tid == id) {
+      proc->time = MAXIMUM(proc->time, ev->cpuNs / 10000000ULL);
+      if (isnan(proc->percent_cpu) && lhost->period > 0.0) {
+         float percent_cpu = proc->time / lhost->period * 100.0;
+         proc->percent_cpu = MINIMUM(percent_cpu, host->activeCPUs * 100.0F);
+         Process_updateCPUFieldWidths(proc->percent_cpu);
+      }
+   }
+
+   LinuxProcessTable_tombRow(host, proc);
+}
+
+static void LinuxProcessTable_applyProcEvent(const ProcMonitorEvent* ev, void* ctx) {
+   LinuxProcessTable* this = ctx;
+
+   switch (ev->type) {
+      case PROCMONITOR_EVENT_FORK:
+      case PROCMONITOR_EVENT_EXEC:
+      case PROCMONITOR_EVENT_THREAD_START:
+         LinuxProcessTable_startTask(this, ev);
+         break;
+      case PROCMONITOR_EVENT_EXIT:
+         /* Reported by the last thread; if that is not the leader, its own row ends too */
+         if (ev->tid != ev->pid)
+            LinuxProcessTable_endTask(this, ev, (pid_t) ev->tid, false);
+         LinuxProcessTable_endTask(this, ev, (pid_t) ev->pid, true);
+         break;
+      case PROCMONITOR_EVENT_THREAD_EXIT:
+         LinuxProcessTable_endTask(this, ev, (pid_t) ev->tid, false);
+         break;
+      default:
+         break;
+   }
+}
+
+/* Machine.wakeupHandler: applies the pending process events between scans */
+static bool LinuxProcessTable_handleWakeup(Machine* host) {
+   LinuxProcessTable* this = (LinuxProcessTable*) host->processTable;
+   return ProcMonitor_consume(LinuxProcessTable_applyProcEvent, this) > 0;
+}
+
 void ProcessTable_goThroughEntries(ProcessTable* super) {
    LinuxProcessTable* this = (LinuxProcessTable*) super;
    Machine* host = super->super.host;
@@ -2033,6 +2259,19 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
          NetLinkNet_update();
    }
 
+   /* The eBPF monitors load lazily on the first scan that needs them; the
+    * process monitor decides on the first scan. Their load-time capabilities
+    * are dropped once every monitor has had its say. If process tracking is
+    * disabled on the first scan, enabling it later only works while the
+    * capabilities are still held. */
+#ifdef HAVE_EBPF_PROCMON
+   ProcMonitor_update(settings->ebpfProcessEvents, !settings->hideUserlandThreads);
+#endif
+#if defined(HAVE_EBPF_NETIO) || defined(HAVE_EBPF_PROCMON)
+   if (NetMonitor_loadAttempted() && ProcMonitor_loadSettled())
+      Platform_dropEBPFCapabilities();
+#endif
+
    /* Shift GPU values */
    {
       lhost->prevGpuTime = lhost->curGpuTime;
@@ -2053,4 +2292,10 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
 #endif
 
    LinuxProcessTable_recurseProcTree(this, rootFd, lhost, PROCDIR, NULL);
+
+   /* Events that arrived during the walk through /proc are applied right
+    * after it; later ones as soon as they come in, see Machine.wakeupFd */
+   ProcMonitor_consume(LinuxProcessTable_applyProcEvent, this);
+   host->wakeupFd = ProcMonitor_wakeupFd();
+   host->wakeupHandler = host->wakeupFd >= 0 ? LinuxProcessTable_handleWakeup : NULL;
 }

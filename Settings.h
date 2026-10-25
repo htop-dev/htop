@@ -98,6 +98,9 @@ typedef struct Settings_ {
    bool highlightThreads;
    bool highlightChanges;
    int highlightDelaySecs;
+   #ifdef HAVE_EBPF_PROCMON
+   bool ebpfProcessEvents;  // track process start and exit via eBPF, rescanning early on events
+   #endif
    bool findCommInCmdline;
    bool stripExeFromCmdline;
    bool showMergedCommand;

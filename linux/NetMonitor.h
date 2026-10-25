@@ -30,6 +30,7 @@ typedef struct NetIOData_ {
 void NetMonitor_init(void);
 void NetMonitor_done(void);
 bool NetMonitor_isActive(void);
+bool NetMonitor_loadAttempted(void);
 void NetMonitor_update(void);
 bool NetMonitor_getNetIO(pid_t pid, NetIOData* data);
 
@@ -38,6 +39,7 @@ bool NetMonitor_getNetIO(pid_t pid, NetIOData* data);
 static inline void NetMonitor_init(void) { }
 static inline void NetMonitor_done(void) { }
 static inline bool NetMonitor_isActive(void) { return false; }
+static inline bool NetMonitor_loadAttempted(void) { return true; }
 static inline void NetMonitor_update(void) { }
 static inline bool NetMonitor_getNetIO(pid_t pid, NetIOData* data) { (void) pid; (void) data; return false; }
 

@@ -6,7 +6,8 @@ htop - linux/LibBpf.h
 Released under the GNU GPLv2+, see the COPYING file
 in the source distribution for its full text.
 
-Shared libbpf runtime for the eBPF based monitors. libbpf is loaded via dlopen, so htop keeps working when
+Shared libbpf runtime for the eBPF based monitors (NetMonitor,
+ProcMonitor). libbpf is loaded via dlopen, so htop keeps working when
 the library is missing at runtime. Every monitor embeds its own eBPF
 object and loads it through this module, so a monitor whose programs
 the kernel refuses does not take the others down with it.
@@ -44,6 +45,9 @@ typedef struct LibBpfObject_ {
  * kernel to a note on when the target was introduced; NULL if unexpected */
 typedef const char* (*LibBpf_ExpectedMissingFn)(const char* section);
 
+/* Called for every record consumed from a BPF_MAP_TYPE_RINGBUF map */
+typedef int (*LibBpf_RingBufferSampleFn)(void* ctx, void* data, size_t size);
+
 /* Diagnostics on stderr, prefixed with "htop-<name>: "; compiled out in release (NDEBUG) builds */
 void LibBpf_debug(const char* name, const char* fmt, ...) ATTR_FORMAT(printf, 2, 3);
 
@@ -59,8 +63,22 @@ void LibBpf_closeObject(LibBpfObject* this);
 int LibBpf_mapFd(const LibBpfObject* this, const char* mapName);
 
 int LibBpf_mapLookupElem(int fd, const void* key, void* value);
+int LibBpf_mapUpdateElem(int fd, const void* key, const void* value);
 int LibBpf_mapDeleteElem(int fd, const void* key);
 int LibBpf_mapGetNextKey(int fd, const void* key, void* nextKey);
+
+/* struct ring_buffer* consuming the given BPF_MAP_TYPE_RINGBUF map, or NULL
+ * on failure, including a libbpf too old to provide the ring buffer API */
+void* LibBpf_ringBufferNew(int mapFd, LibBpf_RingBufferSampleFn sample, void* ctx);
+
+/* Hands all pending records to the sample callback without blocking;
+ * returns the number of records consumed or a negative error */
+int LibBpf_ringBufferConsume(void* rb);
+
+/* Epoll file descriptor that becomes readable while records are pending */
+int LibBpf_ringBufferEpollFd(void* rb);
+
+void LibBpf_ringBufferFree(void* rb);
 
 /* Unloads libbpf; every object must have been closed before */
 void LibBpf_done(void);

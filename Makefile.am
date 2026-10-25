@@ -14,6 +14,7 @@ EXTRA_DIST = \
 	htop.png \
 	htop.svg \
 	linux/NetMonitor.bpf.c \
+	linux/ProcMonitor.bpf.c \
 	build-aux/compile \
 	build-aux/depcomp \
 	build-aux/install-sh \
@@ -205,6 +206,8 @@ linux_platform_headers = \
 	linux/OpenRCMeter.h \
 	linux/Platform.h \
 	linux/PressureStallMeter.h \
+	linux/ProcMonitor.h \
+	linux/ProcMonitorEvent.h \
 	linux/ProcessField.h \
 	linux/SELinuxMeter.h \
 	linux/SystemdMeter.h \
@@ -279,6 +282,26 @@ linux/NetMonitor_bpf_embedded.o: linux/NetMonitor.bpf.o
 	$(AM_V_GEN)rm -f NetMonitor_bpf.o
 
 CLEANFILES += linux/NetMonitor.bpf.o NetMonitor_bpf.o linux/NetMonitor_bpf_embedded.o
+endif
+
+if HAVE_EBPF_PROCMON
+linux_platform_sources += linux/ProcMonitor.c
+htop_LDADD += linux/ProcMonitor_bpf_embedded.o
+
+linux/ProcMonitor.bpf.o: linux/ProcMonitor.bpf.c linux/ProcMonitorEvent.h
+	$(AM_V_CC)mkdir -p $(dir $@) && $(HTop_BPF_CC) -O2 -g -Wall $(htop_bpf_cc_flags) $(CPPFLAGS) $(HTOP_BPF_INCLUDES) \
+	  -I$(srcdir) -D__TARGET_ARCH_$(htop_bpf_arch) \
+	  -c $< -o $@
+
+# Same stable-symbol-name dance as for NetMonitor above:
+# _binary_ProcMonitor_bpf_o_start/_end are referenced from linux/ProcMonitor.c
+linux/ProcMonitor_bpf_embedded.o: linux/ProcMonitor.bpf.o
+	$(AM_V_GEN)cp $< ProcMonitor_bpf.o
+	$(AM_V_GEN)$(HTop_LD) -r -b binary ProcMonitor_bpf.o -o $@
+	$(AM_V_GEN)$(OBJCOPY) --rename-section .data=.rodata,alloc,load,readonly,data,contents $@ $@
+	$(AM_V_GEN)rm -f ProcMonitor_bpf.o
+
+CLEANFILES += linux/ProcMonitor.bpf.o ProcMonitor_bpf.o linux/ProcMonitor_bpf_embedded.o
 endif
 
 if HTOP_LINUX

@@ -1745,7 +1745,7 @@ AC_ARG_ENABLE(
    [ebpf],
    [AS_HELP_STRING(
       [--enable-ebpf],
-      [check the build prerequisites of the eBPF based features (libbpf headers and clang or the bpf-unknown-none-gcc cross-compiler); adds no runtime behaviour by itself, see --enable-ebpf-netio @<:@default=check@:>@]
+      [check the build prerequisites of the eBPF based features (libbpf headers and clang or the bpf-unknown-none-gcc cross-compiler); adds no runtime behaviour by itself, see --enable-ebpf-netio and --enable-ebpf-procmon @<:@default=check@:>@]
    )],
    [],
    [enable_ebpf=check]
@@ -1770,6 +1770,28 @@ case "$enable_ebpf_netio" in
       ;;
    *)
       AC_MSG_ERROR([bad value '$enable_ebpf_netio' for --enable-ebpf-netio])
+      ;;
+esac
+AC_ARG_ENABLE(
+   [ebpf-procmon],
+   [AS_HELP_STRING(
+      [--enable-ebpf-procmon],
+      [enable eBPF based tracking of process and thread start and exit; implies --enable-ebpf, at runtime libbpf is loaded via dlopen and kernel BTF is required @<:@default=check@:>@]
+   )],
+   [],
+   [enable_ebpf_procmon=check]
+)
+case "$enable_ebpf_procmon" in
+   no|check)
+      ;;
+   yes)
+      if test "$enable_ebpf" = no; then
+         AC_MSG_ERROR([--enable-ebpf-procmon requires eBPF support, which --disable-ebpf turns off])
+      fi
+      enable_ebpf=yes
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_ebpf_procmon' for --enable-ebpf-procmon])
       ;;
 esac
 AC_PATH_PROG([CLANG], [clang], [], [$PATH])
@@ -1867,6 +1889,14 @@ if test "$enable_ebpf_netio" = yes; then
    AC_DEFINE([HAVE_EBPF_NETIO], [1], [Define if eBPF based per-process network bandwidth columns should be enabled.])
 fi
 AM_CONDITIONAL([HAVE_EBPF_NETIO], [test "$enable_ebpf_netio" = yes])
+
+if test "$enable_ebpf_procmon" = check; then
+   enable_ebpf_procmon="$enable_ebpf"
+fi
+if test "$enable_ebpf_procmon" = yes; then
+   AC_DEFINE([HAVE_EBPF_PROCMON], [1], [Define if eBPF based tracking of process start and exit should be enabled.])
+fi
+AM_CONDITIONAL([HAVE_EBPF_PROCMON], [test "$enable_ebpf_procmon" = yes])
 
 # ----------------------------------------------------------------------
 
@@ -2026,6 +2056,7 @@ AC_MSG_RESULT([
   (Linux) sensors:           $enable_sensors
   (Linux) eBPF monitoring:   $enable_ebpf
   (Linux) net columns:       $htop_net_columns
+  (Linux) process monitoring: $enable_ebpf_procmon
   (Linux) capabilities:      $enable_capabilities
   unicode:                   $enable_unicode
   affinity:                  $enable_affinity
