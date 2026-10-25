@@ -1745,11 +1745,33 @@ AC_ARG_ENABLE(
    [ebpf],
    [AS_HELP_STRING(
       [--enable-ebpf],
-      [enable eBPF based per-process network bandwidth columns; requires libbpf headers and clang or the bpf-unknown-none-gcc cross-compiler at compile time, at runtime libbpf is loaded via dlopen @<:@default=check@:>@]
+      [check the build prerequisites of the eBPF based features (libbpf headers and clang or the bpf-unknown-none-gcc cross-compiler); adds no runtime behaviour by itself, see --enable-ebpf-netio @<:@default=check@:>@]
    )],
    [],
    [enable_ebpf=check]
 )
+AC_ARG_ENABLE(
+   [ebpf-netio],
+   [AS_HELP_STRING(
+      [--enable-ebpf-netio],
+      [enable eBPF based per-process network bandwidth columns; implies --enable-ebpf, at runtime libbpf is loaded via dlopen @<:@default=check@:>@]
+   )],
+   [],
+   [enable_ebpf_netio=check]
+)
+case "$enable_ebpf_netio" in
+   no|check)
+      ;;
+   yes)
+      if test "$enable_ebpf" = no; then
+         AC_MSG_ERROR([--enable-ebpf-netio requires eBPF support, which --disable-ebpf turns off])
+      fi
+      enable_ebpf=yes
+      ;;
+   *)
+      AC_MSG_ERROR([bad value '$enable_ebpf_netio' for --enable-ebpf-netio])
+      ;;
+esac
 AC_PATH_PROG([CLANG], [clang], [], [$PATH])
 AC_PATH_PROG([BPF_CC], [bpf-unknown-none-gcc], [], [$PATH])
 case "$enable_ebpf" in
@@ -1778,7 +1800,7 @@ case "$enable_ebpf" in
       ;;
 esac
 if test "$enable_ebpf" = yes; then
-   AC_DEFINE([HAVE_EBPF], [1], [Define if eBPF based per-process network bandwidth support should be enabled.])
+   AC_DEFINE([HAVE_EBPF], [1], [Define if the build prerequisites of the eBPF based features are available.])
 
    # Select the compiler for the eBPF program: clang with -target bpf, or the
    # GCC BPF cross-compiler bpf-unknown-none-gcc (e.g. Debian's gcc-bpf).
@@ -1837,6 +1859,14 @@ AC_SUBST([htop_bpf_cc_flags])
 AC_SUBST([HTop_LD])
 AC_SUBST([htop_bpf_arch])
 AM_CONDITIONAL([HAVE_EBPF], [test "$enable_ebpf" = yes])
+
+if test "$enable_ebpf_netio" = check; then
+   enable_ebpf_netio="$enable_ebpf"
+fi
+if test "$enable_ebpf_netio" = yes; then
+   AC_DEFINE([HAVE_EBPF_NETIO], [1], [Define if eBPF based per-process network bandwidth columns should be enabled.])
+fi
+AM_CONDITIONAL([HAVE_EBPF_NETIO], [test "$enable_ebpf_netio" = yes])
 
 # ----------------------------------------------------------------------
 
@@ -1979,7 +2009,7 @@ if test "$my_htop_platform" = unsupported; then
 fi
 
 htop_net_columns=""
-if test "$enable_ebpf" = yes; then
+if test "$enable_ebpf_netio" = yes; then
    htop_net_columns="eBPF, "
 fi
 if test "$enable_libnl_net" = yes; then
@@ -1994,6 +2024,7 @@ AC_MSG_RESULT([
   (Linux) proc directory:    $with_proc
   (Linux) delay accounting:  $enable_delayacct
   (Linux) sensors:           $enable_sensors
+  (Linux) eBPF monitoring:   $enable_ebpf
   (Linux) net columns:       $htop_net_columns
   (Linux) capabilities:      $enable_capabilities
   unicode:                   $enable_unicode

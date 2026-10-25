@@ -199,6 +199,7 @@ linux_platform_headers = \
 	linux/LinuxMachine.h \
 	linux/LinuxProcess.h \
 	linux/LinuxProcessTable.h \
+	linux/LibBpf.h \
 	linux/NetLinkNet.h \
 	linux/NetMonitor.h \
 	linux/OpenRCMeter.h \
@@ -252,6 +253,10 @@ htop_LDADD =
 CLEANFILES =
 
 if HAVE_EBPF
+linux_platform_sources += linux/LibBpf.c
+endif
+
+if HAVE_EBPF_NETIO
 linux_platform_sources += linux/NetMonitor.c
 htop_LDADD += linux/NetMonitor_bpf_embedded.o
 
