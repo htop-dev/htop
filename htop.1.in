@@ -703,6 +703,15 @@ The autogroup identifier for the process. Requires Linux CFS to be enabled.
 .B ANI
 The autogroup nice value for the process autogroup. Requires Linux CFS to be enabled.
 .TP
+.B EXIT_STATUS (EXIT)
+The exit code of an ended process, or the name of the signal that terminated
+it, followed by an asterisk (*) if a core was dumped. Only known for processes
+or threads whose end was observed through eBPF process tracking (see
+.B PROCESS START AND EXIT TRACKING
+below); running and other processes show N/A. Useful together with the
+highlighting of ended processes, which keeps them in the list for the
+highlight time.
+.TP
 .B All other flags
 Currently unsupported (always displays '-').
 .SH "PROCESS START AND EXIT TRACKING"
@@ -721,8 +730,9 @@ reads the events as soon as they arrive and applies them to the process list
 right away: started processes and threads are added as if a scan had found
 them (with the information the event carries: PID, parent, user, start time,
 command line as far as captured; the next scan fills in the rest), and ended
-ones are marked as gone, for processes that started and ended within one
-update interval with the CPU time they consumed. Ended processes are shown in state X (dead); with "Highlight
+ones are marked as gone, with their exit status (see EXIT_STATUS) and, for
+processes that started and ended within one update interval, the CPU time
+they consumed. Ended processes are shown in state X (dead); with "Highlight
 new and old processes" enabled they stay in the list for the highlight time,
 otherwise until the next scan. The display is redrawn for such changes at
 most every 100 milliseconds, so bursts of short-lived processes (for example

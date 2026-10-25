@@ -2131,6 +2131,7 @@ static void LinuxProcessTable_startTask(LinuxProcessTable* this, const ProcMonit
    lp->flags = ev->flags;
    proc->isKernelThread = (ev->flags & PF_KTHREAD) != 0;
    proc->state = UNKNOWN;
+   lp->has_exit_status = false;
 
    proc->st_uid = ev->uid;
    proc->user = UsersTable_getRef(host->usersTable, ev->uid);
@@ -2165,7 +2166,7 @@ static void LinuxProcessTable_startTask(LinuxProcessTable* this, const ProcMonit
    Process_makeCommandStr(proc, settings);
 }
 
-/* A task ended: it is marked as gone, adding it first
+/* A task ended: it is marked as gone with its exit status, adding it first
  * if it started and ended before it could be shown */
 static void LinuxProcessTable_endTask(LinuxProcessTable* this, const ProcMonitorEvent* ev, pid_t id, bool groupTotals) {
    ProcessTable* pt = &this->super;
@@ -2191,7 +2192,10 @@ static void LinuxProcessTable_endTask(LinuxProcessTable* this, const ProcMonitor
          return;
    }
 
+   LinuxProcess* lp = (LinuxProcess*) proc;
    proc->state = DEFUNCT;
+   lp->exit_status = ev->exitCode;
+   lp->has_exit_status = true;
 
    /* The final CPU time; a row that never saw a scan gets its CPU usage
     * over the current interval, as all of it was consumed in there */

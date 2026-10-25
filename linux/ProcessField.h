@@ -52,6 +52,7 @@ in the source distribution for its full text.
    NET_RX = 136,                 \
    NET_TX = 137,                 \
    NET_TOTAL = 138,              \
+   EXIT_STATUS = 139,            \
    // End of list
 
 

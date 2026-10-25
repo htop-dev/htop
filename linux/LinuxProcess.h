@@ -156,6 +156,10 @@ typedef struct LinuxProcess_ {
    long int autogroup_id;
    int autogroup_nice;
 
+   /* Exit status in wait(2) format, as observed by the eBPF process monitor */
+   int exit_status;
+   bool has_exit_status;
+
    /* Added or changed from eBPF process events since the last scan of /proc */
    bool fromEvent;
 } LinuxProcess;
