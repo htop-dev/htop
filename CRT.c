@@ -84,8 +84,8 @@ static const char* const CRT_treeStrUtf8[LAST_TREE_STR] = {
                                      // WITH VERTICAL STROKE' (U+1FBAF, "\xf0\x9f\xae\xaf") when
                                      // Unicode 13 is common
    [TREE_STR_SHUT] = "\xe2\x94\x80", // ─
-   [TREE_STR_ASC]  = "\xe2\x96\xb3", // △
-   [TREE_STR_DESC] = "\xe2\x96\xbd", // ▽
+   [TREE_STR_ASC]  = "\xe2\x96\xb4", // ▴
+   [TREE_STR_DESC] = "\xe2\x96\xbe", // ▾
 };
 
 bool CRT_utf8 = false;
