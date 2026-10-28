@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "Hashtable.h"
 
 #include <assert.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -73,6 +74,11 @@ static bool Hashtable_isConsistent(const Hashtable* this) {
    bool res = items == this->items;
    if (!res)
       Hashtable_dump(this);
+
+   assert(this->size > 0);
+   assert(this->size <= SIZE_MAX / sizeof(HashtableItem));
+   assert(this->size >= this->items);
+
    return res;
 }
 
@@ -88,26 +94,26 @@ size_t Hashtable_count(const Hashtable* this) {
 
 #endif /* NDEBUG */
 
-/* https://oeis.org/A014234 */
-static const uint64_t OEISprimes[] = {
-   7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 8191,
-   16381, 32749, 65521,
-#if SIZE_MAX > UINT16_MAX
-   131071, 262139, 524287, 1048573,
-   2097143, 4194301, 8388593, 16777213, 33554393,
-   67108859, 134217689, 268435399, 536870909, 1073741789,
-   2147483647, 4294967291,
-#endif
-#if SIZE_MAX > UINT32_MAX
-   8589934583, 17179869143, 34359738337, 68719476731, 137438953447,
-#endif
-};
-
 static size_t nextPrime(size_t n) {
-   /* on 32-bit make sure we do not return primes not fitting in size_t */
-   for (size_t i = 0; i < ARRAYSIZE(OEISprimes); i++) {
-      if (n <= OEISprimes[i]) {
-         return OEISprimes[i];
+   // Table of differences so that (2^m - primeDiffs[m]) is a prime.
+   // This is OEIS sequence https://oeis.org/A013603 except for
+   // entry 0 (2^0 = 1 as a non-prime special case).
+   static const uint8_t primeDiffs[] = {
+      0, 0, 1, 1, 3, 1, 3, 1, 5, 3, 3, 9, 3, 1, 3, 19,
+#if SIZE_MAX > UINT16_MAX
+      15, 1, 5, 1, 3, 9, 3, 15, 3, 39, 5, 39, 57, 3, 35, 1,
+#if SIZE_MAX > UINT32_MAX
+      5, 9, 41, 31, 5, 25, 45, 7, 87, 21, 11, 57, 17, 55, 21, 115,
+      59, 81, 27, 129, 47, 111, 33, 55, 5, 13, 27, 55, 93, 1, 57, 25,
+#endif
+#endif
+   };
+
+   assert(sizeof(n) * CHAR_BIT <= ARRAYSIZE(primeDiffs));
+   for (uint8_t shift = 3; shift < sizeof(n) * CHAR_BIT; shift++) {
+      size_t prime = ((size_t)1 << shift) - primeDiffs[shift];
+      if (n <= prime) {
+         return prime;
       }
    }
 
@@ -192,21 +198,18 @@ static void insert(Hashtable* this, ht_key_t key, void* value) {
    }
 }
 
-void Hashtable_setSize(Hashtable* this, size_t size) {
-
+static void Hashtable_setSize(Hashtable* this, size_t size) {
    assert(Hashtable_isConsistent(this));
+   assert(size >= this->items);
 
-   if (size <= this->items)
-      return;
-
-   size_t newSize = nextPrime(size);
-   if (newSize == this->size)
+   size = nextPrime(size);
+   if (size == this->size)
       return;
 
    HashtableItem* oldBuckets = this->buckets;
    size_t oldSize = this->size;
 
-   this->size = newSize;
+   this->size = size;
    this->buckets = (HashtableItem*) xCalloc(this->size, sizeof(HashtableItem));
    this->items = 0;
 
@@ -224,24 +227,20 @@ void Hashtable_setSize(Hashtable* this, size_t size) {
 }
 
 void Hashtable_put(Hashtable* this, ht_key_t key, void* value) {
-
    assert(Hashtable_isConsistent(this));
-   assert(this->size > 0);
    assert(value);
 
    /* grow on load-factor > 0.7 */
-   if (10 * this->items > 7 * this->size) {
-      if (SIZE_MAX / 2 < this->size)
-         CRT_fatalError("Hashtable: size overflow");
+   if (sizeof(HashtableItem) < 7 && SIZE_MAX / 7 < this->size)
+      CRT_fatalError("Hashtable: size overflow");
 
-      Hashtable_setSize(this, 2 * this->size);
-   }
+   if (this->items >= this->size * 7 / 10)
+      Hashtable_setSize(this, this->size + 1);
 
    insert(this, key, value);
 
    assert(Hashtable_isConsistent(this));
    assert(Hashtable_get(this, key) != NULL);
-   assert(this->size > this->items);
 }
 
 void* Hashtable_remove(Hashtable* this, ht_key_t key) {
@@ -293,8 +292,12 @@ void* Hashtable_remove(Hashtable* this, ht_key_t key) {
    assert(Hashtable_get(this, key) == NULL);
 
    /* shrink on load-factor < 0.125 */
-   if (8 * this->items < this->size)
-      Hashtable_setSize(this, this->size / 3); /* account for nextPrime rounding up */
+   if (sizeof(HashtableItem) < 3 && SIZE_MAX / 3 < this->size)
+      CRT_fatalError("Hashtable: size overflow");
+
+   if (this->items < this->size / 8) {
+      Hashtable_setSize(this, this->size * 3 / 8); /* account for nextPrime rounding up */
+   }
 
    return res;
 }
