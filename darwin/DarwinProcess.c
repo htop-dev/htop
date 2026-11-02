@@ -381,6 +381,9 @@ void DarwinProcess_setFromKInfoProc(Process* proc, const struct kinfo_proc* ps, 
       if (settings->ss->flags & PROCESS_FLAG_CWD) {
          DarwinProcess_updateCwd(ep->p_pid, proc);
       }
+   } else if (settings->updateProcessNames && ep->p_stat != SZOMB) {
+      DarwinProcess_updateExe(ep->p_pid, proc);
+      DarwinProcess_updateCmdLine(ps, proc);
    }
 
    if (proc->tty_name == NULL && (dev_t)proc->tty_nr != NODEV) {
