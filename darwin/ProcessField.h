@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 
 #define PLATFORM_PROCESS_FIELDS  \
+   M_FOOTPRINT = 41,             \
    TRANSLATED = 100,             \
    RBYTES = 107,                 \
    WBYTES = 108,                 \
