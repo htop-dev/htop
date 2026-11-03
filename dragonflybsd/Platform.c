@@ -24,6 +24,7 @@ in the source distribution for its full text.
 
 #include "CPUMeter.h"
 #include "DateTimeMeter.h"
+#include "DinitMeter.h"
 #include "FileDescriptorMeter.h"
 #include "HostnameMeter.h"
 #include "LoadAverageMeter.h"
@@ -31,8 +32,11 @@ in the source distribution for its full text.
 #include "MemoryMeter.h"
 #include "MemorySwapMeter.h"
 #include "ProcessTable.h"
+#include "RunitMeter.h"
+#include "S6Meter.h"
 #include "SwapMeter.h"
 #include "SysArchMeter.h"
+#include "SysVInitMeter.h"
 #include "TasksMeter.h"
 #include "UptimeMeter.h"
 #include "XUtils.h"
@@ -143,6 +147,10 @@ const MeterClass* const Platform_meterTypes[] = {
    &NetworkIOMeter_class,
    &FileDescriptorMeter_class,
    &BlankMeter_class,
+   &SysVInitMeter_class,
+   &RunitMeter_class,
+   &S6Meter_class,
+   &DinitMeter_class,
    NULL
 };
 
