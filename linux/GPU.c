@@ -13,8 +13,10 @@ in the source distribution for its full text.
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
+#include <limits.h>
 #include <sys/types.h>
 
+#include "XUtils.h"
 #include "linux/Compat.h"
 #include "linux/LinuxMachine.h"
 
@@ -43,6 +45,42 @@ static bool is_duplicate_client(const ClientInfo* parsed, ClientID id, const cha
    }
 
    return false;
+}
+
+/*
+ * Parses the value of a "drm-resident-<region>" / "drm-memory-<region>" fdinfo
+ * line (the text right after the ':') into a byte count. Rejects malformed or
+ * unrecognized unit suffixes and multiplications that would overflow.
+ */
+static bool parse_drm_memory_value(const char* text, unsigned long long int* outBytes) {
+   char* endptr;
+   errno = 0;
+   unsigned long long int value = strtoull(text, &endptr, 10);
+   if (errno != 0)
+      return false;
+
+   while (*endptr == ' ')
+      endptr++;
+
+   unsigned long long int multiplier;
+   if (*endptr == '\0')
+      multiplier = 1;
+   else if (String_eq(endptr, "KiB"))
+      multiplier = 1024ULL;
+   else if (String_eq(endptr, "MiB"))
+      multiplier = 1024ULL * 1024ULL;
+   else if (String_eq(endptr, "GiB"))
+      multiplier = 1024ULL * 1024ULL * 1024ULL;
+   else if (String_eq(endptr, "TiB"))
+      multiplier = 1024ULL * 1024ULL * 1024ULL * 1024ULL;
+   else
+      return false;
+
+   if (multiplier > 1 && value > ULLONG_MAX / multiplier)
+      return false;
+
+   *outBytes = value * multiplier;
+   return true;
 }
 
 static void update_machine_gpu(LinuxProcessTable* lpt, unsigned long long int time, const char* engine, size_t engine_len) {
@@ -83,6 +121,7 @@ void GPU_readProcessData(LinuxProcessTable* lpt, LinuxProcess* lp, openat_arg_t 
    DIR* fdinfoDir = NULL;
    ClientInfo* parsed_ids = NULL;
    unsigned long long int new_gpu_time = 0;
+   unsigned long long int new_gpu_memory = 0;
 
    /* check only if active in last check or last scan was more than 5s ago */
    if (lp->gpu_activityMs != 0 && host->monotonicMs - lp->gpu_activityMs < 5000) {
@@ -193,6 +232,33 @@ void GPU_readProcessData(LinuxProcessTable* lpt, LinuxProcess* lp, openat_arg_t 
                   update_machine_gpu(lpt, value, engineStart, delim - engineStart);
                }
             }
+         } else if ((line[0] == 'm' && String_startsWith(line, "memory-")) ||
+                    (line[0] == 'r' && String_startsWith(line, "resident-"))) {
+            /*
+             * "drm-resident-<region>" is the current key for backing-store size;
+             * "drm-memory-<region>" is its deprecated alias (amdgpu only). A given
+             * driver emits only one of the two per region, so summing both is safe.
+             */
+            if (sstate == SECST_DUPLICATE)
+               continue;
+
+            const char* delim = strchr(line, ':');
+            if (!delim)
+               continue;
+
+            unsigned long long int bytesValue;
+            if (!parse_drm_memory_value(delim + 1, &bytesValue))
+               continue;
+
+            if (sstate == SECST_UNKNOWN) {
+               if (client_id != INVALID_CLIENT_ID && !is_duplicate_client(parsed_ids, client_id, pdev))
+                  sstate = SECST_NEW;
+               else
+                  sstate = SECST_DUPLICATE;
+            }
+
+            if (sstate == SECST_NEW)
+               new_gpu_memory += bytesValue;
          }
       } /* finished parsing lines */
 
@@ -228,6 +294,7 @@ void GPU_readProcessData(LinuxProcessTable* lpt, LinuxProcess* lp, openat_arg_t 
 out:
 
    lp->gpu_time = new_gpu_time;
+   lp->gpu_memory = new_gpu_memory;
 
    while (parsed_ids) {
       ClientInfo* next = parsed_ids->next;

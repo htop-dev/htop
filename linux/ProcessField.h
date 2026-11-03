@@ -49,6 +49,7 @@ in the source distribution for its full text.
    GPU_PERCENT = 133,            \
    ISCONTAINER = 134,            \
    M_EPSS = 135,                 \
+   GPU_MEMORY = 136,             \
    // End of list
 
 
