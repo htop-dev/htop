@@ -405,32 +405,50 @@ void Platform_setGPUValues(Meter* this, double* totalUsage, unsigned long long* 
 
    static uint64_t prevMonotonicMs;
    static double residuePercentage;
-   static unsigned long long int prevResidueTime;
 
    // The results are cached so that we can update values of multiple meter
    // instances. We also need a local cache of the monotonic timestamp, thus we
    // don't use host->prevMonotonicMs.
-   if (host->monotonicMs > prevMonotonicMs) {
+   if (prevMonotonicMs == 0) {
+      // First call, there's no sampling interval to relate the counters to yet
+      prevMonotonicMs = host->monotonicMs;
+   } else if (host->monotonicMs > prevMonotonicMs) {
       uint64_t monotonictimeDelta = host->monotonicMs - prevMonotonicMs;
 
-      unsigned long long int curResidueTime = lhost->curGpuTime;
+      unsigned long long int totalTimeDiff = saturatingSub(lhost->curGpuTime, lhost->prevGpuTime);
+      unsigned long long int namedTimeDiff = 0;
 
       const GPUEngineData* gpuEngineData;
       size_t i;
-      for (gpuEngineData = lhost->gpuEngineData, i = 0; gpuEngineData && i < ARRAYSIZE(GPUMeter_engineData); gpuEngineData = gpuEngineData->next, i++) {
-         GPUMeter_engineData[i].key        = gpuEngineData->key;
-         GPUMeter_engineData[i].timeDiff   = saturatingSub(gpuEngineData->curTime, gpuEngineData->prevTime);
-         GPUMeter_engineData[i].percentage = 100.0 * GPUMeter_engineData[i].timeDiff / (1000 * 1000) / monotonictimeDelta;
+      for (gpuEngineData = lhost->gpuEngineData, i = 0; gpuEngineData; gpuEngineData = gpuEngineData->next, i++) {
+         unsigned long long int timeDiff = saturatingSub(gpuEngineData->curTime, gpuEngineData->prevTime);
 
-         curResidueTime = saturatingSub(curResidueTime, gpuEngineData->curTime);
+         // Drivers reporting cycles instead of nanoseconds (e.g. Intel Xe) only
+         // provide a ratio of busy to elapsed cycles; scale it to the sampling
+         // interval to get a comparable busy time.
+         unsigned long long int totalCyclesDiff = gpuEngineData->prevTotalCycles ? saturatingSub(gpuEngineData->curTotalCycles, gpuEngineData->prevTotalCycles) : 0;
+         if (totalCyclesDiff > 0) {
+            unsigned long long int cyclesDiff = saturatingSub(gpuEngineData->curCycles, gpuEngineData->prevCycles);
+            unsigned long long int cyclesTime = (unsigned long long int)((double)cyclesDiff / totalCyclesDiff * monotonictimeDelta * (1000 * 1000));
+
+            timeDiff += cyclesTime;
+            totalTimeDiff += cyclesTime;
+         }
+
+         if (i < ARRAYSIZE(GPUMeter_engineData)) {
+            GPUMeter_engineData[i].key        = gpuEngineData->key;
+            GPUMeter_engineData[i].timeDiff   = timeDiff;
+            GPUMeter_engineData[i].percentage = 100.0 * timeDiff / (1000 * 1000) / monotonictimeDelta;
+
+            namedTimeDiff += timeDiff;
+         }
       }
 
-      residuePercentage = 100.0 * saturatingSub(curResidueTime, prevResidueTime) / (1000 * 1000) / monotonictimeDelta;
+      residuePercentage = 100.0 * saturatingSub(totalTimeDiff, namedTimeDiff) / (1000 * 1000) / monotonictimeDelta;
 
-      *totalGPUTimeDiff = saturatingSub(lhost->curGpuTime, lhost->prevGpuTime);
-      *totalUsage = 100.0 * (*totalGPUTimeDiff) / (1000 * 1000) / monotonictimeDelta;
+      *totalGPUTimeDiff = totalTimeDiff;
+      *totalUsage = 100.0 * totalTimeDiff / (1000 * 1000) / monotonictimeDelta;
 
-      prevResidueTime = curResidueTime;
       prevMonotonicMs = host->monotonicMs;
    }
 
