@@ -323,15 +323,21 @@ retry:
    curpos = jails;
    while (curpos) {
       int jailid;
-      char* str_hostname;
 
       nextpos = strchr(curpos, '\n');
       if (nextpos) {
          *nextpos++ = 0;
       }
 
-      jailid = atoi(strtok(curpos, " "));
-      str_hostname = strtok(NULL, " ");
+      char* str_jailid = strtok(curpos, " ");
+      if (!str_jailid)
+         goto next;
+
+      char* str_hostname = strtok(NULL, " ");
+      if (!str_hostname)
+         goto next;
+
+      jailid = atoi(str_jailid);
 
       char* jname = (char*) (Hashtable_get(this->jails, jailid));
       if (jname == NULL) {
@@ -339,6 +345,7 @@ retry:
          Hashtable_put(this->jails, jailid, jname);
       }
 
+next:
       curpos = nextpos;
    }
 
