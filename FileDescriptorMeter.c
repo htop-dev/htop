@@ -71,9 +71,9 @@ static void FileDescriptorMeter_updateValues(Meter* this) {
    if (!isNonnegative(this->values[0])) {
       xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "unknown/unknown");
    } else if (FD_EFFECTIVE_UNLIMITED(this->values[1])) {
-      xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%.0lf/unlimited", this->values[0]);
+      xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%.0f/unlimited", this->values[0]);
    } else {
-      xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%.0lf/%.0lf", this->values[0], this->values[1]);
+      xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "%.0f/%.0f", this->values[0], this->values[1]);
    }
 }
 
@@ -88,14 +88,14 @@ static void FileDescriptorMeter_display(const Object* cast, RichString* out) {
    }
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], "used: ");
-   len = xSnprintf(buffer, sizeof(buffer), "%.0lf", this->values[0]);
+   len = xSnprintf(buffer, sizeof(buffer), "%.0f", this->values[0]);
    RichString_appendnAscii(out, CRT_colors[FILE_DESCRIPTOR_USED], buffer, len);
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " max: ");
    if (FD_EFFECTIVE_UNLIMITED(this->values[1])) {
       RichString_appendAscii(out, CRT_colors[FILE_DESCRIPTOR_MAX], "unlimited");
    } else {
-      len = xSnprintf(buffer, sizeof(buffer), "%.0lf", this->values[1]);
+      len = xSnprintf(buffer, sizeof(buffer), "%.0f", this->values[1]);
       RichString_appendnAscii(out, CRT_colors[FILE_DESCRIPTOR_MAX], buffer, len);
    }
 }
