@@ -30,6 +30,21 @@ typedef struct FreeBSDProcess_ {
    char* jname;
    char* emul;
    FreeBSDSchedClass sched_class;
+
+   /* Block input operations (ru_inblock) */
+   uint64_t io_read_ops;
+
+   /* Block output operations (ru_oublock) */
+   uint64_t io_write_ops;
+
+   /* Point in time of last io scan (monotonic milliseconds) */
+   uint64_t io_last_scan_time_ms;
+
+   /* Block input operations per second */
+   double io_rate_read_ops;
+
+   /* Block output operations per second */
+   double io_rate_write_ops;
 } FreeBSDProcess;
 
 extern const ProcessClass FreeBSDProcess_class;
