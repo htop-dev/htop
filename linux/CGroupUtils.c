@@ -515,7 +515,7 @@ char* CGroup_filterContainer(const char* cgroup) {
    }
 
    if (!s.pos) {
-      return xStrdup("/");
+      return xStrdup("");
    }
 
    s.buf = xCalloc(s.pos + 1, sizeof(char));
