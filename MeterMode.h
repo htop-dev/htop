@@ -14,6 +14,7 @@ enum MeterModeId_ {
    TEXT_METERMODE,
    GRAPH_METERMODE,
    LED_METERMODE,
+   GRAPH2_METERMODE /* Not default supported */,
    LAST_METERMODE
 };
 
