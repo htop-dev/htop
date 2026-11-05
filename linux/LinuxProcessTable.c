@@ -1732,8 +1732,16 @@ static bool LinuxProcessTable_recurseProcTree(LinuxProcessTable* this, openat_ar
          }
       }
 
-      if (ss->flags & PROCESS_FLAG_LINUX_CGROUP)
+      /* The cgroup is also needed to confirm a namespace difference below, but
+         only for the few processes that showed one. */
+      if ((ss->flags & PROCESS_FLAG_LINUX_CGROUP) || proc->isRunningInContainer == TRI_ON)
          LinuxProcessTable_readCGroupFile(lp, procFd);
+
+      /* Both tests above only prove the process sits in its own PID namespace,
+         which a browser sandbox does as well. Ask the cgroup whether this is
+         really a container. */
+      if (proc->isRunningInContainer == TRI_ON && !CGroup_looksLikeContainer(lp->cgroup))
+         proc->isRunningInContainer = TRI_OFF;
 
       if ((ss->flags & PROCESS_FLAG_LINUX_SMAPS) && !Process_isKernelThread(proc)) {
          if (!mainTask) {
