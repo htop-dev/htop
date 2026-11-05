@@ -579,23 +579,26 @@ char* Platform_getProcessMaps(pid_t pid) {
 
    size_t capacity = 0;
    size_t size = 0;
-   ssize_t bytes = 0;
 
-   do {
+   while (true) {
+      if (size == capacity) {
+         capacity += 4096;
+         maps = xRealloc(maps, capacity);
+      }
+
+      size_t bytes = fread(maps + size, 1, capacity - size, fp);
       size += bytes;
-      capacity += 4096;
-      maps = xRealloc(maps, capacity);
-   } while (!ferror(fp) && !feof(fp) &&
-            (bytes = fread(maps + size, 1, capacity - size, fp)) > 0);
+      if (bytes == 0)
+         break;
+   }
 
+   bool failed = ferror(fp);
    fclose(fp);
 
-   if (bytes < 0) {
+   if (failed) {
       free(maps);
       return NULL;
    }
-
-   size += bytes;
 
    maps = xRealloc(maps, size + 2);
 
