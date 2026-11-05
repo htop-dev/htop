@@ -590,11 +590,11 @@ static Htop_Reaction actionLsof(State* st) {
    if (!Action_writeableProcess(st))
       return HTOP_OK;
 
-   const Process* p = (Process*) Panel_getSelected((Panel*)st->mainPanel);
-   if (!p)
+   Object* selected = Panel_getSelected((Panel*)st->mainPanel);
+   if (!selected || !Object_isA(selected, (const ObjectClass*) &Process_class))
       return HTOP_OK;
 
-   assert(Object_isA((const Object*) p, (const ObjectClass*) &Process_class));
+   const Process* p = (const Process*) selected;
 
    OpenFilesScreen* ofs = OpenFilesScreen_new(p);
    InfoScreen_run((InfoScreen*)ofs);
@@ -608,11 +608,11 @@ static Htop_Reaction actionShowLocks(State* st) {
    if (!Action_readableProcess(st))
       return HTOP_OK;
 
-   const Process* p = (Process*) Panel_getSelected((Panel*)st->mainPanel);
-   if (!p)
+   Object* selected = Panel_getSelected((Panel*)st->mainPanel);
+   if (!selected || !Object_isA(selected, (const ObjectClass*) &Process_class))
       return HTOP_OK;
 
-   assert(Object_isA((const Object*) p, (const ObjectClass*) &Process_class));
+   const Process* p = (const Process*) selected;
 
    ProcessLocksScreen* pls = ProcessLocksScreen_new(p);
    InfoScreen_run((InfoScreen*)pls);
@@ -655,11 +655,11 @@ static Htop_Reaction actionStrace(State* st) {
    if (!Action_writeableProcess(st))
       return HTOP_OK;
 
-   const Process* p = (Process*) Panel_getSelected((Panel*)st->mainPanel);
-   if (!p)
+   Object* selected = Panel_getSelected((Panel*)st->mainPanel);
+   if (!selected || !Object_isA(selected, (const ObjectClass*) &Process_class))
       return HTOP_OK;
 
-   assert(Object_isA((const Object*) p, (const ObjectClass*) &Process_class));
+   const Process* p = (const Process*) selected;
 
    TraceScreen* ts = TraceScreen_new(p);
    bool ok = TraceScreen_forkTracer(ts);
@@ -927,11 +927,11 @@ static Htop_Reaction actionShowEnvScreen(State* st) {
    if (!Action_readableProcess(st))
       return HTOP_OK;
 
-   Process* p = (Process*) Panel_getSelected((Panel*)st->mainPanel);
-   if (!p)
+   Object* selected = Panel_getSelected((Panel*)st->mainPanel);
+   if (!selected || !Object_isA(selected, (const ObjectClass*) &Process_class))
       return HTOP_OK;
 
-   assert(Object_isA((const Object*) p, (const ObjectClass*) &Process_class));
+   Process* p = (Process*) selected;
 
    EnvScreen* es = EnvScreen_new(p);
    InfoScreen_run((InfoScreen*)es);
@@ -945,11 +945,11 @@ static Htop_Reaction actionShowCommandScreen(State* st) {
    if (!Action_readableProcess(st))
       return HTOP_OK;
 
-   Process* p = (Process*) Panel_getSelected((Panel*)st->mainPanel);
-   if (!p)
+   Object* selected = Panel_getSelected((Panel*)st->mainPanel);
+   if (!selected || !Object_isA(selected, (const ObjectClass*) &Process_class))
       return HTOP_OK;
 
-   assert(Object_isA((const Object*) p, (const ObjectClass*) &Process_class));
+   Process* p = (Process*) selected;
 
    CommandScreen* cmdScr = CommandScreen_new(p);
    InfoScreen_run((InfoScreen*)cmdScr);
