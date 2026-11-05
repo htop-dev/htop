@@ -144,7 +144,7 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    },
    [PERCENT_CPU] = {
       .name = "PERCENT_CPU",
-      .title = " CPU%",
+      .title = "    CPU%",
       .description = "Percentage of the CPU time the process used in the last sampling",
       .flags = 0,
       .defaultSortDesc = true,
@@ -161,10 +161,12 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    },
    [PERCENT_MEM] = {
       .name = "PERCENT_MEM",
-      .title = "MEM% ",
+      .title = "    MEM%",
       .description = "Percentage of the memory the process is using, based on resident memory size",
       .flags = 0,
       .defaultSortDesc = true,
+      .autoWidth = true,
+      .autoTitleRightAlign = true,
    },
    [USER] = {
       .name = "USER",
