@@ -17,7 +17,6 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "Platform.h"
 #include "ProvideCurses.h"
-#include "Vector.h"
 #include "XUtils.h"
 
 
@@ -58,8 +57,9 @@ static void MapsScreen_scan(InfoScreen* this) {
       InfoScreen_addLine(this, "Could not read process maps.");
    }
 
-   Vector_insertionSort(this->lines);
-   Vector_insertionSort(panel->items);
+   /* The kernel already lists mappings in ascending start-address order;
+      keep it rather than sorting the lines as text (which would order the
+      addresses lexically). */
    Panel_setSelected(panel, idx);
 }
 
