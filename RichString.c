@@ -108,7 +108,7 @@ static inline int RichString_writeFromWide(RichString* this, int attrs, const ch
 
    wchar_t data[len];
    len = mbstowcs_nonfatal(data, data_c, len);
-   if (len <= 0)
+   if (len == 0)
       return 0;
 
    size_t newLen = from + len;
@@ -129,7 +129,7 @@ int RichString_appendnWideColumns(RichString* this, int attrs, const char* data_
 
    wchar_t data[len];
    len = mbstowcs_nonfatal(data, data_c, len);
-   if (len <= 0)
+   if (len == 0)
       return 0;
 
    int from = this->chlen;
