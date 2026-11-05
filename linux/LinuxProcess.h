@@ -29,6 +29,29 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_LINUX_AUTOGROUP 0x00080000
 #define PROCESS_FLAG_LINUX_GPU       0x00100000
 #define PROCESS_FLAG_LINUX_CONTAINER 0x00200000
+#define PROCESS_FLAG_LINUX_NETIO     0x00400000
+
+/* Exponential moving average rate estimator over a pair of cumulative kernel
+ * counters. The instantaneous rate between scans is smoothed, so a single
+ * noisy scan interval cannot inflate the displayed value, while quiet gaps
+ * between bursts decay the rate instead of snapping it to zero. A cumulative
+ * counter that goes backwards (reset elsewhere, PID reuse) re-seeds the
+ * tracker instead of producing a bogus huge rate. */
+typedef struct NetRateWindow_ {
+   /* Smoothed rate (bytes per second) */
+   double rx_bps;
+   double tx_bps;
+
+   /* Cumulative bytes as of the last scan */
+   unsigned long long last_rx_bytes;
+   unsigned long long last_tx_bytes;
+
+   /* Point in time of the last scan (milliseconds elapsed since the Epoch) */
+   unsigned long long last_scan_ms;
+
+   /* Whether the cumulative counters have (ever) been observed */
+   bool seen;
+} NetRateWindow;
 
 typedef struct LinuxProcess_ {
    Process super;
@@ -76,11 +99,33 @@ typedef struct LinuxProcess_ {
    /* Point in time of last io scan (in milliseconds elapsed since the Epoch) */
    unsigned long long io_last_scan_time_ms;
 
+   /* Number of read(2) syscalls as of the last scan (count of reads, used to
+    * bound the rchar/wchar network guesstimate) */
+   unsigned long long io_last_scan_syscr;
+
+   /* Number of write(2) syscalls as of the last scan */
+   unsigned long long io_last_scan_syscw;
+
    /* Storage data read (in bytes per second) */
    double io_rate_read_bps;
 
    /* Storage data written (in bytes per second) */
    double io_rate_write_bps;
+
+   /* Network data received (in bytes per second) */
+   double net_rate_rx_bps;
+
+   /* Network data transmitted (in bytes per second) */
+   double net_rate_tx_bps;
+
+   /* Rate-window state for the network byte counters attributed via eBPF */
+   NetRateWindow netBpf;
+
+   /* Rate-window state for the rchar/wchar guesstimate used when eBPF is unavailable */
+   NetRateWindow netEst;
+
+   /* Rate-window state for the network byte counters attributed via NETLINK_SOCK_DIAG */
+   NetRateWindow netNl;
 
    char* cgroup;
    char* cgroup_short;
