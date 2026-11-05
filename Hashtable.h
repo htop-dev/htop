@@ -35,6 +35,8 @@ void Hashtable_put(Hashtable* this, ht_key_t key, void* value);
 
 void* Hashtable_remove(Hashtable* this, ht_key_t key);
 
+void Hashtable_shrink(Hashtable* this);
+
 void* Hashtable_get(Hashtable* this, ht_key_t key);
 
 void Hashtable_foreach(Hashtable* this, Hashtable_PairFunction f, void* userData);

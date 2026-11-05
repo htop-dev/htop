@@ -25,7 +25,7 @@ in the source distribution for its full text.
 
 typedef struct HashtableItem_ {
    ht_key_t key;
-   size_t probe;
+   unsigned int probe;
    void* value;
 } HashtableItem;
 
@@ -48,7 +48,7 @@ static void Hashtable_dump(const Hashtable* this) {
 
    size_t items = 0;
    for (size_t i = 0; i < this->size; i++) {
-      fprintf(stderr, "  item %5zu: key = %5u probe = %2zu value = %p\n",
+      fprintf(stderr, "  item %5zu: key = %5u probe = %2u value = %p\n",
               i,
               this->buckets[i].key,
               this->buckets[i].probe,
@@ -151,7 +151,7 @@ void Hashtable_clear(Hashtable* this) {
 
 static void insert(Hashtable* this, ht_key_t key, void* value) {
    size_t index = key % this->size;
-   size_t probe = 0;
+   unsigned int probe = 0;
 #ifndef NDEBUG
    size_t origIndex = index;
 #endif
@@ -299,9 +299,24 @@ void* Hashtable_remove(Hashtable* this, ht_key_t key) {
    return res;
 }
 
+void Hashtable_shrink(Hashtable* this) {
+   assert(Hashtable_isConsistent(this));
+
+   /* shrink on load-factor < 0.4 if size can be reduced */
+   if (this->size > 61 && 10 * this->items < 4 * this->size) {
+      size_t targetSize = this->items ? (this->items * 2) : 13;
+      size_t newSize = nextPrime(targetSize);
+      if (newSize < this->size) {
+         Hashtable_setSize(this, newSize);
+      }
+   }
+
+   assert(Hashtable_isConsistent(this));
+}
+
 void* Hashtable_get(Hashtable* this, ht_key_t key) {
    size_t index = key % this->size;
-   size_t probe = 0;
+   unsigned int probe = 0;
    void* res = NULL;
 #ifndef NDEBUG
    size_t origIndex = index;

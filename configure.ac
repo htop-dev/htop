@@ -218,7 +218,7 @@ m4_version_prereq(
 
 # Optional Section
 
-AC_CHECK_HEADERS([execinfo.h])
+AC_CHECK_HEADERS([execinfo.h malloc.h])
 
 if test "$my_htop_platform" = darwin; then
    AC_CHECK_HEADERS([mach/mach_time.h])
@@ -414,6 +414,7 @@ AC_CHECK_FUNCS([ \
    faccessat \
    fstatat \
    host_get_clock_service \
+   malloc_trim \
    memfd_create \
    openat \
    readlinkat \

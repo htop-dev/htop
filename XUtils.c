@@ -25,6 +25,10 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "Macros.h"
 
+#if defined(HAVE_MALLOC_H) && defined(HAVE_MALLOC_TRIM)
+#include <malloc.h>
+#endif
+
 
 void fail(void) {
    CRT_done();
@@ -104,6 +108,12 @@ void* xReallocArrayZero(void* ptr, size_t prevmemb, size_t newmemb, size_t size)
    }
 
    return ret;
+}
+
+void xTrimMemory(void) {
+#if defined(HAVE_MALLOC_TRIM)
+   malloc_trim(0);
+#endif
 }
 
 inline bool String_contains_i(const char* s1, const char* s2, bool multi) {
@@ -308,6 +318,66 @@ void free_and_xStrdup(char** ptr, const char* str) {
 
    free(*ptr);
    *ptr = xStrdup(str);
+}
+
+typedef struct RefString_ {
+   uint32_t refCount;
+   char data[];
+} RefString;
+
+static inline RefString* RefString_fromData(char* s) {
+   return (RefString*)(void*)(s - offsetof(RefString, data));
+}
+
+char* RefString_new(const char* s) {
+   if (!s)
+      return NULL;
+
+   size_t len = strlen(s);
+   RefString* rs = xMalloc(sizeof(RefString) + len + 1);
+   rs->refCount = 1;
+   memcpy(rs->data, s, len + 1);
+   return rs->data;
+}
+
+char* RefString_ref(char* s) {
+   if (!s)
+      return NULL;
+
+   RefString* rs = RefString_fromData(s);
+   rs->refCount++;
+   return s;
+}
+
+void RefString_unref(char* s) {
+   if (!s)
+      return;
+
+   RefString* rs = RefString_fromData(s);
+   assert(rs->refCount > 0);
+   if (--rs->refCount == 0)
+      free(rs);
+}
+
+void RefString_assign(char** dest, char* src) {
+   if (*dest == src)
+      return;
+
+   if (*dest)
+      RefString_unref(*dest);
+
+   *dest = src ? RefString_ref(src) : NULL;
+}
+
+void RefString_assignNew(char** dest, const char* src) {
+   if (*dest && src && String_eq(*dest, src))
+      return;
+
+   char* newStr = src ? RefString_new(src) : NULL;
+   if (*dest)
+      RefString_unref(*dest);
+
+   *dest = newStr;
 }
 
 char* xStrndup(const char* str, size_t len) {

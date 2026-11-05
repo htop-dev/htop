@@ -133,7 +133,7 @@ static inline ProcessState PCPProcessTable_getProcessState(char state) {
 static void PCPProcessTable_updateID(Process* process, int pid, int offset) {
    Process_setThreadGroup(process, (pid_t) Metric_instance_u32(PCP_PROC_TGID, pid, offset, 1));
    Process_setParent(process, (pid_t) Metric_instance_u32(PCP_PROC_PPID, pid, offset, 1));
-   process->state = PCPProcessTable_getProcessState(Metric_instance_char(PCP_PROC_STATE, pid, offset, '?'));
+   process->state = (uint8_t) PCPProcessTable_getProcessState(Metric_instance_char(PCP_PROC_STATE, pid, offset, '?'));
 }
 
 static void PCPProcessTable_updateInfo(PCPProcess* pp, int pid, int offset, char* command, size_t commLen) {
@@ -157,9 +157,9 @@ static void PCPProcessTable_updateInfo(PCPProcess* pp, int pid, int offset, char
    pp->stime = Metric_instance_time(PCP_PROC_STIME, pid, offset);
    pp->cutime = Metric_instance_time(PCP_PROC_CUTIME, pid, offset);
    pp->cstime = Metric_instance_time(PCP_PROC_CSTIME, pid, offset);
-   process->priority = Metric_instance_u32(PCP_PROC_PRIORITY, pid, offset, 0);
+   process->priority = (int) Metric_instance_u32(PCP_PROC_PRIORITY, pid, offset, 0);
    process->nice = (int) Metric_instance_s32(PCP_PROC_NICE, pid, offset, 0);
-   process->nlwp = Metric_instance_u32(PCP_PROC_THREADS, pid, offset, 0);
+   process->nlwp = (int) Metric_instance_u32(PCP_PROC_THREADS, pid, offset, 0);
    process->starttime_ctime = Metric_instance_time(PCP_PROC_STARTTIME, pid, offset);
    process->processor = (int) Metric_instance_u32(PCP_PROC_PROCESSOR, pid, offset, 0);
 
@@ -251,7 +251,11 @@ static char* setString(Metric metric, int pid, int offset, char* string) {
 }
 
 static void PCPProcessTable_updateTTY(Process* process, int pid, int offset) {
-   process->tty_name = setString(PCP_PROC_TTYNAME, pid, offset, process->tty_name);
+   pmAtomValue value;
+   if (Metric_instance(PCP_PROC_TTYNAME, pid, offset, &value, PM_TYPE_STRING))
+      Process_updateTty(process, value.cp);
+   else
+      Process_updateTty(process, NULL);
 }
 
 static void PCPProcessTable_readCGroups(PCPProcess* pp, int pid, int offset) {
@@ -294,7 +298,11 @@ static void PCPProcessTable_readSecattrData(PCPProcess* pp, int pid, int offset)
 }
 
 static void PCPProcessTable_readCwd(PCPProcess* pp, int pid, int offset) {
-   pp->super.procCwd = setString(PCP_PROC_CWD, pid, offset, pp->super.procCwd);
+   pmAtomValue value;
+   if (Metric_instance(PCP_PROC_CWD, pid, offset, &value, PM_TYPE_STRING))
+      Process_updateCwd(&pp->super, value.cp);
+   else
+      Process_updateCwd(&pp->super, NULL);
 }
 
 static void PCPProcessTable_updateUsername(Process* process, int pid, int offset, UsersTable* users) {

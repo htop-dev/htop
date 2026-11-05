@@ -41,9 +41,21 @@ typedef struct Row_ {
    /* Pointer to quasi-global data */
    const struct Machine_* host;
 
+   /*
+    * Internal time counts for showing new and exited processes.
+    */
+   uint64_t seenStampMs;
+   uint64_t tombStampMs;
+
    int id;
    int group;
    int parent;
+
+   /*
+    * Internal state for tree-mode.
+    */
+   int32_t indent;
+   uint16_t tree_depth;
 
    /* Has no known parent */
    bool isRoot;
@@ -62,18 +74,6 @@ typedef struct Row_ {
 
    /* Whether the row was updated during the last scan */
    bool updated;
-
-   /*
-    * Internal state for tree-mode.
-    */
-   int32_t indent;
-   unsigned int tree_depth;
-
-   /*
-    * Internal time counts for showing new and exited processes.
-    */
-   uint64_t seenStampMs;
-   uint64_t tombStampMs;
 } Row;
 
 typedef Row* (*Row_New)(const struct Machine_*);
