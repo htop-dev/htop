@@ -75,6 +75,10 @@ static inline bool String_eq_nullable(const char* s1, const char* s2) {
 ATTR_NONNULL ATTR_RETNONNULL ATTR_MALLOC
 char* String_cat(const char* s1, const char* s2);
 
+/* Join a NULL-terminated array of strings with a separator */
+ATTR_NONNULL ATTR_RETNONNULL ATTR_MALLOC
+char* String_join(const char* sep, const char* const items[]);
+
 ATTR_NONNULL ATTR_RETNONNULL ATTR_MALLOC
 char* String_trim(const char* in);
 
