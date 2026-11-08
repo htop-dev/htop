@@ -99,8 +99,10 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool follow) {
 
 // ----------------------------------------
 
+static inline bool setActiveScreen(Settings* settings, State* st, unsigned int ssIdx);
+
 static void Action_runSetup(State* st) {
-   const Settings* settings = st->host->settings;
+   Settings* settings = st->host->settings;
    ScreenManager* scr = ScreenManager_new(st->header, st->host, st, true);
    CategoriesPanel_new(scr, st->header, st->host);
    ScreenManager_run(scr, NULL, NULL, "Setup");
@@ -109,6 +111,11 @@ static void Action_runSetup(State* st) {
       CRT_setMouse(settings->enableMouse);
       Header_writeBackToSettings(st->header);
    }
+
+   /* Setup may have repointed settings->ss (e.g. reordering the Screens list)
+      without updating host->activeTable; re-sync them so later actions act on
+      the correct table. */
+   setActiveScreen(settings, st, settings->ssIndex);
 }
 
 static bool changePriority(MainPanel* panel, int delta) {
