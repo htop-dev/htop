@@ -10,6 +10,8 @@ in the source distribution for its full text.
 #include "NetworkIOMeter.h"
 
 #include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "CRT.h"
 #include "Machine.h"
@@ -21,6 +23,52 @@ in the source distribution for its full text.
 #include "Row.h"
 #include "XUtils.h"
 
+
+/* Index into this table is param - 1. Entries are never removed, so a
+   meter keeps its interface even while the interface is absent. */
+static char** interfaceNames;
+static unsigned int interfaceNamesCount;
+
+bool NetworkIOMeter_isValidInterfaceName(const char* name) {
+   size_t len = strlen(name);
+   if (len == 0 || len > NETWORKIO_INTERFACE_NAME_MAX)
+      return false;
+
+   /* the kernel rejects '/', ':' and whitespace; parentheses and '=' would break
+      htoprc, control characters the display. Non-ASCII (UTF-8) names are allowed. */
+   for (const unsigned char* c = (const unsigned char*)name; *c; c++) {
+      if (*c == '/' || *c == ':' || *c == '(' || *c == ')' || *c == '=' || *c <= ' ' || *c == 0x7f)
+         return false;
+   }
+
+   return true;
+}
+
+unsigned int NetworkIOMeter_paramForInterface(const char* name) {
+   if (!NetworkIOMeter_isValidInterfaceName(name))
+      return 0;
+
+   for (unsigned int i = 0; i < interfaceNamesCount; i++) {
+      if (String_eq(interfaceNames[i], name))
+         return i + 1;
+   }
+
+   /* AvailableMetersPanel keeps param in the low 16 bits of the item key */
+   if (interfaceNamesCount >= 0xffff)
+      return 0;
+
+   interfaceNames = xReallocArray(interfaceNames, interfaceNamesCount + 1, sizeof(*interfaceNames));
+   interfaceNames[interfaceNamesCount] = xStrdup(name);
+   interfaceNamesCount++;
+   return interfaceNamesCount;
+}
+
+const char* NetworkIOMeter_interfaceForParam(unsigned int param) {
+   if (param == 0 || param > interfaceNamesCount)
+      return NULL;
+
+   return interfaceNames[param - 1];
+}
 
 static const int NetworkIOMeter_attributes[] = {
    METER_VALUE_IOREAD,
