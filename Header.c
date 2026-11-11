@@ -21,6 +21,7 @@ in the source distribution for its full text.
 #include "CPUMeter.h"
 #include "DynamicMeter.h"
 #include "Macros.h"
+#include "NetworkIOMeter.h"
 #include "Object.h"
 #include "Platform.h"
 #include "ProvideCurses.h"
@@ -83,10 +84,29 @@ static void Header_addMeterByName(Header* this, const char* name, MeterModeId mo
    Vector* meters = this->columns[column];
 
    const char* paren = strchr(name, '(');
+   size_t nameLen = paren ? (size_t)(paren - name) : strlen(name);
+
+   const MeterClass* type = NULL;
+   for (const MeterClass* const* t = Platform_meterTypes; *t; t++) {
+      if (0 == strncmp(name, (*t)->name, nameLen) && (*t)->name[nameLen] == '\0') {
+         type = *t;
+         break;
+      }
+   }
+   if (!type)
+      return;
+
    unsigned int param = 0;
-   size_t nameLen;
    if (paren) {
-      if (sscanf(paren, "(%10u)", &param) != 1) { // not CPUMeter
+      if (type == &NetworkIOMeter_class) {
+         char interfaceName[NETWORKIO_INTERFACE_NAME_MAX + 1];
+         char close;
+         if (sscanf(paren, "(%15[^)]%c", interfaceName, &close) != 2 || close != ')')
+            return;    // htoprc parse failure
+         param = NetworkIOMeter_paramForInterface(interfaceName);
+         if (!param)
+            return;    // invalid interface name
+      } else if (sscanf(paren, "(%10u)", &param) != 1) { // not CPUMeter
          char dynamic[32] = {0};
          if (sscanf(paren, "(%30s)", dynamic) == 1) { // DynamicMeter
             char* end;
@@ -100,21 +120,13 @@ static void Header_addMeterByName(Header* this, const char* name, MeterModeId mo
             param = 0;
          }
       }
-      nameLen = paren - name;
-   } else {
-      nameLen = strlen(name);
    }
 
-   for (const MeterClass* const* type = Platform_meterTypes; *type; type++) {
-      if (0 == strncmp(name, (*type)->name, nameLen) && (*type)->name[nameLen] == '\0') {
-         Meter* meter = Meter_new(this->host, param, *type);
-         if (mode != 0) {
-            Meter_setMode(meter, mode);
-         }
-         Vector_add(meters, meter);
-         break;
-      }
+   Meter* meter = Meter_new(this->host, param, type);
+   if (mode != 0) {
+      Meter_setMode(meter, mode);
    }
+   Vector_add(meters, meter);
 }
 
 void Header_populateFromSettings(Header* this) {
@@ -159,6 +171,8 @@ void Header_writeBackToSettings(const Header* this) {
          if (meter->param && As_Meter(meter) == &DynamicMeter_class) {
             const char* dynamic = DynamicMeter_lookup(settings->dynamicMeters, meter->param);
             xAsprintf(&name, "%s(%s)", As_Meter(meter)->name, dynamic);
+         } else if (meter->param && As_Meter(meter) == &NetworkIOMeter_class) {
+            xAsprintf(&name, "%s(%s)", As_Meter(meter)->name, NetworkIOMeter_interfaceForParam(meter->param));
          } else if (meter->param && As_Meter(meter) == &CPUMeter_class) {
             xAsprintf(&name, "%s(%u)", As_Meter(meter)->name, meter->param);
          } else {
