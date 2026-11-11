@@ -768,32 +768,6 @@ static bool Platform_parseNetDevLine(char* lineBuffer, const char** name, Networ
    return true;
 }
 
-bool Platform_getNetworkIO(NetworkIOData* data) {
-   FILE* fp = fopen(PROCDIR "/net/dev", "r");
-   if (!fp)
-      return false;
-
-   char lineBuffer[512];
-   while (fgets(lineBuffer, sizeof(lineBuffer), fp)) {
-      const char* interfaceName;
-      NetworkIOData ifData;
-      if (!Platform_parseNetDevLine(lineBuffer, &interfaceName, &ifData))
-         continue;
-
-      if (String_eq(interfaceName, "lo"))
-         continue;
-
-      data->bytesReceived += ifData.bytesReceived;
-      data->packetsReceived += ifData.packetsReceived;
-      data->bytesTransmitted += ifData.bytesTransmitted;
-      data->packetsTransmitted += ifData.packetsTransmitted;
-   }
-
-   fclose(fp);
-
-   return true;
-}
-
 /*
  * Link speed in Mbit/s from sysfs, 0 when unknown. Only devices backed by
  * hardware (with a "device" link) are considered: virtual devices like tun
@@ -821,42 +795,16 @@ static uint32_t Platform_getNetworkInterfaceSpeed(const char* name) {
    return (uint32_t)speed;
 }
 
-bool Platform_getNetworkInterfaceIO(const char* name, NetworkIOData* data, uint32_t* linkSpeedMbps, bool* present) {
+bool Platform_getNetworkIO(NetworkIOData* data, NetworkInterfaceIOData** interfaces, size_t* interfaceCount) {
+   *interfaces = NULL;
+   *interfaceCount = 0;
+
    FILE* fp = fopen(PROCDIR "/net/dev", "r");
    if (!fp)
       return false;
 
-   bool found = false;
-   char lineBuffer[512];
-   while (fgets(lineBuffer, sizeof(lineBuffer), fp)) {
-      const char* interfaceName;
-      NetworkIOData ifData;
-      if (!Platform_parseNetDevLine(lineBuffer, &interfaceName, &ifData))
-         continue;
-
-      if (String_eq(interfaceName, name)) {
-         *data = ifData;
-         found = true;
-         break;
-      }
-   }
-
-   fclose(fp);
-
-   if (found)
-      *linkSpeedMbps = Platform_getNetworkInterfaceSpeed(name);
-
-   *present = found;
-   return true;
-}
-
-char** Platform_getNetworkInterfaces(void) {
-   FILE* fp = fopen(PROCDIR "/net/dev", "r");
-   if (!fp)
-      return NULL;
-
+   NetworkInterfaceIOData* parsedInterfaces = xCalloc(1, sizeof(*parsedInterfaces));
    size_t count = 0;
-   char** names = xCalloc(1, sizeof(char*));
 
    char lineBuffer[512];
    while (fgets(lineBuffer, sizeof(lineBuffer), fp)) {
@@ -868,14 +816,23 @@ char** Platform_getNetworkInterfaces(void) {
       if (String_eq(interfaceName, "lo"))
          continue;
 
-      names = xReallocArray(names, count + 2, sizeof(char*));
-      names[count++] = xStrdup(interfaceName);
-      names[count] = NULL;
+      parsedInterfaces = xReallocArray(parsedInterfaces, count + 1, sizeof(*parsedInterfaces));
+      NetworkInterfaceIOData* entry = &parsedInterfaces[count++];
+      String_safeStrncpy(entry->name, interfaceName, sizeof(entry->name));
+      entry->data = ifData;
+      entry->linkSpeedMbps = Platform_getNetworkInterfaceSpeed(interfaceName);
+
+      data->bytesReceived += ifData.bytesReceived;
+      data->packetsReceived += ifData.packetsReceived;
+      data->bytesTransmitted += ifData.bytesTransmitted;
+      data->packetsTransmitted += ifData.packetsTransmitted;
    }
 
    fclose(fp);
 
-   return names;
+   *interfaces = parsedInterfaces;
+   *interfaceCount = count;
+   return true;
 }
 
 // Linux battery reading by Ian P. Hands (iphands@gmail.com, ihands@redhat.com).

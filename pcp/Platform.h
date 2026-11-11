@@ -119,12 +119,7 @@ void Platform_getPressureStall(const char* file, bool some, double* ten, double*
 
 bool Platform_getDiskIO(DiskIOData* data);
 
-bool Platform_getNetworkIO(NetworkIOData* data);
-
-/* false if no data source is available; *present tells whether the interface exists */
-bool Platform_getNetworkInterfaceIO(const char* name, NetworkIOData* data, uint32_t* linkSpeedMbps, bool* present);
-
-char** Platform_getNetworkInterfaces(void);
+bool Platform_getNetworkIO(NetworkIOData* data, NetworkInterfaceIOData** interfaces, size_t* interfaceCount);
 
 void Platform_getBattery(double* percent, ACPresence* isOnAC);
 

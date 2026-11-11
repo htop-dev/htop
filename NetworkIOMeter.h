@@ -8,10 +8,14 @@ in the source distribution for its full text.
 */
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #include "Meter.h"
 
+
+/* Maximum interface name length on Linux, without the terminating NUL */
+#define NETWORKIO_INTERFACE_NAME_MAX 15
 
 typedef struct NetworkIOData_ {
    uint64_t bytesReceived;
@@ -20,10 +24,16 @@ typedef struct NetworkIOData_ {
    uint64_t packetsTransmitted;
 } NetworkIOData;
 
-extern const MeterClass NetworkIOMeter_class;
+typedef struct NetworkInterfaceIOData_ {
+   char name[NETWORKIO_INTERFACE_NAME_MAX + 1];
+   NetworkIOData data;
+   uint32_t linkSpeedMbps;
+} NetworkInterfaceIOData;
 
-/* Maximum interface name length on Linux, without the terminating NUL */
-#define NETWORKIO_INTERFACE_NAME_MAX 15
+/* A non-NULL array from Platform_getNetworkIO indicates per-interface support,
+   including when its element count is zero. The caller owns the array. */
+
+extern const MeterClass NetworkIOMeter_class;
 
 bool NetworkIOMeter_isValidInterfaceName(const char* name);
 
@@ -35,6 +45,6 @@ bool NetworkIOMeter_isValidInterfaceName(const char* name);
 unsigned int NetworkIOMeter_paramForInterface(const char* name);
 
 /* NULL for the aggregate meter */
-const char* NetworkIOMeter_interfaceForParam(unsigned int param);
+const char* NetworkIOMeter_interfaceForParam(size_t param);
 
 #endif /* HEADER_NetworkIOMeter */

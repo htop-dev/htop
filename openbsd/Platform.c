@@ -352,22 +352,12 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return false;
 }
 
-bool Platform_getNetworkIO(NetworkIOData* data) {
+bool Platform_getNetworkIO(NetworkIOData* data, NetworkInterfaceIOData** interfaces, size_t* interfaceCount) {
    // TODO
    (void)data;
+   *interfaces = NULL;
+   *interfaceCount = 0;
    return false;
-}
-
-bool Platform_getNetworkInterfaceIO(const char* name, NetworkIOData* data, uint32_t* linkSpeedMbps, bool* present) {
-   (void)name;
-   (void)data;
-   (void)linkSpeedMbps;
-   (void)present;
-   return false;
-}
-
-char** Platform_getNetworkInterfaces(void) {
-   return NULL;
 }
 
 static bool findDevice(const char* name, int* mib, struct sensordev* snsrdev, size_t* sdlen) {

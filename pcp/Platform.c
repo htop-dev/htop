@@ -839,7 +839,10 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return true;
 }
 
-bool Platform_getNetworkIO(NetworkIOData* data) {
+bool Platform_getNetworkIO(NetworkIOData* data, NetworkInterfaceIOData** interfaces, size_t* interfaceCount) {
+   *interfaces = NULL;
+   *interfaceCount = 0;
+
    pmAtomValue value;
    if (Metric_values(PCP_NET_RECVB, &value, 1, PM_TYPE_U64) != NULL)
       data->bytesReceived = value.ull;
@@ -850,18 +853,6 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    if (Metric_values(PCP_NET_SENDP, &value, 1, PM_TYPE_U64) != NULL)
       data->packetsTransmitted = value.ull;
    return true;
-}
-
-bool Platform_getNetworkInterfaceIO(const char* name, NetworkIOData* data, uint32_t* linkSpeedMbps, bool* present) {
-   (void)name;
-   (void)data;
-   (void)linkSpeedMbps;
-   (void)present;
-   return false;
-}
-
-char** Platform_getNetworkInterfaces(void) {
-   return NULL;
 }
 
 void Platform_getFileDescriptors(double* used, double* max) {
