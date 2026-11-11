@@ -358,6 +358,18 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return false;
 }
 
+bool Platform_getNetworkInterfaceIO(const char* name, NetworkIOData* data, uint32_t* linkSpeedMbps, bool* present) {
+   (void)name;
+   (void)data;
+   (void)linkSpeedMbps;
+   (void)present;
+   return false;
+}
+
+char** Platform_getNetworkInterfaces(void) {
+   return NULL;
+}
+
 static bool findDevice(const char* name, int* mib, struct sensordev* snsrdev, size_t* sdlen) {
    for (int devn = 0;; devn++) {
       mib[2] = devn;

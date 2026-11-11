@@ -852,6 +852,18 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
+bool Platform_getNetworkInterfaceIO(const char* name, NetworkIOData* data, uint32_t* linkSpeedMbps, bool* present) {
+   (void)name;
+   (void)data;
+   (void)linkSpeedMbps;
+   (void)present;
+   return false;
+}
+
+char** Platform_getNetworkInterfaces(void) {
+   return NULL;
+}
+
 void Platform_getFileDescriptors(double* used, double* max) {
    *used = NAN;
    *max = 65536;
