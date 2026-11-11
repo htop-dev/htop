@@ -22,6 +22,7 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "Meter.h"
 #include "MetersPanel.h"
+#include "NetworkIOMeter.h"
 #include "Object.h"
 #include "Platform.h"
 #include "ProvideCurses.h"
@@ -138,6 +139,30 @@ static void AvailableMetersPanel_addDynamicMeters(Panel* super, const Settings* 
    Hashtable_foreach(dynamicMeters, AvailableMetersPanel_addDynamicMeter, &iter);
 }
 
+// Handle (&NetworkIOMeter_class) entries: the aggregate plus one per interface
+static void AvailableMetersPanel_addNetworkIOMeters(Panel* super, const MeterClass* type, unsigned int offset) {
+   const char* label = type->description ? type->description : type->uiName;
+   Panel_add(super, (Object*) ListItem_new(label, offset << 16));
+
+   NetworkIOData aggregate = {0};
+   NetworkInterfaceIOData* interfaces;
+   size_t count;
+   if (!Platform_getNetworkIO(&aggregate, &interfaces, &count))
+      return;
+
+   for (size_t i = 0; i < count; i++) {
+      unsigned int param = NetworkIOMeter_paramForInterface(interfaces[i].name);
+      if (!param)
+         continue;
+
+      char buffer[50];
+      xSnprintf(buffer, sizeof(buffer), "%s: %s", type->uiName, interfaces[i].name);
+      Panel_add(super, (Object*) ListItem_new(buffer, (offset << 16) | param));
+   }
+
+   free(interfaces);
+}
+
 // Handle remaining Platform Meter entries in the AvailableMetersPanel
 static void AvailableMetersPanel_addPlatformMeter(Panel* super, const MeterClass* type, unsigned int offset) {
    const char* label = type->description ? type->description : type->uiName;
@@ -159,14 +184,16 @@ AvailableMetersPanel* AvailableMetersPanel_new(Machine* host, Header* header, si
 
    Panel_setHeader(super, "Available meters");
    // Platform_meterTypes[0] should be always (&CPUMeter_class) which we will
-   // handle separately in the code below.  Likewise, identifiers for Dynamic
-   // Meters are handled separately - similar to CPUs, this allows generation
+   // handle separately in the code below. Likewise, Dynamic and Network IO
+   // meters are handled separately: similar to CPUs, this allows generation
    // of multiple different Meters (also using 'param' to distinguish them).
    for (unsigned int i = 1; Platform_meterTypes[i]; i++) {
       const MeterClass* type = Platform_meterTypes[i];
       assert(type != &CPUMeter_class);
       if (type == &DynamicMeter_class)
          AvailableMetersPanel_addDynamicMeters(super, host->settings, i);
+      else if (type == &NetworkIOMeter_class)
+         AvailableMetersPanel_addNetworkIOMeters(super, type, i);
       else
          AvailableMetersPanel_addPlatformMeter(super, type, i);
    }
