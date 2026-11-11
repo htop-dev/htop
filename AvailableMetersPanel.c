@@ -22,6 +22,7 @@ in the source distribution for its full text.
 #include "Macros.h"
 #include "Meter.h"
 #include "MetersPanel.h"
+#include "NetworkIOMeter.h"
 #include "Object.h"
 #include "Platform.h"
 #include "ProvideCurses.h"
@@ -138,6 +139,28 @@ static void AvailableMetersPanel_addDynamicMeters(Panel* super, const Settings* 
    Hashtable_foreach(dynamicMeters, AvailableMetersPanel_addDynamicMeter, &iter);
 }
 
+// Handle (&NetworkIOMeter_class) entries: the aggregate plus one per interface
+static void AvailableMetersPanel_addNetworkIOMeters(Panel* super, const MeterClass* type, unsigned int offset) {
+   const char* label = type->description ? type->description : type->uiName;
+   Panel_add(super, (Object*) ListItem_new(label, offset << 16));
+
+   char** interfaces = Platform_getNetworkInterfaces();
+   if (!interfaces)
+      return;
+
+   for (char** name = interfaces; *name; name++) {
+      unsigned int param = NetworkIOMeter_paramForInterface(*name);
+      if (!param)
+         continue;
+
+      char buffer[50];
+      xSnprintf(buffer, sizeof(buffer), "%s: %s", type->uiName, *name);
+      Panel_add(super, (Object*) ListItem_new(buffer, (offset << 16) | param));
+   }
+
+   String_freeArray(interfaces);
+}
+
 // Handle remaining Platform Meter entries in the AvailableMetersPanel
 static void AvailableMetersPanel_addPlatformMeter(Panel* super, const MeterClass* type, unsigned int offset) {
    const char* label = type->description ? type->description : type->uiName;
@@ -167,6 +190,8 @@ AvailableMetersPanel* AvailableMetersPanel_new(Machine* host, Header* header, si
       assert(type != &CPUMeter_class);
       if (type == &DynamicMeter_class)
          AvailableMetersPanel_addDynamicMeters(super, host->settings, i);
+      else if (type == &NetworkIOMeter_class)
+         AvailableMetersPanel_addNetworkIOMeters(super, type, i);
       else
          AvailableMetersPanel_addPlatformMeter(super, type, i);
    }
