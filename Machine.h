@@ -59,6 +59,8 @@ typedef struct Machine_ {
    unsigned int activeCPUs;
    unsigned int existingCPUs;
 
+   bool containerized; /* whether htop is running inside a container (Linux only; always false elsewhere) */
+
    UsersTable* usersTable;
    uid_t htopUserId;
    uid_t maxUserId;  /* recently observed */
