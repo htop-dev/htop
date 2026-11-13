@@ -117,9 +117,9 @@ static void DarwinProcess_rowWriteField(const Row* super, RichString* str, Proce
    case TRANSLATED: xSnprintf(buffer, n, "%c ", dp->translated ? 'T' : 'N'); break;
    case RBYTES: Row_printBytes(str, dp->io_read_bytes, coloring); return;
    case WBYTES: Row_printBytes(str, dp->io_write_bytes, coloring); return;
-   case IO_READ_RATE: Row_printRate(str, dp->io_rate_read_bps, coloring); return;
-   case IO_WRITE_RATE: Row_printRate(str, dp->io_rate_write_bps, coloring); return;
-   case IO_RATE: Row_printRate(str, DarwinProcess_totalIORate(dp), coloring); return;
+   case IO_READ_RATE: Row_printRate(str, dp->io_rate_read_bps, coloring, host->settings->decimalUnits); return;
+   case IO_WRITE_RATE: Row_printRate(str, dp->io_rate_write_bps, coloring, host->settings->decimalUnits); return;
+   case IO_RATE: Row_printRate(str, DarwinProcess_totalIORate(dp), coloring, host->settings->decimalUnits); return;
    default:
       Process_writeField(&dp->super, str, field);
       return;
