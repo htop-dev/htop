@@ -55,6 +55,12 @@ static inline bool String_startsWith(const char* s, const char* match) {
    return strncmp(s, match, strlen(match)) == 0;
 }
 
+/*
+ * Case-insensitive substring search. With multi enabled, s2 may consist of
+ * several terms separated by '|'. A match against any non-negated term is
+ * sufficient, while a term prefixed with '!' excludes strings containing it.
+ * If only negated terms are present, everything not excluded matches.
+ */
 bool String_contains_i(const char* s1, const char* s2, bool multi);
 
 ATTR_NONNULL
