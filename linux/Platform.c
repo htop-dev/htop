@@ -53,7 +53,10 @@ in the source distribution for its full text.
 #include "linux/IOPriorityPanel.h"
 #include "linux/LinuxMachine.h"
 #include "linux/LinuxProcess.h"
+#include "linux/NetLinkNet.h"
+#include "linux/NetMonitor.h"
 #include "linux/OpenRCMeter.h"
+#include "linux/ProcMonitor.h"
 #include "linux/SELinuxMeter.h"
 #include "linux/SystemdMeter.h"
 #include "linux/ZramMeter.h"
@@ -70,6 +73,10 @@ in the source distribution for its full text.
 
 #ifdef HAVE_SENSORS_SENSORS_H
 #include "LibSensors.h"
+#endif
+
+#ifdef HAVE_EBPF
+#include "linux/LibBpf.h"
 #endif
 
 #ifndef O_PATH
@@ -1058,27 +1065,57 @@ CommandLineStatus Platform_getLongOption(int opt, int argc, char** argv) {
 }
 
 #ifdef HAVE_LIBCAP
-static int dropCapabilities(enum CapMode mode) {
+static int dropCapabilities(enum CapMode mode, ATTR_UNUSED bool keepEBPFCaps) {
 
    if (mode == CAP_MODE_OFF)
       return 0;
 
-   /* capabilities we keep to operate */
-   const cap_value_t keepcapsStrict[] = {
-      CAP_DAC_READ_SEARCH,
-      CAP_SYS_PTRACE,
-   };
-   const cap_value_t keepcapsBasic[] = {
-      CAP_DAC_READ_SEARCH,   /* read non world-readable process files of other users, like /proc/[pid]/io */
-      CAP_KILL,              /* send signals to processes of other users */
-      CAP_SYS_NICE,          /* lower process nice value / change nice value for arbitrary processes */
-      CAP_SYS_PTRACE,        /* read /proc/[pid]/exe */
-#ifdef HAVE_DELAYACCT
-      CAP_NET_ADMIN,         /* communicate over netlink socket for delay accounting */
+   /* kprobe attachment via perf_event_open() needs CAP_SYS_ADMIN when
+    * kernel.perf_event_paranoid exceeds the level CAP_PERFMON alone covers
+    * (paranoid 3 is e.g. the default shipping in Debian). */
+#ifdef HAVE_EBPF_NETIO
+   bool keepSysAdmin = false;
+   int paranoid = 3;
+   FILE* fp = fopen("/proc/sys/kernel/perf_event_paranoid", "r");
+   if (fp) {
+      if (fscanf(fp, "%d", &paranoid) != 1)
+         paranoid = 3;
+      fclose(fp);
+   }
+   keepSysAdmin = (paranoid > 2);
 #endif
-   };
-   const cap_value_t* const keepcaps = (mode == CAP_MODE_BASIC) ? keepcapsBasic : keepcapsStrict;
-   const size_t ncap = (mode == CAP_MODE_BASIC) ? ARRAYSIZE(keepcapsBasic) : ARRAYSIZE(keepcapsStrict);
+
+   /* capabilities we keep to operate */
+   cap_value_t keepcaps[16];
+   size_t ncap = 0;
+
+   #define KEEP(cap) do { keepcaps[ncap++] = (cap); } while (0)
+
+   KEEP(CAP_DAC_READ_SEARCH);   /* read non world-readable process files of other users, like /proc/[pid]/io */
+   KEEP(CAP_SYS_PTRACE);        /* read /proc/[pid]/exe */
+
+   if (mode == CAP_MODE_BASIC) {
+      KEEP(CAP_KILL);           /* send signals to processes of other users */
+      KEEP(CAP_SYS_NICE);       /* lower process nice value / change nice value for arbitrary processes */
+#ifdef HAVE_DELAYACCT
+      KEEP(CAP_NET_ADMIN);      /* communicate over netlink socket for delay accounting */
+#endif
+#if defined(HAVE_EBPF_NETIO) || defined(HAVE_EBPF_PROCMON)
+      if (keepEBPFCaps) {
+#ifdef HAVE_EBPF_NETIO
+         if (keepSysAdmin)
+            KEEP(CAP_SYS_ADMIN);   /* perf_event_open() kprobe attach requires it when perf_event_paranoid>2 */
+#endif
+         KEEP(CAP_BPF);            /* bpf() syscall to load the eBPF programs (NET columns, process events) */
+         KEEP(CAP_PERFMON);        /* attach the kprobes/kretprobes and the BTF tracepoints */
+#ifdef HAVE_EBPF_NETIO
+         KEEP(CAP_SYSLOG);         /* resolve kernel symbols for the kprobe targets */
+#endif
+      }
+#endif
+   }
+
+   #undef KEEP
 
    cap_t caps = cap_init();
    if (caps == NULL) {
@@ -1143,9 +1180,29 @@ static int dropCapabilities(enum CapMode mode) {
 }
 #endif
 
+#if defined(HAVE_EBPF_NETIO) || defined(HAVE_EBPF_PROCMON)
+/* After every eBPF monitor had its one-time load attempt the load-time
+ * capabilities are no longer required: map lookup, iteration and deletion
+ * as well as ring buffer consumption go through already-open file
+ * descriptors. Repeated calls are no-ops. */
+int Platform_dropEBPFCapabilities(void) {
+#ifdef HAVE_LIBCAP
+   static bool dropped = false;
+
+   if (dropped || Platform_capabilitiesMode != CAP_MODE_BASIC)
+      return 0;
+
+   dropped = true;
+   return dropCapabilities(CAP_MODE_BASIC, false);
+#else
+   return 0;
+#endif
+}
+#endif
+
 bool Platform_init(void) {
 #ifdef HAVE_LIBCAP
-   if (dropCapabilities(Platform_capabilitiesMode) < 0)
+   if (dropCapabilities(Platform_capabilitiesMode, true) < 0)
       return false;
 #endif
 
@@ -1157,6 +1214,10 @@ bool Platform_init(void) {
 #ifdef HAVE_SENSORS_SENSORS_H
    LibSensors_init();
 #endif
+
+   NetLinkNet_init();
+   NetMonitor_init();
+   ProcMonitor_init();
 
    char target[PATH_MAX];
    ssize_t ret = readlink(PROCDIR "/self/ns/pid", target, sizeof(target) - 1);
@@ -1188,5 +1249,12 @@ bool Platform_init(void) {
 void Platform_done(void) {
 #ifdef HAVE_SENSORS_SENSORS_H
    LibSensors_cleanup();
+#endif
+
+   NetLinkNet_done();
+   NetMonitor_done();
+   ProcMonitor_done();
+#ifdef HAVE_EBPF
+   LibBpf_done();
 #endif
 }
