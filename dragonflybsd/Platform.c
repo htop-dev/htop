@@ -363,6 +363,18 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
    return true;
 }
 
+bool Platform_getNetworkInterfaceIO(const char* name, NetworkIOData* data, uint32_t* linkSpeedMbps, bool* present) {
+   (void)name;
+   (void)data;
+   (void)linkSpeedMbps;
+   (void)present;
+   return false;
+}
+
+char** Platform_getNetworkInterfaces(void) {
+   return NULL;
+}
+
 void Platform_getBattery(double* percent, ACPresence* isOnAC) {
    int life;
    size_t life_len = sizeof(life);
