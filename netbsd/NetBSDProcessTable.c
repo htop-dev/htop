@@ -75,20 +75,12 @@ static void NetBSDProcessTable_updateCwd(const struct kinfo_proc2* kproc, Proces
    const int mib[] = { CTL_KERN, KERN_PROC_ARGS, kproc->p_pid, KERN_PROC_CWD };
    char buffer[2048];
    size_t size = sizeof(buffer);
-   if (sysctl(mib, 4, buffer, &size, NULL, 0) != 0) {
-      free(proc->procCwd);
-      proc->procCwd = NULL;
+   if (sysctl(mib, 4, buffer, &size, NULL, 0) != 0 || buffer[0] == '\0') {
+      Process_updateCwd(proc, NULL);
       return;
    }
 
-   /* Kernel threads return an empty buffer */
-   if (buffer[0] == '\0') {
-      free(proc->procCwd);
-      proc->procCwd = NULL;
-      return;
-   }
-
-   free_and_xStrdup(&proc->procCwd, buffer);
+   Process_updateCwd(proc, buffer);
 }
 
 static void NetBSDProcessTable_updateProcessName(kvm_t* kd, const struct kinfo_proc2* kproc, Process* proc) {
@@ -203,12 +195,7 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
          // KERN_PROC_TTY_NODEV is a negative constant but the type of
          // kproc->p_tdev may be unsigned.
          const char* name = ((dev_t)~kproc->p_tdev != (dev_t)~(KERN_PROC_TTY_NODEV)) ? devname(kproc->p_tdev, S_IFCHR) : NULL;
-         if (!name) {
-            free(proc->tty_name);
-            proc->tty_name = NULL;
-         } else {
-            free_and_xStrdup(&proc->tty_name, name);
-         }
+         Process_updateTty(proc, name);
 
          NetBSDProcessTable_updateExe(kproc, proc);
          NetBSDProcessTable_updateProcessName(nhost->kd, kproc, proc);
@@ -246,7 +233,7 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
       /* Taken from: https://ftp.netbsd.org/pub/NetBSD/NetBSD-current/src/sys/sys/proc.h */
       switch (kproc->p_realstat) {
          case SIDL:     proc->state = IDLE; break;
-         case SACTIVE:  proc->state = get_active_status(nhost, kproc); break;
+         case SACTIVE:  proc->state = (uint8_t) get_active_status(nhost, kproc); break;
          case SSTOP:    proc->state = STOPPED; break;
          case SZOMB:    proc->state = ZOMBIE; break;
          case SDEAD:    proc->state = DEFUNCT; break;

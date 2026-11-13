@@ -22,6 +22,7 @@ in the source distribution for its full text.
 #include "Row.h"
 #include "RowField.h"
 #include "Vector.h"
+#include "XUtils.h"
 
 
 Table* Table_init(Table* this, const ObjectClass* klass, Machine* host) {
@@ -158,7 +159,7 @@ static void Table_buildTreeBranch(Table* this, int rowid, unsigned int level, in
       else
          row->indent = nextIndent;
 
-      row->tree_depth = level + 1;
+      row->tree_depth = (uint16_t)(level + 1);
    }
 }
 
@@ -440,6 +441,11 @@ void Table_rebuildPanel(Table* this) {
          this->stableId = -1;
       }
    }
+
+   Vector_shrink(this->displayList);
+   if (this->panel && this->panel->items) {
+      Vector_shrink(this->panel->items);
+   }
 }
 
 void Table_printHeader(const Settings* settings, RichString* header) {
@@ -495,12 +501,12 @@ Row* Table_cleanupRow(Table* table, Row* row, int idx) {
 
    if (row->tombStampMs > 0) {
       // remove tombed process
-      if (host->monotonicMs >= row->tombStampMs) {
+      if (host->inBackground || host->monotonicMs >= row->tombStampMs) {
          goto remove;
       }
    } else if (!row->updated) {
       // process no longer exists
-      if (settings->highlightChanges && row->wasShown) {
+      if (!host->inBackground && settings->highlightChanges && row->wasShown) {
          // mark tombed
          row->tombStampMs = host->monotonicMs + 1000 * settings->highlightDelaySecs;
       } else {
@@ -513,6 +519,16 @@ Row* Table_cleanupRow(Table* table, Row* row, int idx) {
 remove:
    Table_removeIndex(table, row, idx);
    return NULL;
+}
+
+void Table_compact(Table* this, int dirtyIndex) {
+   int prevSize = Vector_size(this->rows);
+   Vector_compact(this->rows, dirtyIndex);
+   Vector_shrink(this->rows);
+   Hashtable_shrink(this->table);
+   this->needsSort = true;
+   if (Vector_size(this->rows) < prevSize)
+      xTrimMemory();
 }
 
 void Table_cleanupEntries(Table* this) {

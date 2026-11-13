@@ -32,7 +32,7 @@ in the source distribution for its full text.
 
 typedef struct LinuxProcess_ {
    Process super;
-   IOPriority ioPriority;
+
    unsigned long int cminflt;
    unsigned long int cmajflt;
    unsigned long long int utime;
@@ -48,9 +48,6 @@ typedef struct LinuxProcess_ {
    long m_trs;
    long m_drs;
    long m_lrs;
-
-   /* Process flags */
-   unsigned long int flags;
 
    /* Data read (in bytes) */
    unsigned long long io_rchar;
@@ -85,31 +82,40 @@ typedef struct LinuxProcess_ {
    char* cgroup;
    char* cgroup_short;
    char* container_short;
-   unsigned int oom;
+
    #ifdef HAVE_DELAYACCT
    unsigned long long int delay_read_time;
    unsigned long long cpu_delay_total;
    unsigned long long blkio_delay_total;
    unsigned long long swapin_delay_total;
-   float cpu_delay_percent;
-   float blkio_delay_percent;
-   float swapin_delay_percent;
    #endif
+
    unsigned long ctxt_total;
-   unsigned long ctxt_diff;
    char* secattr;
    unsigned long long int last_mlrs_calctime;
 
    /* Total GPU time used in nano seconds */
    unsigned long long int gpu_time;
-   /* GPU utilization in percent */
-   float gpu_percent;
    /* Activity of GPU: 0 if active, otherwise time of last scan in milliseconds */
    uint64_t gpu_activityMs;
 
    /* Autogroup scheduling (CFS) information */
    long int autogroup_id;
+
+   IOPriority ioPriority;
+   unsigned int oom;
+
+   /* GPU utilization in percent */
+   float gpu_percent;
+
    int autogroup_nice;
+   uint32_t ctxt_diff;
+
+   #ifdef HAVE_DELAYACCT
+   float cpu_delay_percent;
+   float blkio_delay_percent;
+   float swapin_delay_percent;
+   #endif
 } LinuxProcess;
 
 extern int pageSize;

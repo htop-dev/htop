@@ -41,12 +41,15 @@ in the source distribution for its full text.
 static const char* const kthreadID = "KTHREAD";
 
 void Process_fillStarttimeBuffer(Process* this) {
+   (void)this;
+}
+
+static void Process_formatStarttime(const Process* this, char* buffer, size_t n) {
    struct tm date;
-   time_t now = this->super.host->realtime.tv_sec;
+   time_t now = this->super.host ? this->super.host->realtime.tv_sec : time(NULL);
    (void) localtime_r(&this->starttime_ctime, &date);
 
-   strftime(this->starttime_show,
-            sizeof(this->starttime_show) - 1,
+   strftime(buffer, n,
             (this->starttime_ctime > now - 86400) ? "%R " : (this->starttime_ctime > now - 364 * 86400) ? "%b%d " : " %Y ",
             &date);
 }
@@ -190,7 +193,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
    bool showThreadNames = settings->showThreadNames;
    bool shadowDistPathPrefix = settings->shadowDistPathPrefix;
 
-   uint64_t settingsStamp = settings->lastUpdate;
+   uint32_t settingsStamp = (uint32_t)settings->lastUpdate;
 
    /* Nothing to do to (Re)Generate the Command string, if the process is:
     * - a kernel thread, or
@@ -200,6 +203,15 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
       return;
    if (this->state == ZOMBIE && !this->mergedCommand.str)
       return;
+   if (Process_isUserlandThread(this) && !showThreadNames) {
+      free(mc->str);
+      mc->str = NULL;
+      free(mc->highlights);
+      mc->highlights = NULL;
+      mc->highlightCount = 0;
+      mc->lastUpdate = settingsStamp;
+      return;
+   }
 
    /* this->mergedCommand.str needs updating only if its state or contents changed.
     * Its content is based on the fields cmdline, comm, and exe. */
@@ -216,7 +228,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
    /* Accommodate the column text, two field separators and terminating NUL */
    size_t maxLen = 2 * SEPARATOR_LEN + 1;
    maxLen += this->cmdline ? strlen(this->cmdline) : strlen("(zombie)");
-   maxLen += this->procComm ? strlen(this->procComm) : 0;
+   maxLen += this->procComm[0] ? strlen(this->procComm) : 0;
    maxLen += this->procExe ? strlen(this->procExe) : 0;
 
    free(mc->str);
@@ -224,18 +236,19 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
 
    /* Reset all locations that need extra handling when actually displaying */
    mc->highlightCount = 0;
-   memset(mc->highlights, 0, sizeof(mc->highlights));
 
    size_t mbMismatch = 0;
    #define WRITE_HIGHLIGHT(_offset, _length, _attr, _flags)                                   \
       do {                                                                                    \
+         if (!mc->highlights)                                                                 \
+            mc->highlights = xCalloc(PROCESS_MAX_HIGHLIGHTS, sizeof(ProcessCmdlineHighlight));\
          /* Check if we still have capacity */                                                \
-         assert(mc->highlightCount < ARRAYSIZE(mc->highlights));                              \
-         if (mc->highlightCount >= ARRAYSIZE(mc->highlights))                                 \
+         assert(mc->highlightCount < PROCESS_MAX_HIGHLIGHTS);                                 \
+         if (mc->highlightCount >= PROCESS_MAX_HIGHLIGHTS)                                    \
             break;                                                                            \
                                                                                               \
-         mc->highlights[mc->highlightCount].offset = str - strStart + (_offset) - mbMismatch; \
-         mc->highlights[mc->highlightCount].length = _length;                                 \
+         mc->highlights[mc->highlightCount].offset = (uint32_t)(str - strStart + (_offset) - mbMismatch); \
+         mc->highlights[mc->highlightCount].length = (uint32_t)(_length);                                 \
          mc->highlights[mc->highlightCount].attr = _attr;                                     \
          mc->highlights[mc->highlightCount].flags = _flags;                                   \
          mc->highlightCount++;                                                                \
@@ -311,7 +324,7 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
 
    /* Establish some shortcuts to data we need */
    const char* cmdline = this->cmdline;
-   const char* procComm = this->procComm;
+   const char* procComm = this->procComm[0] ? this->procComm : NULL;
    const char* procExe = this->procExe;
 
    char* strStart = mc->str;
@@ -485,6 +498,16 @@ void Process_makeCommandStr(Process* this, const Settings* settings) {
    if (*cmdline)
       (void)stpcpyWithNewlineConversion(str, cmdline);
 
+   size_t actualLen = strlen(mc->str) + 1;
+   mc->str = xRealloc(mc->str, actualLen);
+
+   if (mc->highlightCount == 0 && mc->highlights) {
+      free(mc->highlights);
+      mc->highlights = NULL;
+   } else if (mc->highlightCount > 0 && mc->highlightCount < PROCESS_MAX_HIGHLIGHTS) {
+      mc->highlights = xReallocArray(mc->highlights, mc->highlightCount, sizeof(ProcessCmdlineHighlight));
+   }
+
    #undef CHECK_AND_MARK_DIST_PATH_PREFIXES
    #undef CHECK_AND_MARK
    #undef WRITE_SEPARATOR
@@ -539,7 +562,10 @@ void Process_writeCommand(const Process* this, int attr, int baseAttr, RichStrin
 
    RichString_appendWide(str, attr, mergedCommand);
 
-   for (size_t i = 0, hlCount = CLAMP(mc->highlightCount, 0, ARRAYSIZE(mc->highlights)); i < hlCount; i++) {
+   if (!mc->highlights)
+      return;
+
+   for (size_t i = 0, hlCount = CLAMP(mc->highlightCount, 0, PROCESS_MAX_HIGHLIGHTS); i < hlCount; i++) {
       const ProcessCmdlineHighlight* hl = &mc->highlights[i];
 
       if (!hl->length)
@@ -642,7 +668,7 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
    }
    case PROC_COMM: {
       const char* procComm;
-      if (this->procComm) {
+      if (this->procComm[0]) {
          attr = CRT_colors[Process_isUserlandThread(this) ? PROCESS_THREAD_COMM : PROCESS_COMM];
          procComm = this->procComm;
       } else {
@@ -714,7 +740,7 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
       if (this->nlwp == 1)
          attr = CRT_colors[PROCESS_SHADOW];
 
-      xSnprintf(buffer, n, "%4ld ", this->nlwp);
+      xSnprintf(buffer, n, "%4d ", this->nlwp);
       break;
    case PERCENT_CPU: Row_printPercentage(this->percent_cpu, buffer, n, Row_fieldWidths[PERCENT_CPU], &attr); break;
    case PERCENT_NORM_CPU: {
@@ -730,7 +756,7 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
       if (this->priority <= -100)
          xSnprintf(buffer, n, " RT ");
       else
-         xSnprintf(buffer, n, "%3ld ", this->priority);
+         xSnprintf(buffer, n, "%3d ", this->priority);
       break;
    case PROCESSOR: xSnprintf(buffer, n, "%3d ", Settings_cpuId(settings, this->processor)); break;
    case SCHEDULERPOLICY: {
@@ -743,7 +769,7 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
       break;
    }
    case SESSION: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->session); break;
-   case STARTTIME: xSnprintf(buffer, n, "%s", this->starttime_show); break;
+   case STARTTIME: Process_formatStarttime(this, buffer, n); break;
    case STATE:
       xSnprintf(buffer, n, "%c ", processStateChar(this->state));
       switch (this->state) {
@@ -815,14 +841,26 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
    RichString_appendAscii(str, attr, buffer);
 }
 
+void Process_cleanMergedCommand(Process* this) {
+   free(this->mergedCommand.highlights);
+   this->mergedCommand.highlights = NULL;
+   free(this->mergedCommand.str);
+   this->mergedCommand.str = NULL;
+   this->mergedCommand.highlightCount = 0;
+   this->mergedCommand.lastUpdate = 0;
+}
+
 void Process_done(Process* this) {
    assert(this != NULL);
-   free(this->cmdline);
-   free(this->procComm);
-   free(this->procExe);
-   free(this->procCwd);
-   free(this->mergedCommand.str);
-   free(this->tty_name);
+   RefString_unref(this->cmdline);
+   this->cmdline = NULL;
+   RefString_unref(this->procExe);
+   this->procExe = NULL;
+   RefString_unref(this->procCwd);
+   this->procCwd = NULL;
+   Process_cleanMergedCommand(this);
+   RefString_unref(this->tty_name);
+   this->tty_name = NULL;
 }
 
 /* This function returns the string displayed in Command column, so that sorting
@@ -903,6 +941,7 @@ void Process_init(Process* this, const Machine* host) {
 
    this->cmdlineBasenameEnd = 0;
    this->st_uid = (uid_t)-1;
+   this->procComm[0] = '\0';
 }
 
 static bool Process_setPriority(Process* this, int priority) {
@@ -975,8 +1014,8 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
    case COMM:
       return SPACESHIP_NULLSTR(Process_getCommand(p1), Process_getCommand(p2));
    case PROC_COMM: {
-      const char* comm1 = p1->procComm ? p1->procComm : (Process_isKernelThread(p1) ? kthreadID : "");
-      const char* comm2 = p2->procComm ? p2->procComm : (Process_isKernelThread(p2) ? kthreadID : "");
+      const char* comm1 = p1->procComm[0] ? p1->procComm : (Process_isKernelThread(p1) ? kthreadID : "");
+      const char* comm2 = p2->procComm[0] ? p2->procComm : (Process_isKernelThread(p2) ? kthreadID : "");
       return SPACESHIP_NULLSTR(comm1, comm2);
    }
    case PROC_EXE: {
@@ -1041,15 +1080,18 @@ int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField
 }
 
 void Process_updateComm(Process* this, const char* comm) {
-   if (!this->procComm && !comm)
+   if (!comm) {
+      if (this->procComm[0] == '\0')
+         return;
+      this->procComm[0] = '\0';
+      this->mergedCommand.lastUpdate = 0;
+      return;
+   }
+
+   if (String_eq(this->procComm, comm))
       return;
 
-   if (this->procComm && comm && String_eq(this->procComm, comm))
-      return;
-
-   free(this->procComm);
-   this->procComm = comm ? xStrdup(comm) : NULL;
-
+   String_safeStrncpy(this->procComm, comm, sizeof(this->procComm));
    this->mergedCommand.lastUpdate = 0;
 }
 
@@ -1085,17 +1127,26 @@ void Process_updateCmdline(Process* this, const char* cmdline, size_t basenameSt
    if (this->cmdline && cmdline && String_eq(this->cmdline, cmdline))
       return;
 
-   free(this->cmdline);
-   this->cmdline = cmdline ? xStrdup(cmdline) : NULL;
+   RefString_assignNew(&this->cmdline, cmdline);
    if (Process_isKernelThread(this)) {
       /* kernel threads have no basename */
       this->cmdlineBasenameStart = 0;
       this->cmdlineBasenameEnd = 0;
    } else {
-      this->cmdlineBasenameStart = (basenameStart || !cmdline) ? basenameStart : skipPotentialPath(cmdline, basenameEnd);
-      this->cmdlineBasenameEnd = basenameEnd;
+      this->cmdlineBasenameStart = (uint32_t)((basenameStart || !cmdline) ? basenameStart : skipPotentialPath(cmdline, basenameEnd));
+      this->cmdlineBasenameEnd = (uint32_t)basenameEnd;
    }
 
+   this->mergedCommand.lastUpdate = 0;
+}
+
+void Process_updateCmdlineShared(Process* this, char* cmdline, size_t basenameStart, size_t basenameEnd) {
+   if (this->cmdline == cmdline)
+      return;
+
+   RefString_assign(&this->cmdline, cmdline);
+   this->cmdlineBasenameStart = (uint32_t)basenameStart;
+   this->cmdlineBasenameEnd = (uint32_t)basenameEnd;
    this->mergedCommand.lastUpdate = 0;
 }
 
@@ -1106,17 +1157,40 @@ void Process_updateExe(Process* this, const char* exe) {
    if (this->procExe && exe && String_eq(this->procExe, exe))
       return;
 
-   free(this->procExe);
+   RefString_assignNew(&this->procExe, exe);
    if (exe) {
-      this->procExe = xStrdup(exe);
       const char* lastSlash = strrchr(exe, '/');
-      this->procExeBasenameOffset = (lastSlash && *(lastSlash + 1) != '\0' && lastSlash != exe) ? (size_t)(lastSlash - exe + 1) : 0;
+      this->procExeBasenameOffset = (lastSlash && *(lastSlash + 1) != '\0' && lastSlash != exe) ? (uint32_t)(lastSlash - exe + 1) : 0;
    } else {
-      this->procExe = NULL;
       this->procExeBasenameOffset = 0;
    }
 
    this->mergedCommand.lastUpdate = 0;
+}
+
+void Process_updateExeShared(Process* this, char* exe, size_t basenameOffset) {
+   if (this->procExe == exe)
+      return;
+
+   RefString_assign(&this->procExe, exe);
+   this->procExeBasenameOffset = (uint32_t)basenameOffset;
+   this->mergedCommand.lastUpdate = 0;
+}
+
+void Process_updateTty(Process* this, const char* tty_name) {
+   RefString_assignNew(&this->tty_name, tty_name);
+}
+
+void Process_updateTtyShared(Process* this, char* tty_name) {
+   RefString_assign(&this->tty_name, tty_name);
+}
+
+void Process_updateCwd(Process* this, const char* cwd) {
+   RefString_assignNew(&this->procCwd, cwd);
+}
+
+void Process_updateCwdShared(Process* this, char* cwd) {
+   RefString_assign(&this->procCwd, cwd);
 }
 
 void Process_updateCPUFieldWidths(float percentage) {

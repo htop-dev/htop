@@ -119,7 +119,7 @@ void ScreenManager_resize(ScreenManager* this) {
    Panel_move(panel, lastX, y1_header);
 }
 
-static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTimeout, bool* redraw, bool* rescan, bool* timedOut, bool* force_redraw) {
+static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTimeout, bool* redraw, bool* rescan, bool* timedOut, bool* force_redraw, bool inBackground) {
    Machine* host = this->host;
 
    Platform_gettime_realtime(&host->realtime, &host->realtimeMs);
@@ -163,9 +163,13 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
    }
 
    if (*redraw) {
-      Table_rebuildPanel(host->activeTable);
-      if (!this->state->hideMeters)
-         Header_draw(this->header);
+      if (!inBackground) {
+         Table_rebuildPanel(host->activeTable);
+         if (!this->state->hideMeters)
+            Header_draw(this->header);
+      } else {
+         host->activeTable->needsSort = true;
+      }
    }
 
    *rescan = false;
@@ -241,9 +245,30 @@ static void ScreenManager_drawPanels(ScreenManager* this, size_t focus, bool for
    }
 }
 
+static void ScreenManager_exitBackground(ScreenManager* this) {
+   if (this->host) {
+      this->host->inBackground = false;
+      for (size_t t = 0; t < this->host->tableCount; t++) {
+         Table* table = this->host->tables[t];
+         if (!table)
+            continue;
+         for (int i = 0; i < Vector_size(table->rows); i++) {
+            Row* row = (Row*) Vector_get(table->rows, i);
+            if (Object_isA((const Object*) row, (const ObjectClass*) &Process_class)) {
+               Process_makeCommandStr((Process*) row, this->host->settings);
+            }
+         }
+      }
+      if (this->host->activeTable) {
+         Table_rebuildPanel(this->host->activeTable);
+      }
+   }
+}
+
 void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, const char* name) {
    bool quit = false;
    size_t focus = 0;
+   bool inBackground = false;
 
    Panel* panelFocus = (Panel*) Vector_get(this->panels, focus);
    Settings* settings = this->host->settings;
@@ -264,11 +289,13 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
 
    while (!quit) {
       if (this->header) {
-         checkRecalculation(this, &oldTime, &sortTimeout, &redraw, &rescan, &timedOut, &force_redraw);
+         checkRecalculation(this, &oldTime, &sortTimeout, &redraw, &rescan, &timedOut, &force_redraw, inBackground);
       }
 
       if (redraw || force_redraw) {
-         ScreenManager_drawPanels(this, focus, force_redraw);
+         if (!inBackground) {
+            ScreenManager_drawPanels(this, focus, force_redraw);
+         }
          force_redraw = false;
          if (this->host->iterationsRemaining != -1) {
             if (!--this->host->iterationsRemaining) {
@@ -369,7 +396,20 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
             closeTimeout = 0;
          }
          redraw = false;
+
+         xTrimMemory();
+
          continue;
+      }
+
+      if (ch != KEY_FOCUS_OUT) {
+         if (inBackground) {
+            inBackground = false;
+            ScreenManager_exitBackground(this);
+            force_redraw = true;
+            rescan = true;
+            sortTimeout = 0;
+         }
       }
 
       switch (ch) {
@@ -414,7 +454,40 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
          continue;
       }
       case KEY_FOCUS_IN:
+         break;
       case KEY_FOCUS_OUT:
+         inBackground = true;
+         if (this->host) {
+            this->host->inBackground = true;
+            for (size_t t = 0; t < this->host->tableCount; t++) {
+               Table* table = this->host->tables[t];
+               if (!table)
+                  continue;
+               Table_preserveSelection(table);
+               Vector_prune(table->displayList);
+               Vector_shrink(table->displayList);
+               if (table->panel && table->panel->items) {
+                  Vector_prune(table->panel->items);
+                  Vector_shrink(table->panel->items);
+               }
+               Vector_shrink(table->rows);
+               Hashtable_shrink(table->table);
+               table->needsSort = true;
+               for (int i = 0; i < Vector_size(table->rows); i++) {
+                  Row* row = (Row*) Vector_get(table->rows, i);
+                  if (Object_isA((const Object*) row, (const ObjectClass*) &Process_class)) {
+                     Process_cleanMergedCommand((Process*) row);
+                  }
+               }
+            }
+         }
+         for (size_t i = 0; i < this->panelCount; i++) {
+            Panel* p = (Panel*) Vector_get(this->panels, i);
+            if (p && p->items) {
+               Vector_shrink(p->items);
+            }
+         }
+         xTrimMemory();
          break;
       case KEY_LEFT:
       case KEY_CTRL('B'):

@@ -70,6 +70,8 @@ typedef struct Machine_ {
    Table **tables;
    Table *activeTable;
    Table *processTable;
+
+   bool inBackground;
 } Machine;
 
 

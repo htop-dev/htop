@@ -322,12 +322,14 @@ static void BacktracePanelRow_displayInformation(const Object* super, RichString
    const char* processName = "";
    if (process->mergedCommand.str) {
       processName = process->mergedCommand.str;
-      for (size_t i = 0; i < process->mergedCommand.highlightCount; i++) {
-         const ProcessCmdlineHighlight* highlight = process->mergedCommand.highlights;
-         if (highlight->flags & CMDLINE_HIGHLIGHT_FLAG_BASENAME) {
-            highlightLen = highlight->length;
-            highlightOffset = highlight->offset;
-            break;
+      if (process->mergedCommand.highlights) {
+         for (size_t i = 0; i < process->mergedCommand.highlightCount; i++) {
+            const ProcessCmdlineHighlight* highlight = &process->mergedCommand.highlights[i];
+            if (highlight->flags & CMDLINE_HIGHLIGHT_FLAG_BASENAME) {
+               highlightLen = highlight->length;
+               highlightOffset = highlight->offset;
+               break;
+            }
          }
       }
    } else if (process->cmdline) {

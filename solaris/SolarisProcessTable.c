@@ -81,11 +81,13 @@ static void SolarisProcessTable_updateCwd(pid_t pid, Process* proc) {
 
    char target[PATH_MAX];
    ssize_t ret = readlink(path, target, sizeof(target) - 1);
-   if (ret <= 0)
+   if (ret <= 0) {
+      Process_updateCwd(proc, NULL);
       return;
+   }
 
    target[ret] = '\0';
-   free_and_xStrdup(&proc->procCwd, target);
+   Process_updateCwd(proc, target);
 }
 
 /* Taken from: https://docs.oracle.com/cd/E19253-01/817-6223/6mlkidlom/index.html#tbl-sched-state */
@@ -142,7 +144,7 @@ static int SolarisProcessTable_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo
    proc->priority           = _lwpsinfo->pr_pri;
    proc->nice               = _lwpsinfo->pr_nice - NZERO;
    proc->processor          = _lwpsinfo->pr_onpro;
-   proc->state              = SolarisProcessTable_getProcessState(_lwpsinfo->pr_sname);
+   proc->state              = (uint8_t) SolarisProcessTable_getProcessState(_lwpsinfo->pr_sname);
    // NOTE: This 'percentage' is a 16-bit BINARY FRACTIONS where 1.0 = 0x8000
    // Source: https://docs.oracle.com/cd/E19253-01/816-5174/proc-4/index.html
    // (accessed on 18 November 2017)
@@ -153,12 +155,7 @@ static int SolarisProcessTable_walkproc(psinfo_t* _psinfo, lwpsinfo_t* _lwpsinfo
 
    proc->tty_nr             = _psinfo->pr_ttydev;
    const char* name = (_psinfo->pr_ttydev != PRNODEV) ? ttyname(_psinfo->pr_ttydev) : NULL;
-   if (!name) {
-      free(proc->tty_name);
-      proc->tty_name = NULL;
-   } else {
-      free_and_xStrdup(&proc->tty_name, name);
-   }
+   Process_updateTty(proc, name);
 
    proc->m_resident         = _psinfo->pr_rssize;  // KB
    proc->m_virt             = _psinfo->pr_size;    // KB

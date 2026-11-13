@@ -72,7 +72,9 @@ static void ProcessTable_cleanupEntries(Table* super) {
       Process* p = (Process*) Vector_get(super->rows, i);
 
       // tidy up Process state after refreshing the ProcessTable table
-      Process_makeCommandStr(p, settings);
+      if (!host->inBackground) {
+         Process_makeCommandStr(p, settings);
+      }
 
       // keep track of the highest UID and PID for column scaling
       if (p->st_uid > host->maxUserId)

@@ -25,6 +25,8 @@ void Machine_init(Machine* this, UsersTable* usersTable, uid_t userId) {
 
    this->htopUserId = getuid();
 
+   this->inBackground = false;
+
    // discover fixed column width limits
    Row_setPidColumnWidth(Platform_getMaxPid());
 

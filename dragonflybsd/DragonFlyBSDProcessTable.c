@@ -81,20 +81,12 @@ static void DragonFlyBSDProcessTable_updateCwd(const struct kinfo_proc* kproc, P
    const int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_CWD, kproc->kp_pid };
    char buffer[2048];
    size_t size = sizeof(buffer);
-   if (sysctl(mib, 4, buffer, &size, NULL, 0) != 0) {
-      free(proc->procCwd);
-      proc->procCwd = NULL;
+   if (sysctl(mib, 4, buffer, &size, NULL, 0) != 0 || buffer[0] == '\0') {
+      Process_updateCwd(proc, NULL);
       return;
    }
 
-   /* Kernel threads return an empty buffer */
-   if (buffer[0] == '\0') {
-      free(proc->procCwd);
-      proc->procCwd = NULL;
-      return;
-   }
-
-   free_and_xStrdup(&proc->procCwd, buffer);
+   Process_updateCwd(proc, buffer);
 }
 
 static void DragonFlyBSDProcessTable_updateProcessName(kvm_t* kd, const struct kinfo_proc* kproc, Process* proc) {
@@ -176,12 +168,7 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
 
          proc->tty_nr = kproc->kp_tdev; // control terminal device number
          const char* name = (kproc->kp_tdev != NODEV) ? devname(kproc->kp_tdev, S_IFCHR) : NULL;
-         if (!name) {
-            free(proc->tty_name);
-            proc->tty_name = NULL;
-         } else {
-            free_and_xStrdup(&proc->tty_name, name);
-         }
+         Process_updateTty(proc, name);
 
          DragonFlyBSDProcessTable_updateExe(kproc, proc);
          DragonFlyBSDProcessTable_updateProcessName(dhost->kd, kproc, proc);
