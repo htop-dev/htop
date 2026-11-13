@@ -256,7 +256,7 @@ void Panel_draw(Panel* this, bool force_redraw, bool focus, bool highlightSelect
    int h = this->h;
 
    if (hideFunctionBar)
-      h++;
+      h += 2;
 
    const int header_attr = focus
                          ? CRT_colors[PANEL_HEADER_FOCUS]

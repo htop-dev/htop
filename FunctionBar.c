@@ -32,6 +32,24 @@ static const int FunctionBar_EnterEscEvents[] = {13, 27};
 
 static int currentLen = 0;
 
+/* Blank columns between a key and its label, and after each label.
+   Only used when the spaced bar still fits the terminal width. */
+enum {
+   FUNCTIONBAR_KEY_GAP = 1,
+   FUNCTIONBAR_ITEM_GAP = 2,
+};
+
+static bool FunctionBar_spaced(const FunctionBar* this) {
+   int x = 0;
+   for (size_t i = 0; this->functions[i]; i++) {
+      assert(i < FUNCTIONBAR_MAXEVENTS);
+      x += strlen(this->keys.constKeys[i]) + FUNCTIONBAR_KEY_GAP;
+      x += strlen(this->functions[i]) + FUNCTIONBAR_ITEM_GAP;
+   }
+   /* the gap after the last label may run past the edge */
+   return x - FUNCTIONBAR_ITEM_GAP <= COLS;
+}
+
 FunctionBar* FunctionBar_newEnterEsc(const char* enter, const char* esc) {
    const char* functions[FUNCTIONBAR_MAXEVENTS] = {enter, esc, NULL};
    return FunctionBar_new(functions, FunctionBar_EnterEscKeys, FunctionBar_EnterEscEvents);
@@ -98,15 +116,16 @@ int FunctionBar_draw(const FunctionBar* this) {
 int FunctionBar_drawExtra(const FunctionBar* this, const char* buffer, int attr, bool setCursor) {
    attrset(CRT_colors[FUNCTION_BAR]);
    mvhline(LINES - 1, 0, ' ', COLS);
+   const bool spaced = FunctionBar_spaced(this);
    int x = 0;
    for (size_t i = 0; this->functions[i]; i++) {
       assert(i < FUNCTIONBAR_MAXEVENTS);
       attrset(CRT_colors[FUNCTION_KEY]);
       mvaddstr(LINES - 1, x, this->keys.constKeys[i]);
-      x += strlen(this->keys.constKeys[i]);
+      x += strlen(this->keys.constKeys[i]) + (spaced ? FUNCTIONBAR_KEY_GAP : 0);
       attrset(CRT_colors[FUNCTION_BAR]);
       mvaddstr(LINES - 1, x, this->functions[i]);
-      x += strlen(this->functions[i]);
+      x += strlen(this->functions[i]) + (spaced ? FUNCTIONBAR_ITEM_GAP : 0);
    }
 
    /* cursorX: position after function keys (= start of input field) */
@@ -149,21 +168,23 @@ void FunctionBar_append(const char* buffer, int attr) {
 }
 
 int FunctionBar_getWidth(const FunctionBar* this) {
+   const bool spaced = FunctionBar_spaced(this);
    int x = 0;
    for (size_t i = 0; this->functions[i]; i++) {
       assert(i < FUNCTIONBAR_MAXEVENTS);
-      x += strlen(this->keys.constKeys[i]);
-      x += strlen(this->functions[i]);
+      x += strlen(this->keys.constKeys[i]) + (spaced ? FUNCTIONBAR_KEY_GAP : 0);
+      x += strlen(this->functions[i]) + (spaced ? FUNCTIONBAR_ITEM_GAP : 0);
    }
    return x;
 }
 
 int FunctionBar_synthesizeEvent(const FunctionBar* this, int pos) {
+   const bool spaced = FunctionBar_spaced(this);
    int x = 0;
    for (size_t i = 0; this->functions[i]; i++) {
       assert(i < FUNCTIONBAR_MAXEVENTS);
-      x += strlen(this->keys.constKeys[i]);
-      x += strlen(this->functions[i]);
+      x += strlen(this->keys.constKeys[i]) + (spaced ? FUNCTIONBAR_KEY_GAP : 0);
+      x += strlen(this->functions[i]) + (spaced ? FUNCTIONBAR_ITEM_GAP : 0);
       if (pos < x) {
          return this->events[i];
       }
