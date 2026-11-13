@@ -57,6 +57,7 @@ in monochrome mode
 \fB\-F \-\-filter=FILTER\fR
 Filter processes by terms matching the commands. The terms are matched
 case-insensitive and as fixed strings (not regexs). You can separate multiple terms with "|".
+Prefix a term with "!" to exclude processes matching it.
 .TP
 \fB\-\-no-function-bar\fR
 Hide the function bar
@@ -237,6 +238,8 @@ Pressing Shift-F3 will cycle backwards.
 Alternatively the search can be started by simply typing the command
 you are looking for, although for the first character normal key
 bindings take precedence.
+As with filtering, multiple terms can be separated with "|", and a term
+prefixed with "!" matches processes not containing that term.
 .TP
 .B F4, \\\\
 Incremental process filtering: type in part of a process command line and
@@ -244,6 +247,10 @@ only processes whose names match will be shown. To cancel filtering,
 enter the Filter option again and press Esc.
 The matching is done case-insensitive. Terms are fixed strings (no regex).
 You can separate multiple terms with "|".
+A term prefixed with "!" excludes processes matching it instead. If at
+least one non-negated term is given, a process must match one of them and
+must not match any negated term; with only negated terms, all processes
+that do not match them are shown.
 .TP
 .B F5, t
 Tree view: organize processes by parenthood, and layout the relations
