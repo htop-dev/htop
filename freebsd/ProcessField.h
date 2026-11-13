@@ -13,6 +13,11 @@ in the source distribution for its full text.
    JAIL = 101,                   \
    EMULATION = 102,              \
    SCHEDCLASS = 103,             \
+   IO_READ_OPS = 104,            \
+   IO_WRITE_OPS = 105,           \
+   IO_READ_OPS_RATE = 106,       \
+   IO_WRITE_OPS_RATE = 107,      \
+   IO_OPS_RATE = 108,            \
                                  \
    DUMMY_BUMP_FIELD = CWD,       \
    // End of list
