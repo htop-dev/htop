@@ -492,7 +492,7 @@ void Row_printNanoseconds(RichString* str, unsigned long long totalNanoseconds, 
    Row_printTime(str, totalHundredths, coloring);
 }
 
-void Row_printRate(RichString* str, double rate, bool coloring) {
+static void Row_printRateUnit(RichString* str, double rate, bool coloring, char unit) {
    char buffer[16];
 
    int largeNumberColor = CRT_colors[LARGE_NUMBER];
@@ -525,9 +525,17 @@ void Row_printRate(RichString* str, double rate, bool coloring) {
    else if (i >= 3)
       color = largeNumberColor;
 
-   char prefix = (i == 0) ? 'B' : unitPrefixes[i - 1];
+   char prefix = (i == 0) ? unit : unitPrefixes[i - 1];
    int len = xSnprintf(buffer, sizeof(buffer), "%7.2f %c/s ", scaled, prefix);
    RichString_appendnAscii(str, color, buffer, len);
+}
+
+void Row_printRate(RichString* str, double rate, bool coloring) {
+   Row_printRateUnit(str, rate, coloring, 'B');
+}
+
+void Row_printCountRate(RichString* str, double rate, bool coloring) {
+   Row_printRateUnit(str, rate, coloring, 'o');
 }
 
 void Row_printLeftAlignedField(RichString* str, int attr, const char* content, unsigned int width) {
