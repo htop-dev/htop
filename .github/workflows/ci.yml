@@ -257,6 +257,54 @@ jobs:
       run: ./configure --enable-werror || ( cat config.log; exit 1; )
     - name: Build
       run: make -k
+    - name: Check process columns
+      run: ./htop --sort-key=help | grep -q "M_FOOTPRINT"
+    - name: Run htop with FOOTPRINT column (1)
+      env:
+        TERM: xterm-color
+        HTOPRC: .github/workflows/htoprc-darwin
+      run: ./htop -n 5
+    - name: Run htop with FOOTPRINT column (2)
+      env:
+        TERM: xterm-color
+        HTOPRC: .github/workflows/htoprc-darwin
+      run: ./htop -n 5 -t
+    - name: Check data collection for invisible FOOTPRINT sort key
+      env:
+        TERM: xterm-color
+        COLUMNS: 200
+        LINES: 60
+      run: |
+        # Propagate a failing htop through the checker pipeline below, so an
+        # htop crash is not reported as a passing check.
+        set -o pipefail
+        # "htop -s M_FOOTPRINT" sorts by a column that is not visible; the scan
+        # must still collect its data. Without collection every footprint stays
+        # 0 and the PID tie-breaker puts the small process (spawned first, so
+        # with the smaller PID) on top instead of the 400 MB one.
+        # The big process allocates with python3: bash command substitution
+        # drops NUL bytes, so x=$(head -c ... /dev/zero) would retain nothing.
+        # Touching one byte per 4 KiB page keeps the footprint resident even
+        # on 16 KiB-page (arm64) runners, where every page gets touched.
+        sleep 60 & small=$!
+        python3 -c 'import time; x = bytearray(400000000); x[::4096] = b"\1" * ((400000000 + 4095)//4096); time.sleep(60)' & big=$!
+        trap 'kill $small $big 2>/dev/null || true' EXIT
+        # Wait until the big process is up with its pages resident: htop
+        # renders its first frame immediately, and a process missing from
+        # that frame would make the first-row check flaky. Bail out if the
+        # allocation never materialises, so a timeout is not misreported as
+        # a footprint-collection failure.
+        for _ in $(seq 30); do
+          ps -o rss= -p "$big" 2>/dev/null | grep -qE '^\s*[0-9]{6,}' && break
+          sleep 1
+        done
+        if ! ps -o rss= -p "$big" 2>/dev/null | grep -qE '^\s*[0-9]{6,}'; then
+          echo "large process did not become ready within 30 seconds" >&2
+          exit 1
+        fi
+        sed 's/ M_FOOTPRINT//' .github/workflows/htoprc-darwin > "$RUNNER_TEMP/htoprc-sortonly"
+        HTOPRC="$RUNNER_TEMP/htoprc-sortonly" ./htop -n 5 -s M_FOOTPRINT -p "$small,$big" \
+          | python3 .github/workflows/check-htop-first-row.py "$big"
     - name: Distcheck
       run: make distcheck DISTCHECK_CONFIGURE_FLAGS="--enable-werror"
 

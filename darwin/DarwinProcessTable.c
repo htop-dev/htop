@@ -73,7 +73,11 @@ void ProcessTable_delete(Object* cast) {
 }
 
 /*
- * Read per-process disk I/O counters (proc_pid_rusage).
+ * Read per-process memory footprint and disk I/O counters (proc_pid_rusage).
+ *
+ * ri_phys_footprint is the metric displayed as "Memory" by Activity Monitor;
+ * it includes compressed and swapped-out dirty memory, so it can differ a lot
+ * from the resident set size shown in the RES column.
  *
  * Unlike Linux, macOS does not expose separate char/syscall counters; it only
  * provides cumulative storage bytes read and written. Rates are computed from
@@ -84,6 +88,7 @@ static void DarwinProcessTable_readProcRusage(DarwinProcess* proc) {
 
    struct rusage_info_v2 ri;
    if (proc_pid_rusage(Process_getPid(&proc->super), RUSAGE_INFO_V2, (rusage_info_t *)&ri) != 0) {
+      proc->footprint = ULLONG_MAX;
       proc->io_rate_read_bps = NAN;
       proc->io_rate_write_bps = NAN;
       proc->io_read_bytes = ULLONG_MAX;
@@ -91,6 +96,8 @@ static void DarwinProcessTable_readProcRusage(DarwinProcess* proc) {
       proc->io_last_scan_time_ms = host->monotonicMs;
       return;
    }
+
+   proc->footprint = ri.ri_phys_footprint / ONE_K;
 
    uint64_t last_read = proc->io_read_bytes;
    uint64_t last_write = proc->io_write_bytes;
@@ -136,6 +143,13 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
 
    const double time_interval_ns = Platform_schedulerTicksToNanoseconds(dpt->global_diff) / (double) host->activeCPUs;
 
+   /* Flags of the visible columns plus the active sort key: sorting by a column
+    * that is not displayed (e.g. "htop -s M_FOOTPRINT") still requires the data
+    * backing that column to be collected. */
+   const RowField activeSortKey = ScreenSettings_getActiveSortKey(host->settings->ss);
+   const uint32_t rusageFlags = host->settings->ss->flags |
+      (activeSortKey > 0 && activeSortKey < LAST_PROCESSFIELD ? Process_fields[activeSortKey].flags : 0);
+
    /* We use kinfo_procs for initial data since :
     *
     * 1) They always succeed.
@@ -151,7 +165,7 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
       DarwinProcess_setFromKInfoProc(&proc->super, &ps[i], preExisting);
       DarwinProcess_setFromLibprocPidinfo(proc, dpt, time_interval_ns);
 
-      if (host->settings->ss->flags & PROCESS_FLAG_IO) {
+      if (rusageFlags & (PROCESS_FLAG_IO | PROCESS_FLAG_FOOTPRINT)) {
          DarwinProcessTable_readProcRusage(proc);
       }
 

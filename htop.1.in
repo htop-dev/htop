@@ -491,6 +491,12 @@ The size of the virtual memory of the process.
 The resident set size (text + data + stack) of the process (i.e. the size of the
 process's used physical memory).
 .TP
+.B M_FOOTPRINT (FOOT)
+The physical memory footprint of the process (macOS only), as reported by the
+kernel's phys_footprint ledger (proc_pid_rusage(2)). Unlike M_RESIDENT this also
+accounts for compressed and swapped-out memory, so it matches the "Memory"
+column of Activity Monitor.
+.TP
 .B M_SHARE (SHR)
 The size of the process's shared pages.
 .TP

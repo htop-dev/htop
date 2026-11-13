@@ -14,6 +14,7 @@ in the source distribution for its full text.
 
 
 #define PROCESS_FLAG_TTY 0x00000100
+#define PROCESS_FLAG_FOOTPRINT 0x00000200
 
 typedef struct DarwinProcess_ {
    Process super;
@@ -22,6 +23,11 @@ typedef struct DarwinProcess_ {
    uint64_t stime;
    bool taskAccess;
    bool translated;
+
+   /* Physical memory footprint in KiB (phys_footprint from proc_pid_rusage),
+    * matching the "Memory" column of Activity Monitor; ULLONG_MAX when
+    * unavailable. */
+   uint64_t footprint;
 
    /* Storage data read (in bytes) */
    uint64_t io_read_bytes;
