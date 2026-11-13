@@ -42,6 +42,7 @@ myhtopsources = \
 	CPUMeter.c \
 	CRT.c \
 	DateTimeMeter.c \
+	DinitMeter.c \
 	DiskIOMeter.c \
 	DisplayOptionsPanel.c \
 	DynamicColumn.c \
@@ -76,6 +77,8 @@ myhtopsources = \
 	ProcessTable.c \
 	Row.c \
 	RichString.c \
+	RunitMeter.c \
+	S6Meter.c \
 	Scheduling.c \
 	ScreenManager.c \
 	ScreensPanel.c \
@@ -84,6 +87,7 @@ myhtopsources = \
 	SignalsPanel.c \
 	SwapMeter.c \
 	SysArchMeter.c \
+	SysVInitMeter.c \
 	Table.c \
 	TasksMeter.c \
 	TraceScreen.c \
@@ -108,6 +112,7 @@ myhtopheaders = \
 	CommandScreen.h \
 	DateTimeMeter.h \
 	Debug.h \
+	DinitMeter.h \
 	DiskIOMeter.h \
 	DisplayOptionsPanel.h \
 	DynamicColumn.h \
@@ -149,6 +154,8 @@ myhtopheaders = \
 	RichString.h \
 	Row.h \
 	RowField.h \
+	RunitMeter.h \
+	S6Meter.h \
 	Scheduling.h \
 	ScreenManager.h \
 	ScreensPanel.h \
@@ -157,6 +164,7 @@ myhtopheaders = \
 	SignalsPanel.h \
 	SwapMeter.h \
 	SysArchMeter.h \
+	SysVInitMeter.h \
 	Table.h \
 	TasksMeter.h \
 	TraceScreen.h \
