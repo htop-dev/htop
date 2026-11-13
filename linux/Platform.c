@@ -568,6 +568,46 @@ char* Platform_getProcessEnv(pid_t pid) {
    return env;
 }
 
+char* Platform_getProcessMaps(pid_t pid) {
+   char procname[128];
+   xSnprintf(procname, sizeof(procname), PROCDIR "/%d/maps", pid);
+   FILE* fp = fopen(procname, "r");
+   if (!fp)
+      return NULL;
+
+   char* maps = NULL;
+
+   size_t capacity = 0;
+   size_t size = 0;
+
+   while (true) {
+      if (size == capacity) {
+         capacity += 4096;
+         maps = xRealloc(maps, capacity);
+      }
+
+      size_t bytes = fread(maps + size, 1, capacity - size, fp);
+      size += bytes;
+      if (bytes == 0)
+         break;
+   }
+
+   bool failed = ferror(fp);
+   fclose(fp);
+
+   if (failed) {
+      free(maps);
+      return NULL;
+   }
+
+   maps = xRealloc(maps, size + 2);
+
+   maps[size] = '\0';
+   maps[size + 1] = '\0';
+
+   return maps;
+}
+
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    FileLocks_ProcessData* pdata = xCalloc(1, sizeof(FileLocks_ProcessData));
    DIR* dirp;

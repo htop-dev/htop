@@ -528,6 +528,11 @@ char* Platform_getProcessEnv(pid_t pid) {
    return env;
 }
 
+char* Platform_getProcessMaps(pid_t pid) {
+   (void)pid;
+   return NULL;
+}
+
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid) {
    (void)pid;
    return NULL;
