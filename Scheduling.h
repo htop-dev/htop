@@ -41,6 +41,8 @@ typedef struct {
 
 bool Scheduling_rowSetPolicy(Row* proc, Arg arg);
 
+bool Scheduling_rowChangeRTPriority(Row* row, Arg arg);
+
 const char* Scheduling_formatPolicy(int policy);
 
 void Scheduling_readProcessPolicy(Process* proc);

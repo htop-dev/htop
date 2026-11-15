@@ -119,6 +119,14 @@ static bool changePriority(MainPanel* panel, int delta) {
    return anyTagged;
 }
 
+static bool changeRealTimePriority(MainPanel* panel, int delta) {
+   bool anyTagged;
+   bool ok = MainPanel_foreachRow(panel, Scheduling_rowChangeRTPriority, (Arg) { .i = delta }, &anyTagged);
+   if (!ok)
+      beep();
+   return anyTagged;
+}
+
 static void addUserToVector(ht_key_t key, void* userCast, void* panelCast) {
    const char* user = userCast;
    Panel* panel = panelCast;
@@ -521,6 +529,22 @@ static Htop_Reaction actionSetSchedPolicy(State* st) {
    Panel_delete((Object*)schedPanel);
 
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_KEEP_FOLLOWING;
+}
+
+static Htop_Reaction actionHigherRealTimePriority(State* st) {
+   if (!Action_writeableProcess(st))
+      return HTOP_OK;
+
+   bool changed = changeRealTimePriority(st->mainPanel, -1);
+   return changed ? HTOP_REFRESH : HTOP_OK;
+}
+
+static Htop_Reaction actionLowerRealTimePriority(State* st) {
+   if (!Action_writeableProcess(st))
+      return HTOP_OK;
+
+   bool changed = changeRealTimePriority(st->mainPanel, 1);
+   return changed ? HTOP_REFRESH : HTOP_OK;
 }
 #endif  /* SCHEDULER_SUPPORT */
 
@@ -989,6 +1013,8 @@ void Action_setBindings(Htop_Action* keys) {
    keys['U'] = actionUntagAll;
 #ifdef SCHEDULER_SUPPORT
    keys['Y'] = actionSetSchedPolicy;
+   keys[KEY_F(35)] = actionLowerRealTimePriority;
+   keys[KEY_F(36)] = actionHigherRealTimePriority;
 #endif
    keys['Z'] = actionTogglePauseUpdate;
    keys['['] = actionLowerPriority;
