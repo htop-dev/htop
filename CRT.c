@@ -1245,6 +1245,8 @@ IGNORE_WCASTQUAL_BEGIN
       define_key("\033[14~", KEY_F(4));
       define_key("\033[14;2~", KEY_F(15));
       define_key("\033[17;2~", KEY_F(18));
+      define_key("\033[18;5~", KEY_CTRL_F7);
+      define_key("\033[19;5~", KEY_CTRL_F8);
       define_key("\033[Z", KEY_SHIFT_TAB);
 
       /* These are a bit of a gamble: */
