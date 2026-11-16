@@ -679,9 +679,10 @@ bool Platform_getNetworkIO(NetworkIOData* data) {
       data->packetsTransmitted = packetsTransmitted_sum;
 
       free(buf);
+      return true;
    }
 
-   return true;
+   return false;
 }
 
 void Platform_getBattery(double* percent, ACPresence* isOnAC) {
