@@ -75,7 +75,10 @@ typedef struct ProcessMergedCommand_ {
    uint64_t lastUpdate;                        /* Marker based on settings->lastUpdate to track when the rendering needs refreshing */
    char* str;                                  /* merged Command string */
    size_t highlightCount;                      /* how many portions of cmdline to highlight */
-   ProcessCmdlineHighlight highlights[8];      /* which portions of cmdline to highlight */
+   /* Worst case: standalone comm + dist-path prefix on both exe and cmdline
+    * produces 7 highlights (2 dist-path + 2 basename/deleted + 2 separators
+    * + 1 comm).  Size 12 leaves ~70% headroom for future additions. */
+   ProcessCmdlineHighlight highlights[12];     /* which portions of cmdline to highlight */
 } ProcessMergedCommand;
 
 typedef struct Process_ {
