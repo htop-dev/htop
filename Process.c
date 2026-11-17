@@ -881,8 +881,12 @@ static bool Process_matchesFilter(const Process* this, const Table* table) {
       return true;
 
    const char* incFilter = table->incFilter;
-   if (incFilter && !String_contains_i(Process_getCommand(this), incFilter, true))
-      return true;
+   if (incFilter){
+      bool matchesCmdline = String_contains_i(Process_getCommand(this), incFilter, true);
+      bool matchesExePath = this->procExe && String_contains_i(this->procExe, incFilter, true);
+      if (!matchesCmdline && !matchesExePath)
+         return true;
+   }
 
    const ProcessTable* pt = (const ProcessTable*) host->activeTable;
    assert(Object_isA((const Object*) pt, (const ObjectClass*) &ProcessTable_class));
