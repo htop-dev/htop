@@ -580,5 +580,14 @@ int Panel_getCh(Panel* this) {
    set_escdelay(25);
 #endif
 
-   return getch();
+   int ch = getch();
+
+   switch (ch) {
+      case KEY_ALT('H'): return KEY_LEFT;
+      case KEY_ALT('J'): return KEY_DOWN;
+      case KEY_ALT('K'): return KEY_UP;
+      case KEY_ALT('L'): return KEY_RIGHT;
+   }
+
+   return ch;
 }
