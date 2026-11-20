@@ -214,8 +214,110 @@ static int LibSensors_stringToID(const char* str) {
    return (int)parsedID;
 }
 
+static bool LibSensors_chipIDFromLabel(const char* label, int* chipID) {
+   int parsedID;
+   if (String_startsWith(label, "Package id ")) {
+      parsedID = LibSensors_stringToID(label + strlen("Package id "));
+   } else if (String_startsWith(label, "Physical id ")) {
+      parsedID = LibSensors_stringToID(label + strlen("Physical id "));
+   } else {
+      return false;
+   }
+
+   if (parsedID != -1)
+      *chipID = parsedID;
+
+   return true;
+}
+
+static int LibSensors_countCoretempChips(void) {
+   int count = 0;
+   int n = 0;
+
+   for (const sensors_chip_name* chip = sym_sensors_get_detected_chips(NULL, &n); chip; chip = sym_sensors_get_detected_chips(NULL, &n)) {
+      if (String_eq(chip->prefix, "coretemp"))
+         count++;
+   }
+
+   return count;
+}
+
+/*
+ * Collect the physical package IDs of the online CPUs in ascending order.
+ *
+ * Offline CPUs are not listed in /proc/cpuinfo and keep the zero-initialized
+ * physical ID, so including them would invent a package.  libsensors and the
+ * coretemp driver only cover online CPUs as well: a chip is removed when all
+ * CPUs of its die go offline.
+ *
+ * The kernel numbers packages and dies in the same order, so the n-th
+ * distinct physical ID belongs to the package of the n-th chip, as long as
+ * every package has the same number of dies.
+ */
+static int LibSensors_collectPackageIDs(CPUData* cpus, unsigned int existingCPUs, int* packageIDs) {
+   int count = 0;
+
+   for (unsigned int i = 1; i <= existingCPUs; i++) {
+      int j = 0;
+
+      if (!cpus[i].online)
+         continue;
+
+      while (j < count && packageIDs[j] < cpus[i].physicalID)
+         j++;
+
+      if (j < count && packageIDs[j] == cpus[i].physicalID)
+         continue;
+
+      memmove(&packageIDs[j + 1], &packageIDs[j], (count - j) * sizeof(*packageIDs));
+      packageIDs[j] = cpus[i].physicalID;
+      count++;
+   }
+
+   return count;
+}
+
+/*
+ * Collect the addresses of the coretemp chips in ascending order.
+ *
+ * The address is the platform device ID, which is also the package ID printed
+ * by the driver's "Package id" label, so it identifies the chip when that
+ * label is missing.
+ */
+static int LibSensors_collectCoretempAddrs(int* addrs, int max) {
+   int kept = 0;
+   int n = 0;
+
+   for (const sensors_chip_name* chip = sym_sensors_get_detected_chips(NULL, &n); chip; chip = sym_sensors_get_detected_chips(NULL, &n)) {
+      int i;
+
+      if (!String_eq(chip->prefix, "coretemp") || kept == max)
+         continue;
+
+      for (i = kept; i > 0 && addrs[i - 1] > chip->addr; i--)
+         addrs[i] = addrs[i - 1];
+      addrs[i] = chip->addr;
+      kept++;
+   }
+
+   return kept;
+}
+
+static int LibSensors_chipAddrRank(int addr, const int* addrs, int count) {
+   for (int i = 0; i < count; i++) {
+      if (addrs[i] == addr)
+         return i;
+   }
+
+   return -1;
+}
+
 void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, unsigned int activeCPUs) {
    assert(existingCPUs > 0 && existingCPUs < 16384);
+
+   int* packageIDs = NULL;
+   int* chipAddrs = NULL;
+   int coretempChips = 0;
 
    double* data = xMallocArray(existingCPUs + 1, sizeof(double));
    for (size_t i = 0; i < existingCPUs + 1; i++)
@@ -230,6 +332,20 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
    int topPriority = 99;
 
    int ccdID = 0;
+
+   int packageCount = 0;
+   int diesPerPackage = 0;
+
+   coretempChips = LibSensors_countCoretempChips();
+   if (coretempChips > 0) {
+      packageIDs = xMallocArray(existingCPUs, sizeof(*packageIDs));
+      chipAddrs = xMallocArray(coretempChips, sizeof(*chipAddrs));
+      coretempChips = LibSensors_collectCoretempAddrs(chipAddrs, coretempChips);
+      packageCount = LibSensors_collectPackageIDs(cpus, existingCPUs, packageIDs);
+
+      if (packageCount > 0 && coretempChips % packageCount == 0)
+         diesPerPackage = coretempChips / packageCount;
+   }
 
    int n = 0;
    for (const sensors_chip_name* chip = sym_sensors_get_detected_chips(NULL, &n); chip; chip = sym_sensors_get_detected_chips(NULL, &n)) {
@@ -248,7 +364,20 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
 
       topPriority = priority;
 
+      /* coretemp names a chip after its platform device ID, which is the value
+       * its "Package id" label reports too.  The dies of a package are
+       * numbered consecutively and in the same order as the packages, so the
+       * rank of the address among the detected chips, divided by the number of
+       * dies per package, is the position of the package in the ascending list
+       * of physical IDs.  Using the rank instead of the address itself also
+       * covers addresses and physical IDs that are not consecutive */
       int physicalID = 0;
+      if (String_eq(chip->prefix, "coretemp") && diesPerPackage > 0) {
+         const int rank = LibSensors_chipAddrRank(chip->addr, chipAddrs, coretempChips);
+
+         if (rank >= 0)
+            physicalID = packageIDs[rank / diesPerPackage];
+      }
 
       int m = 0;
       for (const sensors_feature* feature = sym_sensors_get_features(chip, &m); feature; feature = sym_sensors_get_features(chip, &m)) {
@@ -265,21 +394,28 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
          /* Feature name IDs start at 1, adjust to start at 0 to match data indices */
          tempID--;
 
+         /* Read the label first: the package id it may carry must not be lost
+          * when the temperature itself cannot be read */
+         char* label = sym_sensors_get_label(chip, feature);
+         bool isChipID = false;
+         if (label)
+            isChipID = LibSensors_chipIDFromLabel(label, &physicalID);
+
          const sensors_subfeature* subFeature = sym_sensors_get_subfeature(chip, feature, SENSORS_SUBFEATURE_TEMP_INPUT);
          if (!subFeature)
-            continue;
+            goto next_feature;
 
          double temp;
          int r = sym_sensors_get_value(chip, subFeature->number, &temp);
          if (r != 0)
-            continue;
+            goto next_feature;
 
          if (existingCPUs == 8) {
             /* Map temperature values to Snapdragon 8cx cores */
             if (String_startsWith(chip->prefix, "cpu") && chip->prefix[3] >= '0' && chip->prefix[3] <= '7' && String_eq(chip->prefix + 4, "_thermal")) {
                data[1 + chip->prefix[3] - '0'] = temp;
                coreTempCount++;
-               continue;
+               goto next_feature;
             }
 
             /* Map temperature values to Rockchip cores
@@ -294,19 +430,19 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
                data[3] = temp;
                data[4] = temp;
                coreTempCount += 4;
-               continue;
+               goto next_feature;
             }
             if (String_eq(chip->prefix, "bigcore0_thermal")) {
                data[5] = temp;
                data[6] = temp;
                coreTempCount += 2;
-               continue;
+               goto next_feature;
             }
             if (String_eq(chip->prefix, "bigcore1_thermal") || String_eq(chip->prefix, "bigcore2_thermal")) {
                data[7] = temp;
                data[8] = temp;
                coreTempCount += 2;
-               continue;
+               goto next_feature;
             }
          }
 
@@ -318,7 +454,7 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
                data[3] = temp;
                data[4] = temp;
                coreTempCount += 4;
-               continue;
+               goto next_feature;
             }
          }
 
@@ -328,13 +464,13 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
                data[1] = temp;
                data[2] = temp;
                coreTempCount += 2;
-               continue;
+               goto next_feature;
             }
             if (String_eq(chip->prefix, "cpu2_3_thermal")) {
                data[3] = temp;
                data[4] = temp;
                coreTempCount += 2;
-               continue;
+               goto next_feature;
             }
          }
 
@@ -346,22 +482,19 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
             }
 
             coreTempCount = existingCPUs;
-            continue;
+            goto next_feature;
          }
 
-         char *label = sym_sensors_get_label(chip, feature);
+         if (isChipID)
+            goto next_feature;
+
          if (label) {
             bool skip = true;
             int ID;
-            /* Intel coretemp names, labels mention package and physical id */
-            if (String_startsWith(label, "Package id ")) {
-               if ((ID = LibSensors_stringToID(label + strlen("Package id "))) != -1)
-                  physicalID = ID;
-            } else if (String_startsWith(label, "Physical id ")) {
-               if ((ID = LibSensors_stringToID(label + strlen("Physical id "))) != -1)
-                  physicalID = ID;
-            } else if (String_startsWith(label, "Core ")) {
-               if ((ID = LibSensors_stringToID(label + strlen("Core "))) != -1) {
+            /* Intel coretemp names, labels mention the core id */
+            if (String_startsWith(label, "Core ")) {
+               ID = LibSensors_stringToID(label + strlen("Core "));
+               if (ID != -1) {
                   for (size_t i = 1; i < existingCPUs + 1; i++) {
                      if (cpus[i].physicalID == physicalID && cpus[i].coreID == ID) {
                         data[i] = temp;
@@ -395,14 +528,12 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
                skip = false;
             }
 
-            free(label);
-
             if (skip)
-               continue;
+               goto next_feature;
          }
 
          if (tempID > existingCPUs)
-            continue;
+            goto next_feature;
 
          /* If already set, e.g. Ryzen reporting platform temperature for each die, use the bigger one */
          if (isNaN(data[tempID])) {
@@ -412,6 +543,9 @@ void LibSensors_getCPUTemperatures(CPUData* cpus, unsigned int existingCPUs, uns
          } else {
             data[tempID] = MAXIMUM(data[tempID], temp);
          }
+
+next_feature:
+         free(label);
       }
    }
 
@@ -468,6 +602,8 @@ out:
    for (size_t i = 0; i <= existingCPUs; i++)
       cpus[i].temperature = data[i];
 
+   free(chipAddrs);
+   free(packageIDs);
    free(data);
 }
 
