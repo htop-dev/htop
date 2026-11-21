@@ -530,3 +530,34 @@ char* CGroup_filterContainer(const char* cgroup) {
    s.buf[s.size] = '\0';
    return s.buf;
 }
+
+/*
+ * Whether a cgroup path belongs to something worth calling a container.
+ *
+ * Sitting in a PID namespace does not make a process a container: Chromium's
+ * sandbox, bubblewrap and plain unshare(1) all create one inside an ordinary
+ * desktop session. Those stay in the session's own user.slice cgroup and carry
+ * no container label. Container runtimes do the opposite. They either tag the
+ * cgroup with a label CGroup_filterContainer() recognises (docker, podman, LXC,
+ * systemd-nspawn), including the rootless variants that live under user.slice,
+ * or they place the payload outside user.slice altogether (Kubernetes under
+ * kubepods, CRI runtimes under system.slice).
+ *
+ * A NULL cgroup means no information, so the caller's own verdict stands.
+ */
+bool CGroup_looksLikeContainer(const char* cgroup) {
+   if (!cgroup)
+      return true;
+
+   char* container = CGroup_filterContainer(cgroup);
+   const bool labelled = container && !String_eq(container, "/");
+   free(container);
+
+   if (labelled)
+      return true;
+
+   while ('/' == *cgroup)
+      cgroup++;
+
+   return !String_startsWith(cgroup, str_user_slice);
+}
