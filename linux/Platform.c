@@ -29,6 +29,7 @@ in the source distribution for its full text.
 #include "DiskIOMeter.h"
 #include "FileDescriptorMeter.h"
 #include "GPUMeter.h"
+#include "FanMeter.h"
 #include "HostnameMeter.h"
 #include "HugePageMeter.h"
 #include "LoadAverageMeter.h"
@@ -280,6 +281,7 @@ const MeterClass* const Platform_meterTypes[] = {
    &OpenRCUserMeter_class,
    &FileDescriptorMeter_class,
    &GPUMeter_class,
+   &FanMeter_class,
    NULL
 };
 
@@ -439,6 +441,88 @@ void Platform_setGPUValues(Meter* this, double* totalUsage, unsigned long long* 
       this->values[i] = GPUMeter_engineData[i].percentage;
    }
    this->values[residueIndex] = residuePercentage;
+}
+
+static int Platform_getFanSpeedFromHwmonDevice(openat_arg_t parent_dfd, const char *hwmon_device) {
+   DIR* dirp;
+
+#ifdef HAVE_OPENAT
+   openat_arg_t dfd = Compat_openat(parent_dfd, hwmon_device, O_RDONLY | O_CLOEXEC | O_DIRECTORY);
+   if (dfd == -1)
+      return -1;
+
+   dirp = fdopendir(dfd);
+   if (!dirp) {
+      close(dfd);
+      return -1;
+   }
+#else
+   char dfd[4096];
+   if (xSnprintf(dfd, sizeof(dfd), "%s/%s", parent_dfd, hwmon_device) < 0)
+      return -1;
+
+   dirp = opendir(dfd);
+   if (!dirp)
+      return -1;
+#endif
+
+   struct dirent* dir;
+   while ((dir = readdir(dirp)) != NULL) {
+      int fan_num = 0, scan_len = 0;
+      if (sscanf(dir->d_name, "fan%d%n", &fan_num, &scan_len) != 1 ||
+          !String_eq(&dir->d_name[scan_len], "_input"))
+         continue;
+
+      char buffer[32];
+      ssize_t ret = Compat_readfileat(dfd, dir->d_name, buffer, sizeof(buffer));
+      if (ret <= 0 || (size_t)ret > sizeof(buffer))
+         continue;
+
+      int fan_speed;
+      if (sscanf(buffer, "%d", &fan_speed) != 1)
+         continue;
+
+      closedir(dirp);
+      return fan_speed;
+   }
+
+   closedir(dirp);
+   return -1;
+}
+
+/* Traverse hwmon sensors, find first fan, read and return its speed. */
+int Platform_getFanSpeed(void) {
+   DIR* dirp;
+   openat_arg_t dfd;
+
+   dirp = opendir(HWMONDIR);
+   if (!dirp)
+      return -1;
+
+#ifdef HAVE_OPENAT
+   dfd = dirfd(dirp);
+   if (dfd == -1) {
+      closedir(dirp);
+      return -1;
+   }
+#else
+   dfd = HWMONDIR;
+#endif
+
+   struct dirent* dir;
+   while ((dir = readdir(dirp)) != NULL) {
+      if (String_eq(dir->d_name, ".") || String_eq(dir->d_name, ".."))
+         continue;
+
+      int fan_speed = Platform_getFanSpeedFromHwmonDevice(dfd, dir->d_name);
+      if (fan_speed >= 0) {
+         closedir(dirp);
+         return fan_speed;
+      }
+   }
+
+   closedir(dirp);
+   return -1;
 }
 
 void Platform_setMemoryValues(Meter* this) {
