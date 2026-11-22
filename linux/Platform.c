@@ -735,34 +735,103 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return true;
 }
 
-bool Platform_getNetworkIO(NetworkIOData* data) {
+/*
+ * Parse one line of /proc/net/dev. The interface name is terminated by ':'
+ * and is not always followed by a space (large counters may follow directly).
+ * On success *name points into lineBuffer.
+ */
+static bool Platform_parseNetDevLine(char* lineBuffer, const char** name, NetworkIOData* data) {
+   char* colon = strchr(lineBuffer, ':');
+   if (!colon)
+      return false;
+
+   *colon = '\0';
+   const char* start = lineBuffer;
+   while (*start == ' ')
+      start++;
+   if (!*start)
+      return false;
+
+   unsigned long long int bytesReceived, packetsReceived, bytesTransmitted, packetsTransmitted;
+   if (sscanf(colon + 1, "%llu %llu %*u %*u %*u %*u %*u %*u %llu %llu",
+                         &bytesReceived,
+                         &packetsReceived,
+                         &bytesTransmitted,
+                         &packetsTransmitted) != 4)
+      return false;
+
+   *name = start;
+   data->bytesReceived = bytesReceived;
+   data->packetsReceived = packetsReceived;
+   data->bytesTransmitted = bytesTransmitted;
+   data->packetsTransmitted = packetsTransmitted;
+   return true;
+}
+
+/*
+ * Link speed in Mbit/s from sysfs, 0 when unknown. Only devices backed by
+ * hardware (with a "device" link) are considered: virtual devices like tun
+ * report a fictional speed.
+ */
+static uint32_t Platform_getNetworkInterfaceSpeed(const char* name) {
+   char path[128];
+
+   xSnprintf(path, sizeof(path), "/sys/class/net/%s/device", name);
+   if (access(path, F_OK) != 0)
+      return 0;
+
+   xSnprintf(path, sizeof(path), "/sys/class/net/%s/speed", name);
+   char buffer[32];
+   ssize_t r = Compat_readfile(path, buffer, sizeof(buffer));
+   if (r < 1)
+      return 0;
+
+   char* end;
+   errno = 0;
+   long speed = strtol(buffer, &end, 10);
+   if (errno || end == buffer || speed <= 0 || (uintmax_t)speed > UINT32_MAX)
+      return 0;
+
+   return (uint32_t)speed;
+}
+
+bool Platform_getNetworkIO(NetworkIOData* data, NetworkInterfaceIOData** interfaces, size_t* interfaceCount) {
+   *interfaces = NULL;
+   *interfaceCount = 0;
+
    FILE* fp = fopen(PROCDIR "/net/dev", "r");
    if (!fp)
       return false;
 
+   NetworkInterfaceIOData* parsedInterfaces = xCalloc(1, sizeof(*parsedInterfaces));
+   size_t count = 0;
+
    char lineBuffer[512];
    while (fgets(lineBuffer, sizeof(lineBuffer), fp)) {
-      char interfaceName[32];
-      unsigned long long int bytesReceived, packetsReceived, bytesTransmitted, packetsTransmitted;
-      if (sscanf(lineBuffer, "%31s %llu %llu %*u %*u %*u %*u %*u %*u %llu %llu",
-                             interfaceName,
-                             &bytesReceived,
-                             &packetsReceived,
-                             &bytesTransmitted,
-                             &packetsTransmitted) != 5)
+      const char* interfaceName;
+      NetworkIOData ifData;
+      if (!Platform_parseNetDevLine(lineBuffer, &interfaceName, &ifData))
          continue;
 
-      if (String_eq(interfaceName, "lo:"))
+      if (String_eq(interfaceName, "lo"))
          continue;
 
-      data->bytesReceived += bytesReceived;
-      data->packetsReceived += packetsReceived;
-      data->bytesTransmitted += bytesTransmitted;
-      data->packetsTransmitted += packetsTransmitted;
+      parsedInterfaces = xReallocArray(parsedInterfaces, count + 1, sizeof(*parsedInterfaces));
+      NetworkInterfaceIOData* entry = &parsedInterfaces[count++];
+      String_safeStrncpy(entry->name, interfaceName, sizeof(entry->name));
+      entry->data = ifData;
+      entry->linkSpeedMbps = Platform_getNetworkInterfaceSpeed(interfaceName);
+
+      data->bytesReceived += ifData.bytesReceived;
+      data->packetsReceived += ifData.packetsReceived;
+      data->bytesTransmitted += ifData.bytesTransmitted;
+      data->packetsTransmitted += ifData.packetsTransmitted;
    }
 
    fclose(fp);
 
+   *interfaces = parsedInterfaces;
+   *interfaceCount = count;
    return true;
 }
 

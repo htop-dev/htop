@@ -839,7 +839,10 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return true;
 }
 
-bool Platform_getNetworkIO(NetworkIOData* data) {
+bool Platform_getNetworkIO(NetworkIOData* data, NetworkInterfaceIOData** interfaces, size_t* interfaceCount) {
+   *interfaces = NULL;
+   *interfaceCount = 0;
+
    pmAtomValue value;
    if (Metric_values(PCP_NET_RECVB, &value, 1, PM_TYPE_U64) != NULL)
       data->bytesReceived = value.ull;

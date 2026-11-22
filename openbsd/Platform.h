@@ -67,7 +67,7 @@ void Platform_getFileDescriptors(double* used, double* max);
 
 bool Platform_getDiskIO(DiskIOData* data);
 
-bool Platform_getNetworkIO(NetworkIOData* data);
+bool Platform_getNetworkIO(NetworkIOData* data, NetworkInterfaceIOData** interfaces, size_t* interfaceCount);
 
 void Platform_getBattery(double* percent, ACPresence* isOnAC);
 

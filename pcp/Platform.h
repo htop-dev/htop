@@ -119,7 +119,7 @@ void Platform_getPressureStall(const char* file, bool some, double* ten, double*
 
 bool Platform_getDiskIO(DiskIOData* data);
 
-bool Platform_getNetworkIO(NetworkIOData* data);
+bool Platform_getNetworkIO(NetworkIOData* data, NetworkInterfaceIOData** interfaces, size_t* interfaceCount);
 
 void Platform_getBattery(double* percent, ACPresence* isOnAC);
 

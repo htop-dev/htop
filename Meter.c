@@ -469,13 +469,12 @@ Meter* Meter_new(const Machine* host, unsigned int param, const MeterClass* type
    return this;
 }
 
-/* Converts 'value' in kibibytes into a human readable string.
-   Example output strings: "0K", "1023K", "98.7M" and "1.23G" */
-int Meter_humanUnit(char* buffer, double value, size_t size) {
+int Meter_humanUnitBase(char* buffer, double value, size_t size, double base) {
    size_t i = 0;
 
    assert(value >= 0.0 || isNaN(value));
-   while (value >= ONE_K) {
+   assert(base > 1.0);
+   while (value >= base) {
       if (i >= ARRAYSIZE(unitPrefixes) - 1) {
          if (value > 9999.0) {
             return xSnprintf(buffer, size, "inf");
@@ -483,14 +482,14 @@ int Meter_humanUnit(char* buffer, double value, size_t size) {
          break;
       }
 
-      value /= ONE_K;
+      value /= base;
       ++i;
    }
 
    int precision = 0;
 
    if (i > 0) {
-      // Fraction digits for mebibytes and above
+      // Fraction digits for scaled values
       precision = value <= 99.9 ? (value <= 9.99 ? 2 : 1) : 0;
 
       // Round up if 'value' is in range (99.9, 100) or (9.99, 10)
@@ -503,6 +502,12 @@ int Meter_humanUnit(char* buffer, double value, size_t size) {
    }
 
    return xSnprintf(buffer, size, "%.*f%c", precision, value, unitPrefixes[i]);
+}
+
+/* Converts 'value' in kibibytes into a human readable string.
+   Example output strings: "0K", "1023K", "98.7M" and "1.23G" */
+int Meter_humanUnit(char* buffer, double value, size_t size) {
+   return Meter_humanUnitBase(buffer, value, size, ONE_K);
 }
 
 void Meter_delete(Object* cast) {

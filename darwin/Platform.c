@@ -626,7 +626,10 @@ bool Platform_getDiskIO(DiskIOData* data) {
 /* Caution: Given that interfaces are dynamic, and it is not possible to get statistics on interfaces that no longer exist,
    if some interface disappears between the time of two samples, the values of the second sample may be lower than those of
    the first one. */
-bool Platform_getNetworkIO(NetworkIOData* data) {
+bool Platform_getNetworkIO(NetworkIOData* data, NetworkInterfaceIOData** interfaces, size_t* interfaceCount) {
+   *interfaces = NULL;
+   *interfaceCount = 0;
+
    int mib[6] = {CTL_NET,
       PF_ROUTE, /* routing messages */
       0, /* protocol number, currently always 0 */

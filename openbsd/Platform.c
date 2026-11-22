@@ -352,9 +352,11 @@ bool Platform_getDiskIO(DiskIOData* data) {
    return false;
 }
 
-bool Platform_getNetworkIO(NetworkIOData* data) {
+bool Platform_getNetworkIO(NetworkIOData* data, NetworkInterfaceIOData** interfaces, size_t* interfaceCount) {
    // TODO
    (void)data;
+   *interfaces = NULL;
+   *interfaceCount = 0;
    return false;
 }
 
