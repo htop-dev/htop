@@ -722,7 +722,7 @@ void Process_writeField(const Process* this, RichString* str, RowField field) {
       Row_printPercentage(cpuPercentage, buffer, n, Row_fieldWidths[PERCENT_CPU], &attr);
       break;
    }
-   case PERCENT_MEM: Row_printPercentage(this->percent_mem, buffer, n, 4, &attr); break;
+   case PERCENT_MEM: Row_printPercentage(this->percent_mem, buffer, n, Row_fieldWidths[PERCENT_MEM], &attr); break;
    case PGRP: xSnprintf(buffer, n, "%*d ", Process_pidDigits, this->pgrp); break;
    case PID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, Process_getPid(this)); break;
    case PPID: xSnprintf(buffer, n, "%*d ", Process_pidDigits, Process_getParent(this)); break;

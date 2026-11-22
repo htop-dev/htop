@@ -34,7 +34,7 @@ ScreenManager* ScreenManager_new(Header* header, Machine* host, State* state, bo
    this->x1 = 0;
    this->y1 = 0;
    this->x2 = 0;
-   this->y2 = -1;
+   this->y2 = -2; /* leave a blank row above the function bar */
    this->panels = Vector_new(Class(Panel), owner, VECTOR_DEFAULT_SIZE);
    this->panelCount = 0;
    this->header = header;
@@ -237,7 +237,12 @@ static void ScreenManager_drawPanels(ScreenManager* this, size_t focus, bool for
                  i == focus,
                  panel != (Panel*)this->state->mainPanel || !this->state->hideSelection,
                  State_hideFunctionBar(this->state));
-      mvvline(panel->y, panel->x + panel->w, ' ', panel->h + (State_hideFunctionBar(this->state) ? 1 : 0));
+      mvvline(panel->y, panel->x + panel->w, ' ', panel->h + (State_hideFunctionBar(this->state) ? 2 : 0));
+   }
+
+   if (!State_hideFunctionBar(this->state)) {
+      attrset(CRT_colors[RESET_COLOR]);
+      mvhline(LINES - 2, 0, ' ', COLS);
    }
 }
 
