@@ -28,6 +28,7 @@ in the source distribution for its full text.
 #include "ListItem.h"
 #include "Macros.h"
 #include "MainPanel.h"
+#include "MapsScreen.h"
 #include "MemoryMeter.h"
 #include "Object.h"
 #include "OpenFilesScreen.h"
@@ -747,6 +748,7 @@ static const struct {
    { .key = "      i: ", .roInactive = true,  .info = "set IO priority" },
    { .key = "      l: ", .roInactive = true,  .info = "list open files with lsof" },
    { .key = "      x: ", .roInactive = false, .info = "list file locks of process" },
+   { .key = "      r: ", .roInactive = false, .info = "show memory maps of process" },
    { .key = "      s: ", .roInactive = true,  .info = "trace syscalls with strace" },
    { .key = "      w: ", .roInactive = false, .info = "wrap process command in multiple lines" },
 #ifdef SCHEDULER_SUPPORT
@@ -941,6 +943,24 @@ static Htop_Reaction actionShowEnvScreen(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
+static Htop_Reaction actionShowMaps(State *st) {
+   if (!Action_readableProcess(st))
+      return HTOP_OK;
+
+   Process *p = (Process *)Panel_getSelected((Panel *)st->mainPanel);
+   if (!p)
+      return HTOP_OK;
+
+   assert(Object_isA((const Object *)p, (const ObjectClass *)&Process_class));
+
+   MapsScreen *es = MapsScreen_new(p);
+   InfoScreen_run((InfoScreen *)es);
+   MapsScreen_delete((Object *)es);
+   clear();
+   CRT_enableDelay();
+   return HTOP_REFRESH | HTOP_REDRAW_BAR;
+}
+
 static Htop_Reaction actionShowCommandScreen(State* st) {
    if (!Action_readableProcess(st))
       return HTOP_OK;
@@ -1007,6 +1027,7 @@ void Action_setBindings(Htop_Action* keys) {
    keys['m'] = actionToggleMergedCommand;
    keys['p'] = actionToggleProgramPath;
    keys['q'] = actionQuit;
+   keys['r'] = actionShowMaps;
    keys['s'] = actionStrace;
    keys['t'] = actionToggleTreeView;
    keys['u'] = actionFilterByUser;

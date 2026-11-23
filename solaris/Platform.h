@@ -89,6 +89,8 @@ void Platform_setZfsCompressedArcValues(Meter* this);
 
 char* Platform_getProcessEnv(pid_t pid);
 
+char* Platform_getProcessMaps(pid_t pid);
+
 FileLocks_ProcessData* Platform_getProcessLocks(pid_t pid);
 
 void Platform_getFileDescriptors(double* used, double* max);
