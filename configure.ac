@@ -884,6 +884,7 @@ if test "$my_htop_platform" = "solaris"; then
 fi
 AC_CHECK_FUNCS([set_escdelay])
 AC_CHECK_FUNCS([getmouse])
+AC_CHECK_FUNCS([init_extended_pair])
 AC_DEFINE([NCURSES_ENABLE_STDBOOL_H], [1], [Define to enable stdbool.h in ncurses])
 
 
