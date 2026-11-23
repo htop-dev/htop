@@ -9,6 +9,7 @@ in the source distribution for its full text.
 
 #include "freebsd/FreeBSDProcess.h"
 
+#include <math.h>
 #include <stdlib.h>
 
 #include "CRT.h"
@@ -16,6 +17,7 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "RichString.h"
 #include "Scheduling.h"
+#include "Settings.h"
 #include "XUtils.h"
 
 
@@ -57,12 +59,19 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [JAIL] = { .name = "JAIL", .title = "JAIL        ", .description = "Jail prison name", .flags = 0, },
    [SCHEDCLASS] = { .name = "SCHEDCLASS", .title = "SC", .description = "Scheduling Class (Timesharing, Realtime, Idletime)", .flags = 0, },
    [EMULATION] = { .name = "EMULATION", .title = "EMULATION        ", .description = "System call emulation environment (ABI)", .flags = 0, },
+   [IO_READ_OPS] = { .name = "IO_READ_OPS", .title = "   READ OPS ", .description = "Number of block input operations of the process", .flags = 0, .defaultSortDesc = true, },
+   [IO_WRITE_OPS] = { .name = "IO_WRITE_OPS", .title = "  WRITE OPS ", .description = "Number of block output operations of the process", .flags = 0, .defaultSortDesc = true, },
+   [IO_READ_OPS_RATE] = { .name = "IO_READ_OPS_RATE", .title = " READ OPS/s ", .description = "Block input operations per second of the process", .flags = 0, .defaultSortDesc = true, },
+   [IO_WRITE_OPS_RATE] = { .name = "IO_WRITE_OPS_RATE", .title = "WRITE OPS/s ", .description = "Block output operations per second of the process", .flags = 0, .defaultSortDesc = true, },
+   [IO_OPS_RATE] = { .name = "IO_OPS_RATE", .title = "  R/W OPS/s ", .description = "Total block I/O operations per second of the process", .flags = 0, .defaultSortDesc = true, },
 };
 
 Process* FreeBSDProcess_new(const Machine* machine) {
    FreeBSDProcess* this = xCalloc(1, sizeof(FreeBSDProcess));
    Object_setClass(this, Class(FreeBSDProcess));
    Process_init(&this->super, machine);
+   this->io_rate_read_ops = NAN;
+   this->io_rate_write_ops = NAN;
    return (Process*)this;
 }
 
@@ -82,8 +91,36 @@ static const char FreeBSD_schedclassChars[MAX_SCHEDCLASS] = {
    [SCHEDCLASS_REALTIME] = 'r',    // realtime scheduling
 };
 
+static double FreeBSDProcess_totalIOOpsRate(const FreeBSDProcess* fp) {
+   double totalRate = NAN;
+   if (isNonnegative(fp->io_rate_read_ops)) {
+      totalRate = fp->io_rate_read_ops;
+      if (isNonnegative(fp->io_rate_write_ops)) {
+         totalRate += fp->io_rate_write_ops;
+      }
+   } else if (isNonnegative(fp->io_rate_write_ops)) {
+      totalRate = fp->io_rate_write_ops;
+   }
+   return totalRate;
+}
+
+/* An operations rate, in the width of Row_printRate's byte rates. */
+static void FreeBSDProcess_printOpsRate(RichString* str, double rate) {
+   char buffer[32];
+
+   if (!isNonnegative(rate)) {
+      RichString_appendAscii(str, CRT_colors[PROCESS_SHADOW], "        N/A ");
+      return;
+   }
+
+   int color = rate < 0.005 ? CRT_colors[PROCESS_SHADOW] : CRT_colors[PROCESS];
+   int len = xSnprintf(buffer, sizeof(buffer), "%11.2f ", rate);
+   RichString_appendnAscii(str, color, buffer, len);
+}
+
 static void FreeBSDProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
    const FreeBSDProcess* fp = (const FreeBSDProcess*) super;
+   bool coloring = super->host->settings->highlightMegabytes;
 
    char buffer[256]; buffer[255] = '\0';
    char sched_class;
@@ -109,6 +146,12 @@ static void FreeBSDProcess_rowWriteField(const Row* super, RichString* str, Proc
       xSnprintf(buffer, n, " %c", sched_class);
       break;
 
+   case IO_READ_OPS: Row_printCount(str, fp->io_read_ops, coloring); return;
+   case IO_WRITE_OPS: Row_printCount(str, fp->io_write_ops, coloring); return;
+   case IO_READ_OPS_RATE: FreeBSDProcess_printOpsRate(str, fp->io_rate_read_ops); return;
+   case IO_WRITE_OPS_RATE: FreeBSDProcess_printOpsRate(str, fp->io_rate_write_ops); return;
+   case IO_OPS_RATE: FreeBSDProcess_printOpsRate(str, FreeBSDProcess_totalIOOpsRate(fp)); return;
+
    default:
       Process_writeField(&fp->super, str, field);
       return;
@@ -131,6 +174,16 @@ static int FreeBSDProcess_compareByKey(const Process* v1, const Process* v2, Pro
       return SPACESHIP_NULLSTR(p1->emul, p2->emul);
    case SCHEDCLASS:
       return SPACESHIP_NUMBER(p1->sched_class, p2->sched_class);
+   case IO_READ_OPS:
+      return SPACESHIP_NUMBER(p1->io_read_ops, p2->io_read_ops);
+   case IO_WRITE_OPS:
+      return SPACESHIP_NUMBER(p1->io_write_ops, p2->io_write_ops);
+   case IO_READ_OPS_RATE:
+      return compareRealNumbers(p1->io_rate_read_ops, p2->io_rate_read_ops);
+   case IO_WRITE_OPS_RATE:
+      return compareRealNumbers(p1->io_rate_write_ops, p2->io_rate_write_ops);
+   case IO_OPS_RATE:
+      return compareRealNumbers(FreeBSDProcess_totalIOOpsRate(p1), FreeBSDProcess_totalIOOpsRate(p2));
    default:
       return Process_compareByKey_Base(v1, v2, key);
    }

@@ -157,6 +157,35 @@ IGNORE_WCASTQUAL_END
    return NULL;
 }
 
+/*
+ * Per-process block I/O, as top(1) -m io shows it: FreeBSD counts the block
+ * input and output operations of a process (ru_inblock and ru_oublock of
+ * its rusage, summed over its threads), not the bytes they move.  Rates are
+ * computed from the difference between consecutive scans, as on Darwin.
+ */
+static void FreeBSDProcessTable_updateIO(FreeBSDProcess* fp, const struct kinfo_proc* kproc, const Machine* host) {
+   uint64_t last_read = fp->io_read_ops;
+   uint64_t last_write = fp->io_write_ops;
+
+   /* Machine_scanTables seeds monotonicMs with 1 on its first scan, so
+    * treat that sentinel as "no timestamp yet". */
+   bool haveBaseline = fp->io_last_scan_time_ms > 1;
+   uint64_t time_delta = saturatingSub(host->monotonicMs, fp->io_last_scan_time_ms);
+
+   fp->io_read_ops = (uint64_t)kproc->ki_rusage.ru_inblock;
+   fp->io_write_ops = (uint64_t)kproc->ki_rusage.ru_oublock;
+
+   if (haveBaseline && time_delta) {
+      fp->io_rate_read_ops = saturatingSub(fp->io_read_ops, last_read) * /*ms to s*/1000. / time_delta;
+      fp->io_rate_write_ops = saturatingSub(fp->io_write_ops, last_write) * /*ms to s*/1000. / time_delta;
+   } else {
+      fp->io_rate_read_ops = NAN;
+      fp->io_rate_write_ops = NAN;
+   }
+
+   fp->io_last_scan_time_ms = host->monotonicMs;
+}
+
 void ProcessTable_goThroughEntries(ProcessTable* super) {
    const FreeBSDProcessTable* this = (const FreeBSDProcessTable*)super;
    const Machine* host = super->super.host;
@@ -248,6 +277,8 @@ void ProcessTable_goThroughEntries(ProcessTable* super) {
       }
 
       proc->majflt = kproc->ki_cow;
+
+      FreeBSDProcessTable_updateIO(fp, kproc, host);
 
       proc->priority = kproc->ki_pri.pri_level -
           /* Reference point, as used by system's top(1) and ps(1). */
