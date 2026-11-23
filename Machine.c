@@ -25,6 +25,9 @@ void Machine_init(Machine* this, UsersTable* usersTable, uid_t userId) {
 
    this->htopUserId = getuid();
 
+   this->wakeupFd = -1;
+   this->wakeupHandler = NULL;
+
    // discover fixed column width limits
    Row_setPidColumnWidth(Platform_getMaxPid());
 
@@ -131,4 +134,8 @@ void Machine_scanTables(Machine* this) {
 
    Row_setUidColumnWidth(this->maxUserId);
    Row_setPidColumnWidth(this->maxProcessId);
+}
+
+bool Machine_handleWakeup(Machine* this) {
+   return this->wakeupHandler ? this->wakeupHandler(this) : false;
 }

@@ -45,6 +45,13 @@ typedef struct Machine_ {
 
    int64_t iterationsRemaining;
 
+   /* Readable when the platform has updates to apply between two scans
+    * (e.g. processes starting or ending), -1 if there is no such source */
+   int wakeupFd;
+
+   /* Applies those updates, see Machine_handleWakeup() */
+   bool (*wakeupHandler)(struct Machine_* host);
+
    #ifdef HAVE_LIBHWLOC
    hwloc_topology_t topology;
    bool topologyOk;
@@ -94,5 +101,8 @@ void Machine_setTablesPanel(Machine* this, Panel* panel);
 void Machine_scan(Machine* this);
 
 void Machine_scanTables(Machine* this);
+
+/* Applies the updates signalled by wakeupFd; returns true if the tables changed */
+bool Machine_handleWakeup(Machine* this);
 
 #endif

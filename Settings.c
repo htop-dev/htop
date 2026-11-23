@@ -484,6 +484,10 @@ static bool Settings_read(Settings* this, const char* fileName, const Machine* h
          this->highlightChanges = atoi(option[1]);
       } else if (String_eq(option[0], "highlight_changes_delay_secs")) {
          this->highlightDelaySecs = CLAMP(atoi(option[1]), 1, 24 * 60 * 60);
+      #ifdef HAVE_EBPF_PROCMON
+      } else if (String_eq(option[0], "ebpf_process_events")) {
+         this->ebpfProcessEvents = atoi(option[1]);
+      #endif
       } else if (String_eq(option[0], "find_comm_in_cmdline")) {
          this->findCommInCmdline = atoi(option[1]);
       } else if (String_eq(option[0], "strip_exe_from_cmdline")) {
@@ -820,6 +824,9 @@ int Settings_write(const Settings* this, bool onCrash) {
    printSettingInteger("highlight_threads", this->highlightThreads);
    printSettingInteger("highlight_changes", this->highlightChanges);
    printSettingInteger("highlight_changes_delay_secs", this->highlightDelaySecs);
+   #ifdef HAVE_EBPF_PROCMON
+   printSettingInteger("ebpf_process_events", this->ebpfProcessEvents);
+   #endif
    printSettingInteger("find_comm_in_cmdline", this->findCommInCmdline);
    printSettingInteger("strip_exe_from_cmdline", this->stripExeFromCmdline);
    printSettingInteger("show_merged_command", this->showMergedCommand);
@@ -1076,6 +1083,9 @@ Settings* Settings_new(const Machine* host, Hashtable* dynamicMeters, Hashtable*
    this->highlightThreads = true;
    this->highlightChanges = false;
    this->highlightDelaySecs = DEFAULT_HIGHLIGHT_SECS;
+#ifdef HAVE_EBPF_PROCMON
+   this->ebpfProcessEvents = false;
+#endif
    this->findCommInCmdline = true;
    this->stripExeFromCmdline = true;
    this->showMergedCommand = false;

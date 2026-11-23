@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include "linux/LinuxProcess.h"
 
 #include <assert.h>
+#include <ctype.h>
 #include <limits.h>
 #include <math.h>
 #include <stdint.h>
@@ -18,6 +19,7 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <syscall.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #include "CRT.h"
 #include "Macros.h"
@@ -30,6 +32,9 @@ in the source distribution for its full text.
 #include "linux/Compat.h"
 #include "linux/IOPriority.h"
 #include "linux/LinuxMachine.h"
+#include "linux/NetLinkNet.h"
+#include "linux/NetMonitor.h"
+#include "linux/Platform.h"
 
 
 const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
@@ -80,6 +85,9 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [IO_READ_RATE] = { .name = "IO_READ_RATE", .title = "  DISK READ ", .description = "The I/O rate of read(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
    [IO_WRITE_RATE] = { .name = "IO_WRITE_RATE", .title = " DISK WRITE ", .description = "The I/O rate of write(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
    [IO_RATE] = { .name = "IO_RATE", .title = "   DISK R/W ", .description = "Total I/O rate in bytes per second", .flags = PROCESS_FLAG_IO, .defaultSortDesc = true, },
+   [NET_RX] = { .name = "NET_RX", .title = "  NET RX    ", .description = "Network receive rate in bytes per second (eBPF exact; + netlink socket counters; ~ read(2)/write(2) estimate)", .flags = PROCESS_FLAG_IO | PROCESS_FLAG_LINUX_NETIO, .defaultSortDesc = true, },
+   [NET_TX] = { .name = "NET_TX", .title = "  NET TX    ", .description = "Network transmit rate in bytes per second (eBPF exact; + netlink socket counters; ~ read(2)/write(2) estimate)", .flags = PROCESS_FLAG_IO | PROCESS_FLAG_LINUX_NETIO, .defaultSortDesc = true, },
+   [NET_TOTAL] = { .name = "NET_TOTAL", .title = "  NET TOTAL ", .description = "Total network rate in bytes per second (eBPF exact; + netlink socket counters; ~ read(2)/write(2) estimate)", .flags = PROCESS_FLAG_IO | PROCESS_FLAG_LINUX_NETIO, .defaultSortDesc = true, },
    [CGROUP] = { .name = "CGROUP", .title = "CGROUP (raw)", .description = "Which cgroup the process is in", .flags = PROCESS_FLAG_LINUX_CGROUP, .autoWidth = true, },
    [CCGROUP] = { .name = "CCGROUP", .title = "CGROUP (compressed)", .description = "Which cgroup the process is in (condensed to essentials)", .flags = PROCESS_FLAG_LINUX_CGROUP, .autoWidth = true, },
    [CONTAINER] = { .name = "CONTAINER", .title = "CONTAINER", .description = "Name of the container the process is in (guessed by heuristics)", .flags = PROCESS_FLAG_LINUX_CGROUP, .autoWidth = true, },
@@ -102,6 +110,9 @@ const ProcessFieldData Process_fields[LAST_PROCESSFIELD] = {
    [AUTOGROUP_ID] = { .name = "AUTOGROUP_ID", .title = "AGRP", .description = "The autogroup identifier of the process", .flags = PROCESS_FLAG_LINUX_AUTOGROUP, },
    [AUTOGROUP_NICE] = { .name = "AUTOGROUP_NICE", .title = " ANI", .description = "Nice value (the higher the value, the more other processes take priority) associated with the process autogroup", .flags = PROCESS_FLAG_LINUX_AUTOGROUP, },
    [ISCONTAINER] = { .name = "ISCONTAINER", .title = "CONT ", .description = "Whether the process is running inside a child container", .flags = PROCESS_FLAG_LINUX_CONTAINER, },
+#ifdef HAVE_EBPF_PROCMON
+   [EXIT_STATUS] = { .name = "EXIT_STATUS", .title = "EXIT       ", .description = "Exit code or terminating signal (* if core dumped) of an ended process or thread; requires eBPF process tracking", .flags = 0, },
+#endif
 #ifdef SCHEDULER_SUPPORT
    [SCHEDULERPOLICY] = { .name = "SCHEDULERPOLICY", .title = "SCHED ", .description = "Current scheduling policy of the process", .flags = PROCESS_FLAG_SCHEDPOL, },
 #endif
@@ -227,6 +238,63 @@ static double LinuxProcess_totalIORate(const LinuxProcess* lp) {
    return totalRate;
 }
 
+/* Marker for the NET columns: none for exact eBPF counters, '+' for the
+ * netlink sock_diag counters, '~' for the rchar/wchar estimate. */
+static char LinuxProcess_netMarker(void) {
+   if (NetMonitor_isActive())
+      return '\0';
+   if (NetLinkNet_isActive())
+      return '+';
+   return '~';
+}
+
+#ifdef HAVE_EBPF_PROCMON
+/* Width of the EXIT_STATUS column: the longest signal names (SIGSTKFLT,
+ * SIGVTALRM) plus the core dump marker */
+#define LINUXPROCESS_EXIT_STATUS_WIDTH 10
+
+/* Whether the exit status applies: it is known and the row shows an ended
+ * process (marked gone, or a zombie or dead task in /proc), not a running
+ * successor that a scan found under the same PID */
+static bool LinuxProcess_hasEnded(const LinuxProcess* lp) {
+   const Process* p = &lp->super;
+   return lp->has_exit_status && (p->super.tombStampMs > 0 || p->state == ZOMBIE || p->state == DEFUNCT);
+}
+
+/* The exit code, or the name of the terminating signal with a trailing '*'
+ * if a core was dumped, left-aligned in a column of fixed width plus a separator */
+static void LinuxProcess_formatExitStatus(char* buffer, size_t n, int status) {
+   if (WIFEXITED(status)) {
+      xSnprintf(buffer, n, "%-*d ", LINUXPROCESS_EXIT_STATUS_WIDTH, WEXITSTATUS(status));
+      return;
+   }
+
+   const int sig = WTERMSIG(status);
+   bool core = false;
+#ifdef WCOREDUMP
+   core = WCOREDUMP(status);
+#endif
+
+   /* Platform_signals names carry their number in front, e.g. " 9 SIGKILL" */
+   const char* name = NULL;
+   for (unsigned int i = 0; i < Platform_numberOfSignals; i++) {
+      if (Platform_signals[i].number == sig) {
+         name = Platform_signals[i].name;
+         while (*name == ' ' || isdigit((unsigned char)*name))
+            name++;
+         break;
+      }
+   }
+
+   char label[24];
+   if (name && *name)
+      xSnprintf(label, sizeof(label), "%s%s", name, core ? "*" : "");
+   else
+      xSnprintf(label, sizeof(label), "SIG%d%s", sig, core ? "*" : "");
+   xSnprintf(buffer, n, "%-*.*s ", LINUXPROCESS_EXIT_STATUS_WIDTH, LINUXPROCESS_EXIT_STATUS_WIDTH, label);
+}
+#endif
+
 static void LinuxProcess_rowWriteField(const Row* super, RichString* str, ProcessField field) {
    const Process* this = (const Process*) super;
    const LinuxProcess* lp = (const LinuxProcess*) super;
@@ -271,9 +339,21 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
    case RBYTES: Row_printBytes(str, lp->io_read_bytes, coloring); return;
    case WBYTES: Row_printBytes(str, lp->io_write_bytes, coloring); return;
    case CNCLWB: Row_printBytes(str, lp->io_cancelled_write_bytes, coloring); return;
-   case IO_READ_RATE:  Row_printRate(str, lp->io_rate_read_bps, coloring); return;
-   case IO_WRITE_RATE: Row_printRate(str, lp->io_rate_write_bps, coloring); return;
-   case IO_RATE: Row_printRate(str, LinuxProcess_totalIORate(lp), coloring); return;
+   case IO_READ_RATE:  Row_printRate(str, lp->io_rate_read_bps, coloring, '\0', 0); return;
+   case IO_WRITE_RATE: Row_printRate(str, lp->io_rate_write_bps, coloring, '\0', 0); return;
+   case IO_RATE: Row_printRate(str, LinuxProcess_totalIORate(lp), coloring, '\0', 0); return;
+   case NET_RX: {
+      Row_printRate(str, lp->net_rate_rx_bps, coloring, LinuxProcess_netMarker(), CRT_colors[PROCESS_SHADOW]);
+      return;
+   }
+   case NET_TX: {
+      Row_printRate(str, lp->net_rate_tx_bps, coloring, LinuxProcess_netMarker(), CRT_colors[PROCESS_SHADOW]);
+      return;
+   }
+   case NET_TOTAL: {
+      Row_printRate(str, lp->net_rate_rx_bps + lp->net_rate_tx_bps, coloring, LinuxProcess_netMarker(), CRT_colors[PROCESS_SHADOW]);
+      return;
+   }
    case CGROUP:
       xSnprintf(buffer, n, "%-*.*s ", Row_fieldWidths[CGROUP], Row_fieldWidths[CGROUP], lp->cgroup ? lp->cgroup : "N/A");
       RichString_appendWide(str, attr, buffer);
@@ -359,6 +439,16 @@ static void LinuxProcess_rowWriteField(const Row* super, RichString* str, Proces
          xSnprintf(buffer, n, "N/A  ");
       }
       break;
+   #ifdef HAVE_EBPF_PROCMON
+   case EXIT_STATUS:
+      if (!LinuxProcess_hasEnded(lp)) {
+         attr = CRT_colors[PROCESS_SHADOW];
+         xSnprintf(buffer, n, "%-*s ", LINUXPROCESS_EXIT_STATUS_WIDTH, "N/A");
+         break;
+      }
+      LinuxProcess_formatExitStatus(buffer, n, lp->exit_status);
+      break;
+   #endif
    default:
       Process_writeField(this, str, field);
       return;
@@ -418,6 +508,12 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
       return compareRealNumbers(p1->io_rate_write_bps, p2->io_rate_write_bps);
    case IO_RATE:
       return compareRealNumbers(LinuxProcess_totalIORate(p1), LinuxProcess_totalIORate(p2));
+   case NET_RX:
+      return compareRealNumbers(p1->net_rate_rx_bps, p2->net_rate_rx_bps);
+   case NET_TX:
+      return compareRealNumbers(p1->net_rate_tx_bps, p2->net_rate_tx_bps);
+   case NET_TOTAL:
+      return compareRealNumbers(p1->net_rate_rx_bps + p1->net_rate_tx_bps, p2->net_rate_rx_bps + p2->net_rate_tx_bps);
    case CGROUP:
       return SPACESHIP_NULLSTR(p1->cgroup, p2->cgroup);
    case CCGROUP:
@@ -455,6 +551,15 @@ static int LinuxProcess_compareByKey(const Process* v1, const Process* v2, Proce
       return SPACESHIP_NUMBER(p1->gpu_time, p2->gpu_time);
    case ISCONTAINER:
       return SPACESHIP_NUMBER(v1->isRunningInContainer, v2->isRunningInContainer);
+   #ifdef HAVE_EBPF_PROCMON
+   case EXIT_STATUS: {
+      const bool ended1 = LinuxProcess_hasEnded(p1);
+      const bool ended2 = LinuxProcess_hasEnded(p2);
+      if (ended1 != ended2)
+         return SPACESHIP_NUMBER(ended1, ended2);
+      return ended1 ? SPACESHIP_NUMBER(p1->exit_status, p2->exit_status) : 0;
+   }
+   #endif
    default:
       return Process_compareByKey_Base(v1, v2, key);
    }

@@ -10,9 +10,13 @@ in the source distribution for its full text.
 #include "ScreenManager.h"
 
 #include <assert.h>
+#include <errno.h>
+#include <poll.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/time.h>
 
 #include "CRT.h"
@@ -241,6 +245,101 @@ static void ScreenManager_drawPanels(ScreenManager* this, size_t focus, bool for
    }
 }
 
+/* Every redraw is followed by a cooldown of this length. Updates applied
+ * between scans (see Machine.wakeupFd) during it are drawn once it ends,
+ * so a burst of events, e.g. a parallel build starting and ending
+ * thousands of processes, does not keep htop redrawing in a tight loop,
+ * while the latest state is still shown ahead of the next scan. The
+ * updates themselves are applied as soon as they arrive. */
+#define SCREENMANAGER_REDRAW_COOLDOWN_MS 100
+
+static uint64_t ScreenManager_nowMs(void) {
+   struct timespec now;
+   uint64_t nowMs;
+   Platform_gettime_realtime(&now, &nowMs);
+   return nowMs;
+}
+
+/*
+ * Waits for the next key like Panel_getCh() does, that is until the next
+ * periodic scan is due. If the platform provides a wakeup file descriptor,
+ * it is watched as well: once it turns readable, the wait ends with ERR and
+ * *wakeup set. If redrawAtMs is non-zero, the wait ends no later than then
+ * with ERR and *redrawDue set. oldTime is the time of the last scan in
+ * tenths of seconds, as kept by checkRecalculation().
+ */
+static int ScreenManager_getCh(const ScreenManager* this, Panel* panel, double oldTime, uint64_t redrawAtMs, bool* wakeup, bool* redrawDue) {
+   const Machine* host = this->host;
+   const int wakeupFd = host->wakeupFd;
+
+   *wakeup = false;
+   *redrawDue = false;
+
+   if (!this->header || wakeupFd < 0 || this->state->pauseUpdate)
+      return Panel_getCh(panel);
+
+   /* Rounded up, so the scan is surely due once the wait ends */
+   const uint64_t lastScanMs = (uint64_t)(oldTime * 100) + 1;
+   const uint64_t dueMs = lastScanMs + (uint64_t)host->settings->delay * 100;
+
+   /* Keys already buffered by curses do not make stdin readable,
+    * so curses is always asked first, without blocking */
+   CRT_disableDelay();
+
+   int ch;
+   for (;;) {
+      ch = Panel_getCh(panel);
+      if (ch != ERR)
+         break;
+
+      const uint64_t nowMs = ScreenManager_nowMs();
+
+      if (redrawAtMs && nowMs >= redrawAtMs) {
+         *redrawDue = true;
+         break;
+      }
+
+      /* Also stop if the clock went backwards; checkRecalculation() rescans then */
+      if (nowMs >= dueMs || nowMs < lastScanMs - 1)
+         break;
+
+      uint64_t timeoutMs = dueMs - nowMs;
+      if (redrawAtMs)
+         timeoutMs = MINIMUM(timeoutMs, redrawAtMs - nowMs);
+
+      struct pollfd fds[2] = {
+         { .fd = STDIN_FILENO, .events = POLLIN },
+         { .fd = wakeupFd, .events = POLLIN },
+      };
+      int r = poll(fds, ARRAYSIZE(fds), (int)timeoutMs);
+      if (r < 0) {
+         /* e.g. SIGWINCH: curses reports KEY_RESIZE on the next read */
+         if (errno == EINTR)
+            continue;
+
+         break;
+      }
+
+      /* A gone terminal: report ERR right away, like curses does */
+      if (fds[0].revents & (POLLERR | POLLHUP | POLLNVAL))
+         break;
+
+      if (fds[1].revents & POLLIN) {
+         *wakeup = true;
+         break;
+      }
+
+      /* A broken wakeup source must not turn the wait into a busy loop */
+      if (fds[1].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+         CRT_enableDelay();
+         return Panel_getCh(panel);
+      }
+   }
+
+   CRT_enableDelay();
+   return ch;
+}
+
 void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, const char* name) {
    bool quit = false;
    size_t focus = 0;
@@ -260,17 +359,32 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
    int sortTimeout = 0;
    int resetSortTimeout = 5;
 
+   /* Updates applied between scans that are not on screen yet, the end of
+    * the cooldown after the last redraw, and whether the current redraw
+    * shows such updates (not counted towards --max-iterations) */
+   bool updatesPending = false;
+   uint64_t cooldownEndMs = 0;
+   bool updateRedraw = false;
+
    this->name = name;
 
    while (!quit) {
       if (this->header) {
+         const uint64_t lastScanMs = this->host->monotonicMs;
          checkRecalculation(this, &oldTime, &sortTimeout, &redraw, &rescan, &timedOut, &force_redraw);
+
+         /* A scan shows everything applied before it */
+         if (this->host->monotonicMs != lastScanMs && !this->state->pauseUpdate)
+            updatesPending = false;
       }
 
       if (redraw || force_redraw) {
          ScreenManager_drawPanels(this, focus, force_redraw);
          force_redraw = false;
-         if (this->host->iterationsRemaining != -1) {
+         cooldownEndMs = ScreenManager_nowMs() + SCREENMANAGER_REDRAW_COOLDOWN_MS;
+         if (updateRedraw) {
+            updateRedraw = false;
+         } else if (this->host->iterationsRemaining != -1) {
             if (!--this->host->iterationsRemaining) {
                quit = true;
                continue;
@@ -279,7 +393,32 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey, con
       }
 
       int prevCh = ch;
-      ch = Panel_getCh(panelFocus);
+      bool wakeup;
+      bool updateRedrawDue;
+      ch = ScreenManager_getCh(this, panelFocus, oldTime, updatesPending ? cooldownEndMs : 0, &wakeup, &updateRedrawDue);
+
+      if (wakeup) {
+         /* Updates between scans (e.g. processes that started or ended) are
+          * applied at once; they show up when the cooldown has ended. Other
+          * redraws until then need not show them (e.g. a tree view that is
+          * not rebuilt), so they stay pending. */
+         if (Machine_handleWakeup(this->host))
+            updatesPending = true;
+         closeTimeout = 0;
+         redraw = false;
+         continue;
+      }
+
+      if (updateRedrawDue) {
+         Table* table = this->host->activeTable;
+         if (!this->state->pauseUpdate && (sortTimeout == 0 || settings->ss->treeView))
+            table->needsSort = true;
+         updatesPending = false;
+         redraw = true;
+         updateRedraw = true;
+         closeTimeout = 0;
+         continue;
+      }
 
       HandlerResult result = IGNORED;
 #ifdef HAVE_GETMOUSE
