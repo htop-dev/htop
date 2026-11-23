@@ -14,10 +14,12 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "Machine.h"
 #include "Macros.h"
+#include "Meter.h"
 #include "Object.h"
 #include "Platform.h"
 #include "RichString.h"
 #include "Row.h"
+#include "Settings.h"
 #include "XUtils.h"
 
 
@@ -40,6 +42,7 @@ static double cached_read_diff;
 static char cached_read_diff_str[6];
 static double cached_write_diff;
 static char cached_write_diff_str[6];
+static const char* cached_disk_unit_suffix = "iB/s";
 static uint64_t cached_num_disks;
 static double cached_utilisation_diff;
 static double cached_utilisation_norm;
@@ -75,6 +78,7 @@ static void DiskIOUpdateCache(const Machine* host) {
    static uint64_t cached_msTimeSpend_total;
 
    if (status != RATESTATUS_INIT) {
+      const bool decimal = host->settings->decimalUnits;
       uint64_t diff;
 
       if (data.totalBytesRead > cached_read_total) {
@@ -84,7 +88,7 @@ static void DiskIOUpdateCache(const Machine* host) {
          diff = 0;
       }
       cached_read_diff = diff;
-      Meter_humanUnit(cached_read_diff_str, cached_read_diff / ONE_K, sizeof(cached_read_diff_str));
+      cached_disk_unit_suffix = Meter_ioRateUnit(cached_read_diff_str, sizeof(cached_read_diff_str), cached_read_diff, decimal);
 
       if (data.totalBytesWritten > cached_write_total) {
          diff = data.totalBytesWritten - cached_write_total;
@@ -93,7 +97,7 @@ static void DiskIOUpdateCache(const Machine* host) {
          diff = 0;
       }
       cached_write_diff = diff;
-      Meter_humanUnit(cached_write_diff_str, cached_write_diff / ONE_K, sizeof(cached_write_diff_str));
+      Meter_ioRateUnit(cached_write_diff_str, sizeof(cached_write_diff_str), cached_write_diff, decimal);
 
       cached_num_disks = data.numDisks;
       cached_utilisation_diff = 0.0;
@@ -133,7 +137,7 @@ static void DiskIORateMeter_updateValues(Meter* this) {
          break;
    }
 
-   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "r:%siB/s w:%siB/s", cached_read_diff_str, cached_write_diff_str);
+   xSnprintf(this->txtBuffer, sizeof(this->txtBuffer), "r:%s%s w:%s%s", cached_read_diff_str, cached_disk_unit_suffix, cached_write_diff_str, cached_disk_unit_suffix);
 }
 
 static void DiskIORateMeter_display(ATTR_UNUSED const Object* cast, RichString* out) {
@@ -153,11 +157,11 @@ static void DiskIORateMeter_display(ATTR_UNUSED const Object* cast, RichString* 
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], "read: ");
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], cached_read_diff_str);
-   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], "iB/s");
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOREAD], cached_disk_unit_suffix);
 
    RichString_appendAscii(out, CRT_colors[METER_TEXT], " write: ");
    RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], cached_write_diff_str);
-   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], "iB/s");
+   RichString_appendAscii(out, CRT_colors[METER_VALUE_IOWRITE], cached_disk_unit_suffix);
 }
 
 static void DiskIOTimeMeter_updateValues(Meter* this) {
