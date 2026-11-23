@@ -121,10 +121,46 @@ static bool Scheduling_setPolicy(Process* p, Arg arg) {
    return r != -1;
 }
 
+static bool Scheduling_setRTPriority(Process* p, int priority) {
+   Scheduling_readProcessPolicy(p);
+   int policy = p->scheduling_policy;
+
+   assert(policy >= 0);
+   assert((size_t)policy < ARRAYSIZE(policies));
+   assert(policies[policy].name);
+
+   if (!policies[policy].prioritySupport)
+      return false;
+
+   struct sched_param old_param;
+   sched_getparam(Process_getPid(p), &old_param);
+
+   const struct sched_param param = { .sched_priority = priority };
+
+   int err = sched_setparam(Process_getPid(p), &param);
+
+   struct sched_param new_param;
+   sched_getparam(Process_getPid(p), &new_param);
+
+   if (err != -1 &&
+      old_param.sched_priority !=  new_param.sched_priority
+   ) {
+      p->priority = -priority - 1;
+   }
+
+   return err != -1;
+}
+
 bool Scheduling_rowSetPolicy(Row* row, Arg arg) {
    Process* p = (Process*) row;
    assert(Object_isA((const Object*) p, (const ObjectClass*) &Process_class));
    return Scheduling_setPolicy(p, arg);
+}
+
+bool Scheduling_rowChangeRTPriority(Row* row, Arg arg) {
+   Process* this = (Process*) row;
+   assert(Object_isA((const Object*) this, (const ObjectClass*) &Process_class));
+   return Scheduling_setRTPriority(this, -this->priority - 1 + arg.i);
 }
 
 const char* Scheduling_formatPolicy(int policy) {

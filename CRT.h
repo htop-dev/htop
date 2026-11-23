@@ -178,6 +178,8 @@ void CRT_handleSIGSEGV(int signal) ATTR_NORETURN;
 #define KEY_RECLICK    KEY_F(32)
 #define KEY_RIGHTCLICK KEY_F(33)
 #define KEY_SHIFT_TAB  KEY_F(34)
+#define KEY_CTRL_F7    KEY_F(35)
+#define KEY_CTRL_F8    KEY_F(36)
 #define KEY_ALT(x)     (KEY_F(64 - 26) + ((x) - 'A'))
 #define KEY_FOCUS_IN   (KEY_MAX_HTOP + 'I')
 #define KEY_FOCUS_OUT  (KEY_MAX_HTOP + 'O')
