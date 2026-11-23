@@ -111,21 +111,53 @@ inline bool String_contains_i(const char* s1, const char* s2, bool multi) {
    if (!s1 || !s2)
       return false;
 
-   // we have a multi-string search term, handle as special case for performance reasons
-   if (multi && strchr(s2, '|')) {
-      size_t nNeedles;
-      char** needles = String_split(s2, '|', &nNeedles);
-      for (size_t i = 0; i < nNeedles; i++) {
-         if (strcasestr(s1, needles[i]) != NULL) {
-            String_freeArray(needles);
-            return true;
-         }
-      }
-      String_freeArray(needles);
-      return false;
-   } else {
+   if (!multi)
       return strcasestr(s1, s2) != NULL;
+
+   // Fast path for a single term, including a negated one
+   if (!strchr(s2, '|')) {
+      bool negated = (s2[0] == '!');
+      const char* needle = negated ? s2 + 1 : s2;
+
+      // An empty term or a lone '!' matches everything
+      if (needle[0] == '\0')
+         return true;
+
+      bool found = strcasestr(s1, needle) != NULL;
+      return negated ? !found : found;
    }
+
+   // We have a multi-term search term, handle as special case for performance reasons
+   size_t nNeedles;
+   char** needles = String_split(s2, '|', &nNeedles);
+   bool hasPositive = false;
+   bool positiveMatch = false;
+   for (size_t i = 0; i < nNeedles; i++) {
+      const char* needle = needles[i];
+      bool negated = (needle[0] == '!');
+      if (negated)
+         needle++;
+
+      // Ignore empty terms, e.g. from stray separators or a lone '!'
+      if (needle[0] == '\0')
+         continue;
+
+      bool found = strcasestr(s1, needle) != NULL;
+      if (negated) {
+         // A negated term excludes matching strings
+         if (found) {
+            String_freeArray(needles);
+            return false;
+         }
+      } else {
+         hasPositive = true;
+         positiveMatch = positiveMatch || found;
+      }
+   }
+   String_freeArray(needles);
+
+   // With only negated terms, everything not excluded matches
+   return !hasPositive || positiveMatch;
 }
 
 char* String_cat(const char* s1, const char* s2) {
