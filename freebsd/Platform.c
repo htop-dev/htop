@@ -55,6 +55,11 @@ const ScreenDefaults Platform_defaultScreens[] = {
       .columns = "PID USER PRIORITY NICE M_VIRT M_RESIDENT STATE PERCENT_CPU PERCENT_MEM TIME Command",
       .sortKey = "PERCENT_CPU",
    },
+   {
+      .name = "I/O",
+      .columns = "PID USER IO_OPS IO_READ_OPS IO_WRITE_OPS Command",
+      .sortKey = "IO_OPS",
+   },
 };
 
 const unsigned int Platform_numberOfDefaultScreens = ARRAYSIZE(Platform_defaultScreens);

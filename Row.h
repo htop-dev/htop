@@ -164,6 +164,9 @@ void Row_printNanoseconds(RichString* str, unsigned long long totalNanoseconds, 
 /* Takes rate in bare unit (base 1024) per second. Prints 12 columns. */
 void Row_printRate(RichString* str, double rate, bool coloring);
 
+/* Takes a per-second count (base 1024) of operations. Prints 12 columns. */
+void Row_printCountRate(RichString* str, double rate, bool coloring);
+
 int Row_printPercentage(float val, char* buffer, size_t n, uint8_t width, int* attr);
 
 static inline int Row_idEqualCompare(const void* v1, const void* v2) {

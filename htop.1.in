@@ -603,6 +603,15 @@ The I/O rate of write(2) in bytes per second, for the process.
 .B IO_RATE (DISK R/W)
 The I/O rate, IO_READ_RATE + IO_WRITE_RATE (see above).
 .TP
+.B IO_READ_OPS (IO READ)
+The I/O rate of block read operations per second, for the process (FreeBSD).
+.TP
+.B IO_WRITE_OPS (IO WRITE)
+The I/O rate of block write operations per second, for the process (FreeBSD).
+.TP
+.B IO_OPS (IO R/W)
+The total I/O rate, IO_READ_OPS + IO_WRITE_OPS (see above) (FreeBSD).
+.TP
 .B CGROUP
 Which cgroup the process is in. For a shortened view see the CCGROUP column below.
 .TP
