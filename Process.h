@@ -231,8 +231,8 @@ typedef int32_t ProcessField;  /* see ReservedField list in RowField.h */
 
 // Implemented in platform-specific code:
 void Process_writeField(const Process* this, RichString* str, ProcessField field);
-int Process_compare(const void* v1, const void* v2);
-int Process_compareByParent(const Row* r1, const Row* r2);
+int Process_compare(const void* v1, const void* v2, void* context);
+int Process_compareByParent(const Row* r1, const Row* r2, void* context);
 void Process_delete(Object* cast);
 extern const ProcessFieldData Process_fields[LAST_PROCESSFIELD];
 #define Process_pidDigits Row_pidDigits
@@ -317,8 +317,8 @@ bool Process_rowIsVisible(const Row* super, const struct Table_* table);
 
 bool Process_rowMatchesFilter(const Row* super, const struct Table_* table);
 
-static inline int Process_pidEqualCompare(const void* v1, const void* v2) {
-   return Row_idEqualCompare(v1, v2);
+static inline int Process_pidEqualCompare(const void* v1, const void* v2, void* context) {
+   return Row_idEqualCompare(v1, v2, context);
 }
 
 int Process_compareByKey_Base(const Process* p1, const Process* p2, ProcessField key);
