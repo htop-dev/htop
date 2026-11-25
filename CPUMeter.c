@@ -73,7 +73,19 @@ static void CPUMeter_init(Meter* this) {
          }
          xSnprintf(caption, sizeof(caption), "%2d%c", Settings_cpuId(host->settings, coreID), threadLetter);
       } else {
-         xSnprintf(caption, sizeof(caption), "%3u", Settings_cpuId(host->settings, cpu - 1));
+         unsigned int id = Settings_cpuId(host->settings, cpu - 1);
+         /* Bar and graph modes reserve three columns for the caption; fall back
+            to plain numbers for all CPUs if any displayed ID needs three digits. */
+         if (host->settings->showCPUTypeLabels &&
+            host->cpuTypes &&
+            cpu <= host->existingCPUs &&
+            cpu <= host->cpuTypeCount &&
+            Settings_cpuId(host->settings, host->existingCPUs - 1) < 100 &&
+            host->cpuTypes[cpu - 1].label != '\0') {
+            xSnprintf(caption, sizeof(caption), "%2u%c", id, host->cpuTypes[cpu - 1].label);
+         } else {
+            xSnprintf(caption, sizeof(caption), "%3u", id);
+         }
       }
       Meter_setCaption(this, caption);
    }

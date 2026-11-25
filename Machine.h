@@ -35,6 +35,18 @@ in the source distribution for its full text.
 typedef unsigned long long int memory_t;
 #define MEMORY_MAX ULLONG_MAX
 
+typedef enum CPUTypeTier_ {
+   CPU_TYPE_TIER_NONE = 0,
+   CPU_TYPE_TIER_LOW,
+   CPU_TYPE_TIER_MEDIUM,
+   CPU_TYPE_TIER_HIGH,
+} CPUTypeTier;
+
+typedef struct CPUTypeInfo_ {
+   char label;
+   CPUTypeTier tier;
+} CPUTypeInfo;
+
 typedef struct Machine_ {
    struct Settings_* settings;
 
@@ -58,6 +70,8 @@ typedef struct Machine_ {
 
    unsigned int activeCPUs;
    unsigned int existingCPUs;
+   CPUTypeInfo* cpuTypes;     /* Optional core type info, indexed by zero-based CPU index */
+   unsigned int cpuTypeCount;
 
    UsersTable* usersTable;
    uid_t htopUserId;
