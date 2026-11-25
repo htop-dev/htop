@@ -882,6 +882,11 @@ enum { SUBTREE_MAX_DEPTH = 1024 };
 /* Return true when this process belongs to the subtree rooted at root:
  * root itself (or one of its threads), or any descendant of it. */
 static bool Process_isInSubtree(const Process* this, const Table* table, int root) {
+   /* Every parent chain ends at 0, so PID 0 matches every process even when
+    * an intermediate parent record is missing from the table. */
+   if (root == 0)
+      return true;
+
    if ((int) Process_getThreadGroup(this) == root)
       return true;
 

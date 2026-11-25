@@ -510,8 +510,10 @@ int CommandLine_run(int argc, char** argv) {
    MainPanel* panel = MainPanel_new();
    Machine_setTablesPanel(host, (Panel*) panel);
 
+   /* The subtree filter belongs to the process table, which is not
+    * necessarily the active table if a dynamic screen comes first. */
    if (flags.descendantsRoot >= 0)
-      host->activeTable->descendantsRoot = flags.descendantsRoot;
+      host->processTable->descendantsRoot = flags.descendantsRoot;
 
    MainPanel_updateLabels(panel, settings->ss->treeView, flags.commFilter);
 
