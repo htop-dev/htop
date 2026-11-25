@@ -57,6 +57,12 @@ in monochrome mode
 \fB\-F \-\-filter=FILTER\fR
 Filter processes by terms matching the commands. The terms are matched
 case-insensitive and as fixed strings (not regexs). You can separate multiple terms with "|".
+A filter of the form \fBppid:PID\fR or \fBppid=PID\fR shows only processes
+whose parent process has the given PID.
+.TP
+\fB\-\-ppid=PID\fR
+Show only the processes whose parent process has the given PID.
+Cannot be combined with \fB\-\-filter\fR.
 .TP
 \fB\-\-no-function-bar\fR
 Hide the function bar
@@ -244,6 +250,8 @@ only processes whose names match will be shown. To cancel filtering,
 enter the Filter option again and press Esc.
 The matching is done case-insensitive. Terms are fixed strings (no regex).
 You can separate multiple terms with "|".
+A filter of the form \fBppid:PID\fR or \fBppid=PID\fR shows only processes
+whose parent process has the given PID.
 .TP
 .B F5, t
 Tree view: organize processes by parenthood, and layout the relations

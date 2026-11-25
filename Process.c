@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include "Process.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <math.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -874,6 +875,27 @@ bool Process_rowIsVisible(const Row* super, const Table* table) {
    return Process_isVisible(this, table->host->settings);
 }
 
+/* Detect a parent-PID filter of the form "ppid:PID" or "ppid=PID".
+ * Returns true when the filter uses this syntax; *valid reports whether
+ * the PID part could be parsed. */
+static bool parseParentPidFilter(const char* filter, pid_t* ppid, bool* valid) {
+   const char* value;
+   if (String_startsWith(filter, "ppid:"))
+      value = filter + 5;
+   else if (String_startsWith(filter, "ppid="))
+      value = filter + 5;
+   else
+      return false;
+
+   char* end = NULL;
+   errno = 0;
+   long parsed = strtol(value, &end, 10);
+   *valid = (end != value && *end == '\0' && errno == 0 && parsed >= 0 && parsed <= INT_MAX);
+   if (*valid)
+      *ppid = (pid_t)parsed;
+   return true;
+}
+
 /* Test whether display must filter out this process (various mechanisms) */
 static bool Process_matchesFilter(const Process* this, const Table* table) {
    const Machine* host = table->host;
@@ -881,8 +903,16 @@ static bool Process_matchesFilter(const Process* this, const Table* table) {
       return true;
 
    const char* incFilter = table->incFilter;
-   if (incFilter && !String_contains_i(Process_getCommand(this), incFilter, true))
-      return true;
+   if (incFilter) {
+      pid_t ppidFilter;
+      bool validPpid = false;
+      if (parseParentPidFilter(incFilter, &ppidFilter, &validPpid)) {
+         if (!validPpid || Process_getParent(this) != ppidFilter)
+            return true;
+      } else if (!String_contains_i(Process_getCommand(this), incFilter, true)) {
+         return true;
+      }
+   }
 
    const ProcessTable* pt = (const ProcessTable*) host->activeTable;
    assert(Object_isA((const Object*) pt, (const ObjectClass*) &ProcessTable_class));

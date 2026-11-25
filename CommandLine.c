@@ -68,6 +68,7 @@ static void printHelpFlag(const char* name) {
           "   --keep-visible[=N]           Keep the first N columns visible when scrolling sideways (default 1)\n"
           "-n --max-iterations=NUMBER      Exit htop after NUMBER iterations/frame updates\n"
           "-p --pid=PID[,PID,PID...]       Show only the given PIDs\n"
+          "   --ppid=PID                   Show only processes whose parent has the given PID\n"
           "   --readonly                   Disable all system and process changing features\n"
           "-s --sort-key=COLUMN            Sort by COLUMN in list view (try --sort-key=help for a list)\n"
           "-t --tree[=MODE]                Show the tree view (MODE: classic|soft|hard); can be combined with -s\n"
@@ -85,6 +86,7 @@ static void printHelpFlag(const char* name) {
 typedef struct CommandLineSettings_ {
    Hashtable* pidMatchList;
    char* commFilter;
+   int ppidFilter;
    uid_t userId;
    int sortKey;
    int delay;
@@ -128,6 +130,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
    *flags = (CommandLineSettings) {
       .pidMatchList = NULL,
       .commFilter = NULL,
+      .ppidFilter = -1,
       .userId = (uid_t)-1, // -1 is guaranteed to be an invalid uid_t (see setreuid(2))
       .sortKey = 0,
       .delay = -1,
@@ -170,6 +173,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
       {"no-meters",  no_argument,         0, 129},
       {"tree",       optional_argument,   0, 't'},
       {"pid",        required_argument,   0, 'p'},
+      {"ppid",       required_argument,   0, 132},
       {"filter",     required_argument,   0, 'F'},
       {"no-functionbar", no_argument,     0, 130},
       {"no-function-bar", no_argument,    0, 130},
@@ -320,6 +324,20 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
 
             break;
          }
+         case 132: {
+            if (!optarg)
+               return STATUS_ERROR_EXIT;
+
+            char* end = NULL;
+            errno = 0;
+            long val = strtol(optarg, &end, 10);
+            if (errno || *end != '\0' || end == optarg || val < 0 || val > INT_MAX) {
+               fprintf(stderr, "Error: invalid parent PID \"%s\".\n", optarg);
+               return STATUS_ERROR_EXIT;
+            }
+            flags->ppidFilter = (int)val;
+            break;
+         }
          case 'F':
             if (!optarg)
                return STATUS_ERROR_EXIT;
@@ -384,15 +402,20 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
       }
    }
 
-   if (optind < argc) {
-      fprintf(stderr, "Error: unsupported non-option ARGV-elements:");
-      while (optind < argc)
-         fprintf(stderr, " %s", argv[optind++]);
-      fprintf(stderr, "\n");
-      return STATUS_ERROR_EXIT;
-   }
+    if (optind < argc) {
+       fprintf(stderr, "Error: unsupported non-option ARGV-elements:");
+       while (optind < argc)
+          fprintf(stderr, " %s", argv[optind++]);
+       fprintf(stderr, "\n");
+       return STATUS_ERROR_EXIT;
+    }
 
-   return STATUS_OK;
+    if (flags->ppidFilter >= 0 && flags->commFilter) {
+       fprintf(stderr, "Error: --ppid and --filter cannot be combined.\n");
+       return STATUS_ERROR_EXIT;
+    }
+
+    return STATUS_OK;
 }
 
 static void setCommFilter(State* state, char** commFilter) {
@@ -482,6 +505,9 @@ int CommandLine_run(int argc, char** argv) {
 
    MainPanel* panel = MainPanel_new();
    Machine_setTablesPanel(host, (Panel*) panel);
+
+   if (flags.ppidFilter >= 0)
+      xAsprintf(&flags.commFilter, "ppid:%d", flags.ppidFilter);
 
    MainPanel_updateLabels(panel, settings->ss->treeView, flags.commFilter);
 
