@@ -54,6 +54,7 @@ typedef struct CPUMeterData_ {
 static void CPUMeter_init(Meter* this) {
    unsigned int cpu = this->param;
    const Machine* host = this->host;
+   this->captionColor = METER_TEXT;
    if (cpu == 0) {
       Meter_setCaption(this, "Avg");
    } else if (host->activeCPUs > 1) {
@@ -82,7 +83,21 @@ static void CPUMeter_init(Meter* this) {
             cpu <= host->cpuTypeCount &&
             Settings_cpuId(host->settings, host->existingCPUs - 1) < 100 &&
             host->cpuTypes[cpu - 1].label != '\0') {
-            xSnprintf(caption, sizeof(caption), "%2u%c", id, host->cpuTypes[cpu - 1].label);
+            const CPUTypeInfo* type = &host->cpuTypes[cpu - 1];
+            xSnprintf(caption, sizeof(caption), "%2u%c", id, type->label);
+            switch (type->tier) {
+               case CPU_TYPE_TIER_LOW:
+                  this->captionColor = CPU_TYPE_LOW;
+                  break;
+               case CPU_TYPE_TIER_MEDIUM:
+                  this->captionColor = CPU_TYPE_MEDIUM;
+                  break;
+               case CPU_TYPE_TIER_HIGH:
+                  this->captionColor = CPU_TYPE_HIGH;
+                  break;
+               case CPU_TYPE_TIER_NONE:
+                  break;
+            }
          } else {
             xSnprintf(caption, sizeof(caption), "%3u", id);
          }

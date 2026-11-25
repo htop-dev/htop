@@ -118,6 +118,7 @@ struct Meter_ {
    const Machine* host;
 
    char* caption;
+   int captionColor;         /**< index into CRT_colors */
    MeterModeId mode;
    unsigned int param;
    GraphData drawData;
