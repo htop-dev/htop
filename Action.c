@@ -568,6 +568,19 @@ static Htop_Reaction actionFilterByUser(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
+static Htop_Reaction actionFilterByParent(State* st) {
+   const Process* p = (const Process*) Panel_getSelected((Panel*)st->mainPanel);
+   if (!p)
+      return HTOP_OK;
+
+   char buf[32];
+   xSnprintf(buf, sizeof(buf), "ppid:%d", (int) Process_getThreadGroup(p));
+   IncSet* inc = st->mainPanel->inc;
+   IncSet_setFilter(inc, buf);
+   st->host->activeTable->incFilter = IncSet_filter(inc);
+   return HTOP_REFRESH | HTOP_REDRAW_BAR;
+}
+
 Htop_Reaction Action_follow(State* st) {
    int selectedRow = MainPanel_selectedRow(st->mainPanel);
    if (st->host->activeTable->following == selectedRow) {
@@ -714,6 +727,7 @@ static const struct {
    { .key = "      m: ",  .roInactive = false, .info = "toggle merged command" },
    { .key = "      Z: ",  .roInactive = false, .info = "pause/resume process updates" },
    { .key = "      u: ",  .roInactive = false, .info = "show processes of a single user" },
+   { .key = " Ctrl-P: ",  .roInactive = false, .info = "filter children of the selected process" },
    { .key = "      H: ",  .roInactive = false, .info = "hide/show user process threads" },
    { .key = "      K: ",  .roInactive = false, .info = "hide/show kernel threads" },
    { .key = "      O: ",  .roInactive = false, .info = "hide/show processes in containers" },
@@ -1010,6 +1024,7 @@ void Action_setBindings(Htop_Action* keys) {
    keys['s'] = actionStrace;
    keys['t'] = actionToggleTreeView;
    keys['u'] = actionFilterByUser;
+   keys[KEY_CTRL('P')] = actionFilterByParent;
    keys['w'] = actionShowCommandScreen;
    keys['x'] = actionShowLocks;
    keys[KEY_F(1)] = actionHelp;

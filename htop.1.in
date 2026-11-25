@@ -252,6 +252,7 @@ The matching is done case-insensitive. Terms are fixed strings (no regex).
 You can separate multiple terms with "|".
 A filter of the form \fBppid:PID\fR or \fBppid=PID\fR shows only processes
 whose parent process has the given PID.
+Pressing Ctrl-P fills in this filter for the currently selected process.
 .TP
 .B F5, t
 Tree view: organize processes by parenthood, and layout the relations
@@ -353,6 +354,11 @@ at compile time.)
 .TP
 .B Ctrl-L
 Refresh: redraw screen and recalculate values.
+.TP
+.B Ctrl-P
+Filter the process list to show only the children of the currently
+selected process. This is the same as entering \fBppid:PID\fR (using the
+selected process' PID) at the F4 filter prompt.
 .TP
 .B Numbers
 PID search: type in process ID and the selection highlight will be moved to it.
