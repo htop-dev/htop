@@ -213,10 +213,20 @@ static void MainPanel_drawFunctionBar(Panel* super, bool hideFunctionBar) {
       return;
 
    IncSet_drawBar(this->inc, CRT_colors[FUNCTION_BAR]);
+
+   /* Append the status indicators first: the function bar has no wrapping,
+    * so an append that overflows the terminal width swallows later ones. */
    if (this->state->pauseUpdate) {
       FunctionBar_append("PAUSED", CRT_colors[PAUSED]);
    } else if (this->state->failedUpdate) {
       FunctionBar_append(this->state->failedUpdate, CRT_colors[FAILED_READ]);
+   }
+
+   int subtreeRoot = this->state->host->activeTable->descendantsRoot;
+   if (subtreeRoot >= 0 && !this->inc->active) {
+      char info[64];
+      xSnprintf(info, sizeof(info), "SUBTREE %d (d on root clears)", subtreeRoot);
+      FunctionBar_append(info, CRT_colors[PAUSED]);
    }
 }
 

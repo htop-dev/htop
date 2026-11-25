@@ -568,6 +568,29 @@ static Htop_Reaction actionFilterByUser(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 
+static Htop_Reaction actionFilterByDescendants(State* st) {
+   Table* table = st->host->activeTable;
+   const Object* selected = Panel_getSelected((Panel*)st->mainPanel);
+   if (!selected) {
+      /* No row to root the subtree at (empty list, or the root exited):
+       * use the key as a way to reset an active subtree filter. */
+      if (table->descendantsRoot < 0)
+         return HTOP_OK;
+      table->descendantsRoot = -1;
+      return HTOP_REFRESH | HTOP_REDRAW_BAR;
+   }
+
+   /* Only process tables take part in subtree filtering. */
+   if (!Object_isA(selected, (const ObjectClass*) &Process_class))
+      return HTOP_OK;
+
+   const Process* p = (const Process*) selected;
+   int root = (int) Process_getThreadGroup(p);
+   /* Toggle: pressing the key on the current root again clears the filter */
+   table->descendantsRoot = (table->descendantsRoot == root) ? -1 : root;
+   return HTOP_REFRESH | HTOP_REDRAW_BAR;
+}
+
 Htop_Reaction Action_follow(State* st) {
    int selectedRow = MainPanel_selectedRow(st->mainPanel);
    if (st->host->activeTable->following == selectedRow) {
@@ -714,6 +737,7 @@ static const struct {
    { .key = "      m: ",  .roInactive = false, .info = "toggle merged command" },
    { .key = "      Z: ",  .roInactive = false, .info = "pause/resume process updates" },
    { .key = "      u: ",  .roInactive = false, .info = "show processes of a single user" },
+   { .key = "      d: ",  .roInactive = false, .info = "show only the selected process subtree" },
    { .key = "      H: ",  .roInactive = false, .info = "hide/show user process threads" },
    { .key = "      K: ",  .roInactive = false, .info = "hide/show kernel threads" },
    { .key = "      O: ",  .roInactive = false, .info = "hide/show processes in containers" },
@@ -1000,6 +1024,7 @@ void Action_setBindings(Htop_Action* keys) {
    keys['b'] = actionBacktrace;
 #endif
    keys['c'] = actionTagAllChildren;
+   keys['d'] = actionFilterByDescendants;
    keys['e'] = actionShowEnvScreen;
    keys['h'] = actionHelp;
    keys['k'] = actionKill;

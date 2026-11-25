@@ -32,6 +32,7 @@ typedef struct Table_ {
 
    struct Machine_* host;
    const char* incFilter;
+   int descendantsRoot;   /* -1 disables; otherwise only rows in this process' subtree are shown */
    bool needsSort;
    int following;         /* -1 or row being visually tracked in the user interface */
    int stableId;          /* stable tree view: row ID to keep at fixed screen position (-1 = inactive) */

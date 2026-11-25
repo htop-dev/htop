@@ -874,10 +874,45 @@ bool Process_rowIsVisible(const Row* super, const Table* table) {
    return Process_isVisible(this, table->host->settings);
 }
 
+/* Upper bound for walking the parent chain. Protects against cyclic or
+ * otherwise corrupt parent data; processes deeper than this are treated
+ * as being outside the subtree. */
+enum { SUBTREE_MAX_DEPTH = 1024 };
+
+/* Return true when this process belongs to the subtree rooted at root:
+ * root itself (or one of its threads), or any descendant of it. */
+static bool Process_isInSubtree(const Process* this, const Table* table, int root) {
+   /* Every parent chain ends at 0, so PID 0 matches every process even when
+    * an intermediate parent record is missing from the table. */
+   if (root == 0)
+      return true;
+
+   if ((int) Process_getThreadGroup(this) == root)
+      return true;
+
+   int parent = (int) Process_getParent(this);
+   for (unsigned int depth = 0; depth < SUBTREE_MAX_DEPTH; depth++) {
+      if (parent == root)
+         return true;
+      if (parent <= 0)
+         return false;
+
+      const Row* row = (const Row*) Hashtable_get(table->table, (ht_key_t) parent);
+      if (!row)
+         return false;
+      parent = row->parent;
+   }
+
+   return false;
+}
+
 /* Test whether display must filter out this process (various mechanisms) */
 static bool Process_matchesFilter(const Process* this, const Table* table) {
    const Machine* host = table->host;
    if (host->userId != (uid_t) -1 && this->st_uid != host->userId)
+      return true;
+
+   if (table->descendantsRoot >= 0 && !Process_isInSubtree(this, table, table->descendantsRoot))
       return true;
 
    const char* incFilter = table->incFilter;
