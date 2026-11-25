@@ -291,6 +291,9 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef("Detailed CPU time (System/IO-Wait/Hard-IRQ/Soft-IRQ/Steal/Guest)", &(settings->detailedCPUTime)));
    Panel_add(super, (Object*) CheckItem_newByRef("Count CPUs from 1 instead of 0", &(settings->countCPUsFromOne)));
    Panel_add(super, (Object*) CheckItem_newByRef("Label CPUs based on SMT topology (e.g. 0a, 0b) instead of CPU index", &(settings->showCPUSMTLabels)));
+   #ifdef HTOP_DARWIN
+   Panel_add(super, (Object*) CheckItem_newByRef("Label CPUs by core type (e.g. 0E, 6P) on Apple Silicon", &(settings->showCPUTypeLabels)));
+   #endif
    Panel_add(super, (Object*) CheckItem_newByRef("Hide offline CPUs in the CPUs meters (e.g. SMT siblings disabled by nosmt)", &(settings->hideOfflineCPUs)));
    Panel_add(super, (Object*) CheckItem_newByRef("Update process names on every refresh", &(settings->updateProcessNames)));
    Panel_add(super, (Object*) CheckItem_newByRef("Add guest time in CPU meter percentage", &(settings->accountGuestInCPUMeter)));

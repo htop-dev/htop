@@ -65,7 +65,7 @@ static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
 
    const char* caption = Meter_getCaption(this);
    if (w > 0) {
-      attrset(CRT_colors[METER_TEXT]);
+      attrset(CRT_colors[this->captionColor]);
       mvaddnstr(y, x, caption, w);
    }
    attrset(CRT_colors[RESET_COLOR]);
@@ -95,7 +95,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    int captionLen = 3;
    const char* caption = Meter_getCaption(this);
    if (w >= captionLen) {
-      attrset(CRT_colors[METER_TEXT]);
+      attrset(CRT_colors[this->captionColor]);
       mvaddnstr(y, x, caption, captionLen);
    }
    w -= captionLen;
@@ -226,7 +226,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    const int captionLen = 3;
    const char* caption = Meter_getCaption(this);
    if (w >= captionLen) {
-      attrset(CRT_colors[METER_TEXT]);
+      attrset(CRT_colors[this->captionColor]);
       mvaddnstr(y, x, caption, captionLen);
    }
    w -= captionLen;
@@ -363,10 +363,10 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
       CRT_utf8 ? y + 1 :
 #endif
       y + 2;
-   attrset(CRT_colors[LED_COLOR]);
-
    const char* caption = Meter_getCaption(this);
    if (w > 0) {
+      int captionColor = this->captionColor == METER_TEXT ? LED_COLOR : this->captionColor;
+      attrset(CRT_colors[captionColor]);
       mvaddnstr(yText, x, caption, w);
    }
 
@@ -375,6 +375,7 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
       goto end;
    }
    int xx = x + captionWidth;
+   attrset(CRT_colors[LED_COLOR]);
 
 #ifdef HAVE_LIBNCURSESW
    if (CRT_utf8)
@@ -460,6 +461,7 @@ Meter* Meter_new(const Machine* host, unsigned int param, const MeterClass* type
    this->values = type->maxItems ? xCalloc(type->maxItems, sizeof(double)) : NULL;
    this->total = type->total;
    this->caption = xStrdup(type->caption);
+   this->captionColor = METER_TEXT;
    if (Meter_initFn(this)) {
       Meter_init(this);
    }

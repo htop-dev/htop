@@ -80,6 +80,7 @@ typedef struct Settings_ {
    bool stickyFollow;
    bool showCPUFrequency;
    bool showCPUSMTLabels;
+   bool showCPUTypeLabels;
    bool hideOfflineCPUs;
    #ifdef BUILD_WITH_CPU_TEMP
    bool showCPUTemperature;

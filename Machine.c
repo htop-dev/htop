@@ -58,6 +58,7 @@ void Machine_done(Machine* this) {
 #endif
    Object_delete(this->processTable);
    free(this->tables);
+   free(this->cpuTypes);
 }
 
 static void Machine_addTable(Machine* this, Table* table) {
