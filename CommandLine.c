@@ -51,6 +51,10 @@ static void printVersionFlag(const char* name) {
    printf("%s " VERSION "\n", name);
 }
 
+enum {
+   OPT_DESCENDANTS = 132,
+};
+
 static void printHelpFlag(const char* name) {
    printf("%s " VERSION "\n"
           COPYRIGHT "\n"
@@ -68,6 +72,7 @@ static void printHelpFlag(const char* name) {
           "   --keep-visible[=N]           Keep the first N columns visible when scrolling sideways (default 1)\n"
           "-n --max-iterations=NUMBER      Exit htop after NUMBER iterations/frame updates\n"
           "-p --pid=PID[,PID,PID...]       Show only the given PIDs\n"
+          "   --descendants=PID            Show only the given process and all its descendants\n"
           "   --readonly                   Disable all system and process changing features\n"
           "-s --sort-key=COLUMN            Sort by COLUMN in list view (try --sort-key=help for a list)\n"
           "-t --tree[=MODE]                Show the tree view (MODE: classic|soft|hard); can be combined with -s\n"
@@ -85,6 +90,7 @@ static void printHelpFlag(const char* name) {
 typedef struct CommandLineSettings_ {
    Hashtable* pidMatchList;
    char* commFilter;
+   int descendantsRoot;
    uid_t userId;
    int sortKey;
    int delay;
@@ -128,6 +134,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
    *flags = (CommandLineSettings) {
       .pidMatchList = NULL,
       .commFilter = NULL,
+      .descendantsRoot = -1,
       .userId = (uid_t)-1, // -1 is guaranteed to be an invalid uid_t (see setreuid(2))
       .sortKey = 0,
       .delay = -1,
@@ -170,6 +177,7 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
       {"no-meters",  no_argument,         0, 129},
       {"tree",       optional_argument,   0, 't'},
       {"pid",        required_argument,   0, 'p'},
+      {"descendants", required_argument,  0, OPT_DESCENDANTS},
       {"filter",     required_argument,   0, 'F'},
       {"no-functionbar", no_argument,     0, 130},
       {"no-function-bar", no_argument,    0, 130},
@@ -320,6 +328,20 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
 
             break;
          }
+         case OPT_DESCENDANTS: {
+            if (!optarg)
+               return STATUS_ERROR_EXIT;
+
+            char* end = NULL;
+            errno = 0;
+            long val = strtol(optarg, &end, 10);
+            if (errno || *end != '\0' || end == optarg || val < 0 || val > INT_MAX) {
+               fprintf(stderr, "Error: invalid PID for --descendants \"%s\".\n", optarg);
+               return STATUS_ERROR_EXIT;
+            }
+            flags->descendantsRoot = (int)val;
+            break;
+         }
          case 'F':
             if (!optarg)
                return STATUS_ERROR_EXIT;
@@ -389,6 +411,11 @@ static CommandLineStatus parseArguments(int argc, char** argv, CommandLineSettin
       while (optind < argc)
          fprintf(stderr, " %s", argv[optind++]);
       fprintf(stderr, "\n");
+      return STATUS_ERROR_EXIT;
+   }
+
+   if (flags->descendantsRoot >= 0 && flags->commFilter) {
+      fprintf(stderr, "Error: --descendants and --filter cannot be combined.\n");
       return STATUS_ERROR_EXIT;
    }
 
@@ -482,6 +509,9 @@ int CommandLine_run(int argc, char** argv) {
 
    MainPanel* panel = MainPanel_new();
    Machine_setTablesPanel(host, (Panel*) panel);
+
+   if (flags.descendantsRoot >= 0)
+      host->activeTable->descendantsRoot = flags.descendantsRoot;
 
    MainPanel_updateLabels(panel, settings->ss->treeView, flags.commFilter);
 

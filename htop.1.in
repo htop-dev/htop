@@ -58,6 +58,14 @@ in monochrome mode
 Filter processes by terms matching the commands. The terms are matched
 case-insensitive and as fixed strings (not regexs). You can separate multiple terms with "|".
 .TP
+\fB\-\-descendants=PID\fR
+Show only the process with the given PID and all of its descendants.
+This is a subtree filter: the process itself is kept, together with every
+process descending from it at any depth. A PID of 0 matches every process,
+because the parent chain of all processes ends at 0; in effect it shows
+the whole list (subject to the other display settings).
+Cannot be combined with \fB\-\-filter\fR.
+.TP
 \fB\-\-no-function-bar\fR
 Hide the function bar
 .TP
@@ -292,6 +300,16 @@ Set CPU affinity: mark which CPUs a process is allowed to use.
 .TP
 .B u
 Show only processes owned by a specified user.
+.TP
+.B d
+Show only the currently selected process and all of its descendants
+(subtree). Pressing d again on the root process clears the filter; on an
+empty list, d clears an active subtree filter regardless of why the list
+is empty (for example after the root has exited). Selecting a descendant
+and pressing d narrows the filter to that process' subtree; to widen it
+again, select a process higher in the tree and press d, or clear the
+filter. While the filter is active, the function bar shows the current
+subtree root (unless the function bar is hidden).
 .TP
 .B N
 Sort by PID.

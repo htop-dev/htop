@@ -30,6 +30,7 @@ Table* Table_init(Table* this, const ObjectClass* klass, Machine* host) {
    this->table = Hashtable_new(200, false);
    this->needsSort = true;
    this->following = -1;
+   this->descendantsRoot = -1;
    this->stableId = -1;
    this->stableLastIdx = 0;
    this->pendingSelection = -1;

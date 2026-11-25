@@ -213,6 +213,14 @@ static void MainPanel_drawFunctionBar(Panel* super, bool hideFunctionBar) {
       return;
 
    IncSet_drawBar(this->inc, CRT_colors[FUNCTION_BAR]);
+
+   int subtreeRoot = this->state->host->activeTable->descendantsRoot;
+   if (subtreeRoot >= 0 && !this->inc->active) {
+      char info[64];
+      xSnprintf(info, sizeof(info), "SUBTREE %d (d on root clears)", subtreeRoot);
+      FunctionBar_append(info, CRT_colors[PAUSED]);
+   }
+
    if (this->state->pauseUpdate) {
       FunctionBar_append("PAUSED", CRT_colors[PAUSED]);
    } else if (this->state->failedUpdate) {
