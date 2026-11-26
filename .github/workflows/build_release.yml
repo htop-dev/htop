@@ -6,6 +6,9 @@ on:
     types:
       - created
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: build
@@ -19,8 +22,10 @@ jobs:
 
     - name: archive
       id: archive
+      env:
+        TAG: ${{ github.event.release.tag_name }}
       run: |
-        VERSION=${{ github.event.release.tag_name }}
+        VERSION="$TAG"
         PKGNAME="htop-$VERSION"
         SHASUM=$PKGNAME.tar.xz.sha256
         autoreconf -i
@@ -35,9 +40,12 @@ jobs:
     - name: upload release assets
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAG: ${{ github.event.release.tag_name }}
+        TARBALL: ${{ steps.archive.outputs.tarball }}
+        SHASUM: ${{ steps.archive.outputs.shasum }}
       run: |
         gh release upload \
-          "${{ github.event.release.tag_name }}" \
-          "${{ steps.archive.outputs.tarball }}" \
-          "${{ steps.archive.outputs.shasum }}" \
+          "$TAG" \
+          "$TARBALL" \
+          "$SHASUM" \
           --clobber
