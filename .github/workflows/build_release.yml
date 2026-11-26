@@ -6,10 +6,15 @@ on:
     types:
       - created
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
     - uses: actions/checkout@v7
       with:
@@ -17,8 +22,10 @@ jobs:
 
     - name: archive
       id: archive
+      env:
+        TAG: ${{ github.event.release.tag_name }}
       run: |
-        VERSION=${{ github.event.release.tag_name }}
+        VERSION="$TAG"
         PKGNAME="htop-$VERSION"
         SHASUM=$PKGNAME.tar.xz.sha256
         autoreconf -i
@@ -28,24 +35,17 @@ jobs:
         TARBALL=$PKGNAME.tar.xz
         tar cJf $TARBALL $PKGNAME
         sha256sum $TARBALL > $SHASUM
-        echo "::set-output name=tarball::$TARBALL"
-        echo "::set-output name=shasum::$SHASUM"
-    - name: upload tarball
-      uses: actions/upload-release-asset@v1
+        echo "tarball=$TARBALL" >> "$GITHUB_OUTPUT"
+        echo "shasum=$SHASUM" >> "$GITHUB_OUTPUT"
+    - name: upload release assets
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./${{ steps.archive.outputs.tarball }}
-        asset_name: ${{ steps.archive.outputs.tarball }}
-        asset_content_type: application/gzip
-
-    - name: upload shasum
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./${{ steps.archive.outputs.shasum }}
-        asset_name: ${{ steps.archive.outputs.shasum }}
-        asset_content_type: text/plain
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAG: ${{ github.event.release.tag_name }}
+        TARBALL: ${{ steps.archive.outputs.tarball }}
+        SHASUM: ${{ steps.archive.outputs.shasum }}
+      run: |
+        gh release upload \
+          "$TAG" \
+          "$TARBALL" \
+          "$SHASUM" \
+          --clobber
