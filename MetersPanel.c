@@ -136,6 +136,8 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
       case KEY_F(7):
       case '[':
       case '-':
+         if (!Vector_size(this->meters))
+            break;
          Vector_moveUp(this->meters, selected);
          Panel_moveSelectedUp(super);
          result = HANDLED;
@@ -147,6 +149,8 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
       case KEY_F(8):
       case ']':
       case '+':
+         if (!Vector_size(this->meters))
+            break;
          Vector_moveDown(this->meters, selected);
          Panel_moveSelectedDown(super);
          result = HANDLED;
