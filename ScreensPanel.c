@@ -147,8 +147,15 @@ renameFinish:
          if (this->renamingNewItem) {
             // If canceling a newly created item, delete it
             Panel_remove(super, Panel_getSelectedIndex(super));
-            // Rebuild with the updated selection after removal
+            // Rebuild with the updated selection after removal. The column
+            // panels still hold the settings of the item Panel_remove deleted.
             rebuildSettingsArray(super, Panel_getSelectedIndex(super));
+            ScreenListItem* focus = (ScreenListItem*) Panel_getSelected(super);
+            if (focus) {
+               Hashtable* dynamicColumns = this->settings->dynamicColumns;
+               ColumnsPanel_fill(this->columns, focus->ss, dynamicColumns);
+               AvailableColumnsPanel_fill(this->availableColumns, focus->ss->dynamic, dynamicColumns);
+            }
          }
 
          this->renamingNewItem = false;
@@ -234,7 +241,8 @@ static void addNewScreen(Panel* super) {
 static HandlerResult ScreensPanel_eventHandlerNormal(Panel* super, int ch) {
    ScreensPanel* const this = (ScreensPanel*) super;
 
-   const void* oldFocus = Panel_get(super, super->prevSelected);
+   /* Panel_remove and Panel_insert unset prevSelected; there is no old focus then */
+   const void* oldFocus = super->prevSelected >= 0 ? Panel_get(super, super->prevSelected) : NULL;
    bool shouldRebuildArray = false;
    HandlerResult result = IGNORED;
 
