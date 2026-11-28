@@ -142,6 +142,9 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
 
    FILE* fp = fdopen(fdpair[0], "r");
    if (!fp) {
+      close(fdpair[0]);
+      int wstatus;
+      xWaitpid(child, &wstatus, 0, false);
       pdata->error = 1;
       return pdata;
    }
@@ -218,12 +221,6 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
 
    int wstatus;
    if (xWaitpid(child, &wstatus, 0, false) < 0) {
-      while (pdata->files) {
-         OpenFiles_FileData* cur = pdata->files;
-         pdata->files = cur->next;
-         OpenFiles_Data_clear(&cur->data);
-         free(cur);
-      }
       pdata->error = 1;
       return pdata;
    }
@@ -259,6 +256,17 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
 static void OpenFiles_Data_clear(OpenFiles_Data* data) {
    for (size_t i = 0; i < ARRAYSIZE(data->data); i++)
       free(data->data[i]);
+}
+
+static void OpenFiles_ProcessData_delete(OpenFiles_ProcessData* pdata) {
+   while (pdata->files) {
+      OpenFiles_FileData* cur = pdata->files;
+      pdata->files = cur->next;
+      OpenFiles_Data_clear(&cur->data);
+      free(cur);
+   }
+   OpenFiles_Data_clear(&pdata->data);
+   free(pdata);
 }
 
 static void OpenFilesScreen_scan(InfoScreen* super) {
@@ -299,14 +307,10 @@ static void OpenFilesScreen_scan(InfoScreen* super) {
                    getDataForType(data, 'n'));
          InfoScreen_addLine(super, entry);
          free(entry);
-         OpenFiles_Data_clear(data);
-         OpenFiles_FileData* old = fdata;
          fdata = fdata->next;
-         free(old);
       }
-      OpenFiles_Data_clear(&pdata->data);
    }
-   free(pdata);
+   OpenFiles_ProcessData_delete(pdata);
    Vector_insertionSort(super->lines);
    Vector_insertionSort(panel->items);
    Panel_setSelected(panel, idx);
